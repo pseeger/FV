@@ -1,0 +1,11 @@
+.*
+!.gitignore
+farmville-*
+assets/
+FBID*
+plugins/
+*.txt
+config/
+data.sqlite
+*.csv
+*.exe
