@@ -15,6 +15,15 @@ global $proxy_settings;
 global $vCnt63000;
 $GLOBALS['consolelog'] = true;
 
+$use_proxy = false;
+
+// load proxy settings
+if (file_exists('proxy.txt')) {
+	$proxy_settings = file('proxy.txt');
+	if (count($proxy_settings))
+		$use_proxy = true;
+}
+
 class Curlfetcher {
 	private $ch;
 	public function __construct() {
@@ -89,14 +98,6 @@ if (version_compare(phpversion(), '5.0.0', '<')) {
 	define('STDOUT', fopen('php://stdout', 'w'));
 }
 
-$use_proxy = false;
-
-// load proxy settings
-if (file_exists('proxy.txt')) {
-	$proxy_settings = file('proxy.txt');
-	if (count($proxy_settings))
-		$use_proxy = true;
-}
 $timezonefile = './timezone.txt';
 if (file_exists($timezonefile)) {
 	$timezone = trim(file_get_contents($timezonefile));
