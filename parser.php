@@ -2710,7 +2710,7 @@ function AddLog($str) {
 	global $res_str;
 	$res_str .= $str . "\r\n";
 
-	if ($is_debug)
+	if ($is_debug) echo $str;
 }
 // ------------------------------------------------------------------------------
 // AddLog2 add string to advanced log
@@ -3748,7 +3748,6 @@ $cmd = @$argv[1];
 if ($plugin_developer) {
 	pluginload();
 }
-
 // execute command
 // echo("Command: ".$cmd."\r\n");
 switch ($cmd) {

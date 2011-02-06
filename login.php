@@ -38,6 +38,6 @@ foreach($accounts as $login_email=>$login_pass) {
 	if(count($cmd)<1) $cmd[]='php -c localphp.ini parser.php get_unit_list_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 	$cmd[]='php -c localphp.ini parser.php arbeit_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 }
-if($argv[1]==='run') foreach($cmd as $c) system($c);
+if(@$argv[1]==='run') foreach($cmd as $c) system($c);
 else foreach($cmd as $c) echo($c);
 ?>
