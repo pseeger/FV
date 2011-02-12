@@ -114,17 +114,7 @@ if($is_debug)
 # connect
 $vDataDB=Parser_SQlite_Connect(PARSER_SQLITE);
 
-/**
- * ***********************************************************\
- * Parser Settings
- * \***********************************************************
- */
 $Load_Farm_Read_Size = 0; //0 = Read all, any other number sets the size read
-/**
- * ***********************************************************\
- *	END Parser Settings
- * \***********************************************************
- */
 
 // ------------------------------------------------------------------------------
 // GetData gets data from http $answer
@@ -264,7 +254,6 @@ function fullread ($sd, $len) {
 
 	return $ret;
 }
-// ********** END NEW READ/WRITE
 // ------------------------------------------------------------------------------
 // Connect connects to farmville server
 //  @return resourse socket connection
@@ -289,7 +278,8 @@ function Connect($server = '') {
 //  @param string $data data
 // ------------------------------------------------------------------------------
 function EchoData($data) {
-	file_put_contents("out.txt",$data);
+	echo 'Echo Data called';
+	file_put_contents('out.txt',$data);
 }
 // ------------------------------------------------------------------------------
 // proxy_GET can use a proxy to get the gameSettings/description xml files
@@ -397,6 +387,9 @@ function proxy_GET($url) {
 // proxy_GET_FB can use a proxy to get FB-Sites
 // ------------------------------------------------------------------------------
 function proxy_GET_FB($url, $vPostGet='GET', $vPostData='') {
+
+}
+function proxy_GET_FB_old($url, $vPostGet='GET', $vPostData='') {	
 	global $use_proxy;
 	global $proxy_settings;
 	global $Cnt302;
@@ -1745,19 +1738,14 @@ function Quests_GetAll() {
 // ------------------------------------------------------------------------------
 function parse_flashvars() {
 	$temp = file_get_contents(F('flashVars.txt'));
-	preg_match('/var flashVars = \{([^}]*)\}/sim', $temp, $flash);
-	preg_match_all('/"([^"]*)":"([^"]*)"/im', $flash[1], $fr);
-	$newarray = array_combine($fr[1], $fr[2]);
-	foreach ($newarray as $key => $value)
-		$newarray[$key] = str_replace('\\/', '/', $value);
-	return $newarray;
+	preg_match('/var flashVars = (\{[^}]*\})/sim', $temp, $flash);
+	return json_decode($flash[1],true);
 }
 
 // ------------------------------------------------------------------------------
 // GetUnitList
 // ------------------------------------------------------------------------------
 function GetUnitList() {
-
 	global $userId, $flashRevision, $botlitever;
 	global $vDataDB;
 
@@ -1765,6 +1753,7 @@ function GetUnitList() {
 		$argv = @$GLOBALS['argv'];
 		$userId = @$argv[2];
 		$flashRevision = @$argv[3];
+		LoadAuthParams();
 	} else {
 		$datasize = hexdec(fread(STDIN, 8));
 		$data = fread(STDIN, $datasize);
@@ -1782,18 +1771,14 @@ function GetUnitList() {
 	}
 
 	$vDir='./farmville-xml';
-	if (!is_dir($vDir)) {
-		@mkdir($vDir);
-	}
+	if (!is_dir($vDir)) @mkdir($vDir);
 	$time_limit = 7*24*60*60; // number of seconds to 'keep' the log DAYSxHOURSxMINSxSECS
 	if ($df = opendir($vDir)) {
 		while (false !== ($file = readdir($df))) {
 			if ($file != "." && $file != "..") {
 				$file1=$vDir.'/'.$file;
 				$last_modified = filemtime($file1);
-				if(time()-$last_modified > $time_limit){
-					unlink($file1);
-				}
+				if(time()-$last_modified > $time_limit) unlink($file1);
 			}
 		}
 		closedir($df);
@@ -1808,27 +1793,21 @@ function GetUnitList() {
 			if ($file != "." && $file != "..") {
 				$file1=$vDir.'/'.$file;
 				$last_modified = filemtime($file1);
-				if(time()-$last_modified > $time_limit){
-					unlink($file1);
-				}
+				if(time()-$last_modified > $time_limit) unlink($file1);
 			}
 		}
 		closedir($df);
 	}
 
 	$vDir='./farmville-logs';
-	if (!is_dir($vDir)) {
-		@mkdir($vDir);
-	}
+	if (!is_dir($vDir)) @mkdir($vDir);
 	$time_limit = 7*24*60*60; // number of seconds to 'keep' the log DAYSxHOURSxMINSxSECS
 	if ($df = opendir($vDir)) {
 		while (false !== ($file = readdir($df))) {
 			if ($file != "." && $file != "..") {
 				$file1=$vDir.'/'.$file;
 				$last_modified = filemtime($file1);
-				if(time()-$last_modified > $time_limit){
-					unlink($file1);
-				}
+				if(time()-$last_modified > $time_limit) unlink($file1);
 			}
 		}
 		closedir($df);
@@ -1841,9 +1820,7 @@ function GetUnitList() {
 		if ($sqlite_flashRevision <> $flashRevision) {
 			$sqlite_update = 1;
 		}
-	} else {
-		$sqlite_update = 1;
-	}
+	} else $sqlite_update = 1;
 
 	if ($sqlite_update == 1) {
 	  $vDataDB=null;
@@ -2155,9 +2132,7 @@ function GetUnitList() {
 		return;
 	}
 	if ($sqlite_update == 1) {
-
 		$vDataDB->queryExec('BEGIN TRANSACTION');
-
 		@$vDataDB->queryExec('delete from units');
 		@$vDataDB->queryExec('delete from achievements');
 		@$vDataDB->queryExec('delete from collectables');
@@ -2165,9 +2140,7 @@ function GetUnitList() {
 		@$vDataDB->queryExec('delete from crafting');
 		@$vDataDB->queryExec('delete from quests');
 		@$vDataDB->queryExec('vacuum');
-
 		$vDataDB->queryExec('COMMIT TRANSACTION');
-
 
 		$vDataDB->queryExec('BEGIN TRANSACTION');
 
@@ -2846,10 +2819,7 @@ function GetObjects2($className = '') {
 //  @param array $plot
 //  @return string Plot name
 // ------------------------------------------------------------------------------
-function GetPlotName($plot) {
-	return $plot['position']['x'] . '-' . $plot['position']['y'];
-}
-
+function GetPlotName($plot) { return $plot['position']['x'] . '-' . $plot['position']['y']; }
 
 // ------------------------------------------------------------------------------
 // Do_Farmhands_Arborists
@@ -2895,7 +2865,6 @@ function Do_Farmhands_Arborists($vWhat) {
 
 }
 
-
 // ------------------------------------------------------------------------------
 // Do_Biplane_Instantgrow
 // ------------------------------------------------------------------------------
@@ -2909,11 +2878,8 @@ function Do_Biplane_Instantgrow() {
 	$biplane=$biplane[0];
 
 	$amf = CreateRequestAMF();
-
 	$amf->_bodys[0]->_value[1][0]['functionName'] = 'WorldService.performAction';
-
 	$amf->_bodys[0]->_value[1][0]['params'][0] = 'instantGrow';
-
 	$amf->_bodys[0]->_value[1][0]['params'][1]['deleted'] = false;
 	$amf->_bodys[0]->_value[1][0]['params'][1]['tempId'] = 'NaN';
 	$amf->_bodys[0]->_value[1][0]['params'][1]['className'] = $biplane['className'];
@@ -2922,7 +2888,6 @@ function Do_Biplane_Instantgrow() {
 	$amf->_bodys[0]->_value[1][0]['params'][1]['direction'] = 0;
 	$amf->_bodys[0]->_value[1][0]['params'][1]['id'] = $biplane['id'];
 	$amf->_bodys[0]->_value[1][0]['params'][1]['position'] = $biplane['position'];
-
 	$amf->_bodys[0]->_value[1][0]['params'][2] = array();
 
 	$amf2 = RequestAMFIntern($amf);
@@ -3303,33 +3268,19 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 
 	$px_Setopts = LoadSavedSettings();
 
-	if ($action == 'combine')
-		$px_Setopts['fuel_combine'] = $fuel;
-
-	if ($action == 'tractor')
-		$px_Setopts['fuel_plow'] = $fuel;
-
-	if ($action == 'plow')
-		$px_Setopts['fuel_plow'] = $fuel;
-
-	if ($action == 'place')
-		$px_Setopts['fuel_place'] = $fuel;
-
-	if ($action == 'harvest')
-		$px_Setopts['fuel_harvest'] = $fuel;
+	if ($action == 'combine') $px_Setopts['fuel_combine'] = $fuel;
+	if ($action == 'tractor') $px_Setopts['fuel_plow'] = $fuel;
+	if ($action == 'plow') $px_Setopts['fuel_plow'] = $fuel;
+	if ($action == 'place') $px_Setopts['fuel_place'] = $fuel;
+	if ($action == 'harvest') $px_Setopts['fuel_harvest'] = $fuel;
 
 	SaveSettings($px_Setopts);
-
 	SaveAuthParams();
 }
 
 function RequestAMF($amf) {
 	$amf2 = RequestAMFIntern($amf);
 	$res = CheckAMF2Response($amf2);
-#	if($res<>'OK') {
-#		error_log(print_r($amf,true));
-#		error_log(print_r($amf2,true));
-#	}
 	return $res;
 }
 
@@ -3436,7 +3387,6 @@ function CheckAMF2RewardsSubCheck2($vRewURL,$vRewItem,$vItemUrl,&$vFound,&$vRewa
 
 
 function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
-
 	CheckAMF2RewardsSubCheck($vReward['collectionCounters'][0]['link'],$vReward['collectionCounters'][0]['collectable'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['animalName'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
@@ -3478,7 +3428,6 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'WanderingStallionFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'OilBarronFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'ConstructionBuildingFriendReward','Item',$vFound,$vRewardsArray);
-
 }
 
 
@@ -3614,27 +3563,20 @@ function Parser_GetCookieString() {
 function Parser_ReadReq() {
 	$vHTML=proxy_GET_FB('http://www.facebook.com/reqs.php');
 
-
-	#preg_match_all('/(<form ajaxify="1" action="\/ajax\/reqs\.php" method="post".*?<\/form>)/ims', $vHTML, $vForms);
 	preg_match_all('/(<form rel="async" action="\/ajax\/reqs\.php" method="post".*?<\/form>)/ims', $vHTML, $vForms);
 	unset($vHTML);
-
 
 	$vGiftRequests = array();
 	foreach($vForms[0] as $vI => $vForm) {
 		preg_match_all('/name="([^"]*)" value="([^"]*)"/ims', $vForm, $vNameValues);
 
+		preg_match_all('|<input[^>]*value="([^\"]*)"[^>]*name="actions\[([^>]*)][^>]*>?|ims', $vForm, $vActions);
 
-		preg_match_all('/<input[^>]*value="([^\"]*)"[^>]*name="actions\[([^>]*)][^>]*>?/ims', $vForm, $vActions);
-
-
-		preg_match_all('/<a href="http:\/\/apps\.facebook\.com\/.*?>(.*?)<\/a>/ims', $vForm, $vAppNameValues);
-
+		preg_match_all('|<a href="http://apps\.facebook\.com/.*?>(.*?)</a>|ims', $vForm, $vAppNameValues);
 
 		preg_match_all('/name="fb_dtsg" value="([^"]*)"/ims', $vForm, $vDTSGValues);
 
-
-		preg_match_all('/<span fb_protected="true" class="fb_protected_wrapper">(.*?)<\/span>/ims', $vForm, $vGiftText);
+		preg_match_all('|<span fb_protected="true" class="fb_protected_wrapper">(.*?)</span>|ims', $vForm, $vGiftText);
 		$vGiftText = trim(strip_tags($vGiftText[1][0]));
 
 		$vPost = '';
@@ -3650,7 +3592,7 @@ function Parser_ReadReq() {
 			$vActionName = '';
 			$vActionUrl = '';
 			for($vJ = 0; $vJ < count($vActions[1]); $vJ++) {
-				if($vActions[2][$vJ]<>'reject') {
+				if($vActions[2][$vJ]!='reject') {
 					$vActionName = $vActions[1][$vJ];
 					$vActionUrl = html_entity_decode($vActions[2][$vJ]);
 					$vPost .= '&actions['.urlencode(html_entity_decode($vActions[2][$vJ], ENT_QUOTES, 'UTF-8')).']='.str_replace('+', '%20', urlencode($vActions[1][$vJ]));
@@ -3665,16 +3607,16 @@ function Parser_ReadReq() {
 				$vDTSG = $vDTSGValues[1][0];
 			}
 			$vPost .= '&post_form_id_source=AsyncRequest';
-			$vGiftRequests[$vI] = array();
-			$vGiftRequests[$vI]['form'] = $vForm;
-			$vGiftRequests[$vI]['name'] = 'FarmVille';
-			$vGiftRequests[$vI]['app_id'] = $vAppId;
-			$vGiftRequests[$vI]['app_name'] = $vAppName;
-			$vGiftRequests[$vI]['action_name'] = $vActionName;
-			$vGiftRequests[$vI]['gift_text'] = $vGiftText;
-			$vGiftRequests[$vI]['action_url'] = $vActionUrl;
-			$vGiftRequests[$vI]['post_data'] = $vPost;
-			$vGiftRequests[$vI]['fb_dtsg'] = $vDTSG;
+			$vGiftRequests[$vI] = array(
+				'form'=>$vForm,
+				'name'=>'FarmVille',
+				'app_id'=>$vAppId,
+				'app_name'=>$vAppName,
+				'action_name'=>$vActionName,
+				'gift_text'=>$vGiftText,
+				'action_url'=>$vActionUrl,
+				'post_data'=>$vPost,
+				'fb_dtsg'=>$vDTSG);
 		}
 		unset($vNameValues,$vActions,$vAppNameValues,$vDTSGValues,$vPost);
 	}
@@ -3683,7 +3625,6 @@ function Parser_ReadReq() {
 }
 
 function pluginload() {
-
 	// get list of plugins
 	global $plugins, $userId, $flashRevision, $botlitever;
 	$plugins = array();
@@ -3728,7 +3669,6 @@ function pluginload() {
 			}
 		}
 	}
-
 	if (PX_VER_PARSER != PX_VER_SETTINGS)
 		echo "\r\n******\r\nERROR: PX's updated parser version (" . PX_VER_PARSER . ") doesn't match settings version (" . PX_VER_SETTINGS . ")\r\n******\r\n";
 }
@@ -3774,8 +3714,7 @@ switch ($cmd) {
 
 	case 'get_unit_list_lite':
 		global $botlitever;
-		$botlitever = @$argv[4];
-		if(strlen($botlitever)==0) $botlitever='unknown';
+		$botlitever = 1;
 	case 'get_unit_list':
 		echo "##### Loading units.txt #####\r\n";
 		$work_timer_start = time();
@@ -3786,8 +3725,7 @@ switch ($cmd) {
 
 	case 'arbeit_lite':
 		global $botlitever;
-		$botlitever = @$argv[4];
-		if(strlen($botlitever)==0) $botlitever='unknown';
+		$botlitever = 1;
 	case 'arbeit':
 		echo "##### Doing work #####\r\n";
 		$work_timer_start = time();
@@ -3814,7 +3752,4 @@ switch ($cmd) {
 		GetSecretKeyLite();
 		break;
 }
-
-//echo "----- end parser.php -----\r\n";
-//echo "----- memory_peak_usage: ".round(memory_get_peak_usage(true)/1024/1024,2)."MB -----\r\n";
 ?>

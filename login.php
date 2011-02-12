@@ -29,12 +29,14 @@ foreach($accounts as $login_email=>$login_pass) {
 		CURLOPT_COOKIEJAR=> 'cookies.txt',
 		CURLOPT_RETURNTRANSFER=> true));
 	$res=curl_exec($c);
-	preg_match('/flashVars.+?({.+?})/',$res,$flashVars);
-	$flashVars = json_decode($flashVars[1],true);
+	preg_match('/var flashVars.+?({.+?})/',$res,$flashVars);
+	$flashVarsParsed = json_decode($flashVars[1],true);
 	$params=array();
-	foreach(array('master_id','flashRevision','token','whatever','whoknows','exp','somethingelse') as $key) @$params[$key]=$flashVars[$key];
+	foreach(array('master_id','flashRevision','token','whatever','whoknows','exp','somethingelse') as $key) @$params[$key]=$flashVarsParsed[$key];
 	file_put_contents('FBID_'.$params['master_id'].'/params.txt',implode(';',$params));
-	file_put_contents('FBID_'.$params['master_id'].'/flashVars.txt',$res);
+	file_put_contents('FBID_'.$params['master_id'].'/flashVars.txt',$flashVars[0]);
+	file_put_contents('FBID_/params.txt',implode(';',$params));
+	file_put_contents('FBID_/flashVars.txt',$flashVars[0]);
 	if(count($cmd)<1) $cmd[]='php -c localphp.ini parser.php get_unit_list_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 	$cmd[]='php -c localphp.ini parser.php arbeit_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 }
