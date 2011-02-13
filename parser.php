@@ -387,10 +387,10 @@ function proxy_GET($url) {
 // proxy_GET_FB can use a proxy to get FB-Sites
 // ------------------------------------------------------------------------------
 function proxy_GET_FB($url, $vPostGet='GET', $vPostData='') {
-
+/*
 }
 function proxy_GET_FB_old($url, $vPostGet='GET', $vPostData='') {	
-	global $use_proxy;
+*/	global $use_proxy;
 	global $proxy_settings;
 	global $Cnt302;
 
@@ -3516,12 +3516,8 @@ function Parser_GetCookieString() {
 		if(file_exists(F('cookies.txt'))) {
 			$cookiestr='';
 			$vCookieArry=file(F('cookies.txt'));
-			foreach($vCookieArry as $vCookieString) {
-				$cookiestr.=substr($vCookieString,0,-16).'; ';
-			}
-		} else {
-			AddLog2('Parser_GetCookieString: no cookies.txt');
-		}
+			foreach($vCookieArry as $vCookieString) $cookiestr.=substr($vCookieString,0,-16).'; ';
+		} else AddLog2('Parser_GetCookieString: no cookies.txt');
 	} else {
 		//in plain bot
 		$retrunstring='';
@@ -3551,10 +3547,8 @@ function Parser_GetCookieString() {
 		foreach($match as $cookiedata) {
 			$matchx = preg_split("/[\s]+/", $cookiedata);
 
-			if ($matchx[0] != '')
-				$cookiestr .= trim($matchx[0])."=".trim($matchx[1])."; ";
-			else if ($matchx[1] != '')
-				$cookiestr .= trim($matchx[1])."=".trim($matchx[2])."; ";
+			if ($matchx[0] != '') $cookiestr .= trim($matchx[0])."=".trim($matchx[1])."; ";
+			else if ($matchx[1] != '') $cookiestr .= trim($matchx[1])."=".trim($matchx[2])."; ";
 		}
 	}
 	return $cookiestr;
