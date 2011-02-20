@@ -258,31 +258,16 @@ function fullread ($sd, $len) {
 
 	return $ret;
 }
-// ------------------------------------------------------------------------------
-// Connect connects to farmville server
-//  @return resourse socket connection
-// ------------------------------------------------------------------------------
+
 function Connect($server = '') {
-	global $use_proxy;
-	global $proxy_settings;
-
-	if (!$server) $server = farmer;
-
-	if ($use_proxy) $s = fsockopen(trim($proxy_settings[0]), intval($proxy_settings[1]));
-	else $s = fsockopen($server, 80);
-
-	if (!$s) {
-		RaiseError(3);
-		exit;
-	}
-	return $s;
+	return -1;
 }
 // ------------------------------------------------------------------------------
 // EchoData returns data in the main application
 //  @param string $data data
 // ------------------------------------------------------------------------------
 function EchoData($data) {
-	echo 'Echo Data called';
+	echo $data;
 	file_put_contents('out.txt',$data);
 }
 // ------------------------------------------------------------------------------
@@ -305,119 +290,8 @@ function proxy_GET_FB($url, $vPostGet='GET', $vPostData='') {
 //  @param string $result AMF-serialized request
 //  @return string http answer
 // ------------------------------------------------------------------------------
-function Request($s, $result) {
-	echo 'Request called';
-	global $use_proxy;
-	global $proxy_settings;
-	global $Load_Farm_Read_Size;
-
-	$headers = array();
-	$headers[] = 'POST ' . farmer_url . ' HTTP/1.1';
-	$headers[] = 'User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; GTB6.5; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET4.0C)';
-	$headers[] = 'Host: ' . farmer;
-	$headers[] = 'Content-Type: application/x-amf';
-	// enable gzip
-	$px_Setopts = LoadSavedSettings();
-	if (@$px_Setopts['e_gzip']) {
-		$headers[] = 'Accept-Encoding: gzip';
-	}
-
-	if ($use_proxy) {
-		if (isset($proxy_settings[2]) && isset($proxy_settings[3])) { // is set proxy user and password
-			$authorization = base64_encode(trim($proxy_settings[2]) . ':' . trim($proxy_settings[3]));
-			$headers[] = "Proxy-Authorization: Basic $authorization";
-		}
-	}
-
-	$headers[] = 'Accept: */*';
-	$headers[] = 'Content-Length: ' . strlen($result);
-
-	stream_set_blocking($s, 0);
-
-	$request = implode("\r\n", $headers);
-	$request .= "\r\n\r\n" . $result;
-
-	fullwrite($s, $request);
-
-	$answer = '';
-	// wait max 50 seconds for data before we repeat request
-	$max_tick = 500;
-
-	$cur_tick = 0;
-	$is_bad = false;
-
-	while (!strlen($answer)) {
-		$answer .= fullread($s, 1024);
-
-		if (!strlen($answer)) {
-			usleep(100000);
-			$cur_tick ++;
-
-			if ($cur_tick > $max_tick) {
-				$is_bad = true;
-				break;
-			}
-		}
-	}
-
-	if ($is_bad) {
-		fclose($s);
-		$s = Connect();
-		AddLog2("repeat request -no answer-");
-		return Request($s, $result);
-	}
-
-	if (strpos($answer, '404 Not Found') !== false) {
-		fclose($s);
-		$s = Connect();
-		AddLog2("repeat request -404-");
-		return Request($s, $result);
-	}
-
-	if (strripos($answer, '500 Internal Server Error') !== false) {
-		AddLog2("Error: 500/ISE");
-		echo "\n*****\nERROR: Internal Server Error\nIf you get this message constantly and farmville appears to be working fine in your browser\nYou have too many objects/superplots. See the Farm Problems section of the parser forum page\n*****\n";
-		fclose($s);
-		return 0;
-	}
-
-	if (strripos($answer, '502 Bad Gateway') !== false) {
-		AddLog2("Error: 502/BADGY");
-		echo "\n*****\nERROR: 502 Bad Gateway\nYou can likely ignore this error unless it happens constantly\n*****\n";
-		return 0;
-	}
-
-	preg_match('/Content-Encoding:[\s]([a-zA-Z]*)[\s]/si', $answer, $matchzip);
-
-	preg_match('/Content-length:[\s]([0-9]*)[\s]/si', $answer, $match);
-	$answer = GetData($answer);
-
-	while (true) {
-		if ($Load_Farm_Read_Size == 0) {
-			$Load_Farm_Read_Size = @$match[1];
-		}
-		if ($Load_Farm_Read_Size == 0) {
-			echo "\n*******\n";
-			echo 'Debug: Read ' . strlen($answer) . ' wanted: ' . @$match[1] . ' Answer: ' . $answer . '';
-			die("\nERROR: Lost connection to server\n*******\n\n");
-		}
-
-		$answer .= fullread($s, $Load_Farm_Read_Size);
-
-		if (strlen($answer) >= $match[1])
-		break;
-		usleep(100000);
-	}
-	if ($Load_Farm_Read_Size == $match[1]) {
-		$Load_Farm_Read_Size = 0;
-	}
-
-	if (@$matchzip[1] == 'gzip') {
-		unset ($matchzip);
-		return gzinflate(substr($answer, 10));
-	} else {
-		return $answer;
-	}
+function Request($s, $data) {
+	return $answer = $GLOBALS['curlfetcher']->post(farmer_url, $data, 'application/x-amf');
 }
 // ------------------------------------------------------------------------------
 // GetFarmserver returns farmville server name
@@ -430,7 +304,6 @@ function GetFarmserver() {
 		$app_url = (@$flashVars['app_url'])?$flashVars['app_url']:'http://fb-ak-0.farmville.com/';
 		preg_match('/http:\/\/(.*?)\//', $app_url, $match);
 		$res = $match[1];
-		echo "Farmserver $res;\n";
 	}
 
 	return $res;
@@ -445,7 +318,6 @@ function GetFarmUrl() {
 		$flashVars = parse_flashvars();
 		$app_url = (@$flashVars['app_url'])?$flashVars['app_url']:'http://fb-ak-0.farmville.com/';
 		$res = $app_url.'flashservices/gateway.php';
-		echo "FarmUrl $res;\n";
 	}
 
 	return $res;
@@ -814,7 +686,7 @@ function Arbeit() {
 	Hook('before_harvest');
 
 	if ($enable_harvest) {
-		AddLog2("harvest crops");
+		AddLog2('harvest crops');
 
 		$plot_list = GetObjects('Plot'); //get plots
 		$plots = array();
@@ -849,11 +721,9 @@ function Arbeit() {
 				AddLog2('n0m mod: Harvest ALL ( ' . count($plots) . ' ) crops!');
 				break;
 		}
-
 		unset($plot_list);
 
-		if (count($plots) > 0)
-		Do_Farm_Work_Plots($plots, 'harvest'); //harvest land
+		if (count($plots) > 0) Do_Farm_Work_Plots($plots, 'harvest'); //harvest land
 		unset($plots);
 	}
 
@@ -866,111 +736,72 @@ function Arbeit() {
 
 		$building_list = array();
 
-		if ($enable_harvest_building_dairy == 1) {
-			$x = GetObjects("DairyFarmBuilding");
-			if (is_array($x))
-			$building_list = array_merge($building_list, $x);
-		}
-		if ($enable_harvest_building_coop == 1) {
-			$x = GetObjects("ChickenCoopBuilding");
-			if (is_array($x))
-			$building_list = array_merge($building_list, $x);
-		}
-		if ($enable_harvest_building_horse == 1) {
-			$x = GetObjects("HorseStableBuilding");
-			if (is_array($x))
-			$building_list = array_merge($building_list, $x);}
-			if ($enable_harvest_building_nursery == 1) {
-				$x = GetObjects("NurseryBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
-			}
-			if ($enable_harvest_building_bees == 1) {
-				$x = GetObjects("BeehiveBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
-			}
+		$buildingassoc = array(
+			'dairy' => 'DairyFarmBuilding',
+			'coop' => 'ChickenCoopBuilding',
+			'horse' => 'HorseStableBuilding',
+			'nursery' => 'NurseryBuilding',
+			'bees' => 'BeehiveBuilding',
+			'pigs' => 'PigpenBuilding',
+			'hauntedhouse' => 'HalloweenHauntedHouseBuilding',
+			'trough' => 'FeedTroughBuilding',
+			'orchard' => 'OrchardBuilding',
+			'turkeyroost' => 'TurkeyRoostBuilding'
+			);
 
-			if ($enable_harvest_building_pigs == 1) {
-				$x = GetObjects("PigpenBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
+		foreach($buildingassoc as $setting=>$objectname) {
+			$varname = 'enable_harvest_building'.$setting;
+			if($$varname == 1) {
+				$x = GetObjects($objectname);
+				//Check whether $building_list+=$x would work 
+				if(is_array($x)) $building_list = array_merge($building_list, $x);
 			}
-
-			if ($enable_harvest_building_hauntedhouse == 1) {
-				$x = GetObjects("HalloweenHauntedHouseBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
+		}
+		if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_duckpond == 1 || $enable_harvest_building_ccastle == 1)
+		{
+			$x = GetObjects("FeatureBuilding");
+			if (is_array($x)) $building_list = array_merge($building_list, $x);
+		}
+		if (count($building_list) > 0) {
+			$buildings = array();
+			foreach($building_list as $plot) {
+				if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['m_hasAnimal'] == 1)) $buildings[] = $plot;
 			}
-			if ($enable_harvest_building_trough == 1) {
-				$x = GetObjects("FeedTroughBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
-			}
-			if ($enable_harvest_building_orchard == 1) {
-				$x = GetObjects("OrchardBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
-			}
-			if ($enable_harvest_building_turkeyroost == 1) {
-				$x = GetObjects("TurkeyRoostBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
-			}
-			if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_duckpond == 1 || $enable_harvest_building_ccastle == 1)
-			{
-				$x = GetObjects("FeatureBuilding");
-				if (is_array($x))
-				$building_list = array_merge($building_list, $x);
-			}
-			if (count($building_list) > 0) {
-				$buildings = array();
-				foreach($building_list as $plot) {
-					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['m_hasAnimal'] == 1))
-					$buildings[] = $plot;
+			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
+			$buildings = array();
+			foreach($building_list as $plot) {
+				if ($plot['className'] == 'HalloweenHauntedHouseBuilding') {
+					list($vUSec,$vSec) = explode(" ", microtime());
+					$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
+					if($plot['plantTime']<($vPlantTime-82800000)) $buildings[] = $plot;
 				}
-				if (count($buildings) > 0)
-				Do_Farm_Work($buildings); //harvest buildings
-				unset($buildings);
-				$buildings = array();
-				foreach($building_list as $plot) {
-					if ($plot['className'] == 'HalloweenHauntedHouseBuilding') {
+			}
+			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
+			$buildings = array();
+			foreach($building_list as $plot) {
+				if ($plot['className'] == 'FeatureBuilding') {
+					if(($enable_harvest_building_wworkshop == 1 && $plot['itemName']=='winterworkshop_finished')
+					||
+					($enable_harvest_building_snowman == 1 && $plot['itemName']=='snowman2010_finished')
+					||
+					($enable_harvest_building_duckpond == 1 && $plot['itemName']=='duckpond_finished')
+					||
+					($enable_harvest_building_ccastle == 1 && $plot['itemName']=='valentines2011_finished')
+
+					) {
 						list($vUSec,$vSec) = explode(" ", microtime());
 						$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
-						if($plot['plantTime']<($vPlantTime-82800000))
+						if($plot['plantTime']<($vPlantTime-86400000))
 						$buildings[] = $plot;
 					}
 				}
-				if (count($buildings) > 0)
-				Do_Farm_Work($buildings); //harvest buildings
-				unset($buildings);
-				$buildings = array();
-				foreach($building_list as $plot) {
-					if ($plot['className'] == 'FeatureBuilding') {
-						if(($enable_harvest_building_wworkshop == 1 && $plot['itemName']=='winterworkshop_finished')
-						||
-						($enable_harvest_building_snowman == 1 && $plot['itemName']=='snowman2010_finished')
-						||
-						($enable_harvest_building_duckpond == 1 && $plot['itemName']=='duckpond_finished')
-						||
-						($enable_harvest_building_ccastle == 1 && $plot['itemName']=='valentines2011_finished')
-
-						) {
-							list($vUSec,$vSec) = explode(" ", microtime());
-							$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
-							if($plot['plantTime']<($vPlantTime-86400000))
-							$buildings[] = $plot;
-						}
-					}
-				}
-				if (count($buildings) > 0)
-				Do_Farm_Work($buildings); //harvest buildings
-				unset($building_list);
 			}
+			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
+			unset($building_list);
+		}
 	}
 
 	Hook('after_harvest_buildings'); //after building harvest
-
 	Hook('before_harvest_animals'); //get product from livestock
 
 	if ($enable_harvest_animal) {
@@ -981,8 +812,7 @@ function Arbeit() {
 		$transform_animals = array();
 
 		foreach($animals as $animal) {
-			if (($animal['state'] != "grown") && ($animal['state'] != "ripe"))
-			continue;
+			if (($animal['state'] != "grown") && ($animal['state'] != "ripe")) continue;
 
 			$px_animal_check = $animal['itemName'];
 
@@ -1000,43 +830,27 @@ function Arbeit() {
 			}
 			// H_Animal should always be set
 			// if we transformed animals on accident ppl would probably be mad lol
-			if (in_array($animal['itemName'], $Transforms)) {
-				$transform_animals[] = $animal;
-			} else {
-				$harvest_animals[] = $animal;
-			}
+			if (in_array($animal['itemName'], $Transforms)) $transform_animals[] = $animal;
+			else $harvest_animals[] = $animal;
 		}
 
 
 		if ($enable_harvest_farmhands) {
-
 			$vRatio=round((count($transform_animals)+count($harvest_animals))*100/count($animals));
-
 			if($vRatio>=$enable_harvest_farmhands_at) {
 
 				$inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
-				if((!isset($inconbox['AA'])) || $inconbox['AA']==0) {
-					AddLog2("farmhands: you dont have farmhands");
-				} elseif($inconbox['AA']<=$enable_harvest_farmhands_min) {
-					AddLog2("farmhands: you dont have enough farmhands (".$inconbox['AA'].")");
-				} else {
+				if((!isset($inconbox['AA'])) || $inconbox['AA']==0) AddLog2("farmhands: you dont have farmhands");
+				elseif($inconbox['AA']<=$enable_harvest_farmhands_min) AddLog2("farmhands: you dont have enough farmhands (".$inconbox['AA'].")");
+				else {
 					AddLog2("farmhands: harvest now, ".$vRatio."% ready (".$inconbox['AA']." farmhands remaining)");
 					$need_reload=Do_Farmhands_Arborists('farmhands');
 				}
-
-
-			} else {
-				AddLog2("farmhands: now ".$vRatio."% ready, harvest later at ".$enable_harvest_farmhands_at."%");
-			}
-
+			} else AddLog2("farmhands: now ".$vRatio."% ready, harvest later at ".$enable_harvest_farmhands_at."%");
 		} else {
-
-			if (count($transform_animals) > 0)
-			Do_Farm_Work($transform_animals, "transform");
-			if (count($harvest_animals) > 0)
-			Do_Farm_Work($harvest_animals);
+			if (count($transform_animals) > 0) Do_Farm_Work($transform_animals, "transform");
+			if (count($harvest_animals) > 0) Do_Farm_Work($harvest_animals);
 		}
-
 		unset($transform_animals, $harvest_animals);
 	}
 
@@ -1050,40 +864,26 @@ function Arbeit() {
 		$trees = array();
 		$plot_list = GetObjects('Tree'); //get list of trees
 		foreach($plot_list as $plot) {
-			if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe'))
-			$trees[] = $plot;
+			if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')) $trees[] = $plot;
 		}
 
 		if ($enable_harvest_arborist) {
-
 			$vRatio=round(count($trees)*100/count($plot_list));
-
 			if($vRatio>=$enable_harvest_arborist_at) {
 				$inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
-				if((!isset($inconbox['A9'])) || $inconbox['A9']==0) {
-					AddLog2("arborists: you dont have arborists");
-				} elseif($inconbox['A9']<=$enable_harvest_arborist_min) {
-					AddLog2("farmhands: you dont have enough arborists (".$inconbox['A9'].")");
-				} else {
+				if((!isset($inconbox['A9'])) || $inconbox['A9']==0) AddLog2("arborists: you dont have arborists");
+				elseif($inconbox['A9']<=$enable_harvest_arborist_min) AddLog2("farmhands: you dont have enough arborists (".$inconbox['A9'].")");
+				else {
 					AddLog2("arborists: harvest now, ".$vRatio."% ready (".$inconbox['A9']." arborists remaining)");
 					$need_reload=Do_Farmhands_Arborists('arborists');
 				}
 
-			} else {
-				AddLog2("arborists: now ".$vRatio."% ready, harvest later at ".$enable_harvest_arborist_at."%");
-			}
-
-		} else {
-
-			if (count($trees) > 0)
-			Do_Farm_Work($trees); //harvest trees
-
-		}
+			} else AddLog2("arborists: now ".$vRatio."% ready, harvest later at ".$enable_harvest_arborist_at."%");
+		} elseif (count($trees) > 0) Do_Farm_Work($trees); //harvest trees
 		unset($trees,$plot_list);
 	}
 
 	Hook('after_harvest_tree');
-
 	Hook('before_hoe');
 
 	if ($enable_hoe) { // we've selected to auto-plow plots
@@ -1097,13 +897,11 @@ function Arbeit() {
 		$plots = array();
 		$plot_list = GetObjects('Plot');
 		foreach($plot_list as $plot) {
-			if (($plot['state'] == 'withered') || ($plot['state'] == 'fallow'))
-			$plots[] = $plot;
+			if (($plot['state'] == 'withered') || ($plot['state'] == 'fallow')) $plots[] = $plot;
 		}
 		unset($plot_list);
 
-		if (count($plots) > 0)
-		Do_Farm_Work_Plots($plots, 'plow'); //plow land
+		if (count($plots) > 0) Do_Farm_Work_Plots($plots, 'plow'); //plow land
 		unset($plots);
 	}
 
@@ -2478,8 +2276,7 @@ function AddLog($str) {
 function AddLog2($str) {
 	global $is_debug, $consolelog;
 	@file_put_contents(LogF("log2.txt"),@date("H:i:s")." $str\r\n",FILE_APPEND);
-	if ($is_debug || $consolelog)
-	echo "Log2: " . $str . "\r\n";
+	if ($is_debug || $consolelog) echo $str . "\r\n";
 }
 // ------------------------------------------------------------------------------
 // DebugLog
@@ -3078,13 +2875,7 @@ function RequestAMFIntern($amf) {
 	DebugLog(" >> RequestAMF");
 
 	$serializer = new AMFSerializer();
-	if(function_exists('curl_exec')) $answer = $GLOBALS['curlfetcher']->post(farmer_url, $serializer->serialize($amf), 'application/x-amf');
-	else {
-		$result = $serializer->serialize($amf); // serialize the data
-		$s = Connect();
-		$answer = Request($s, $result);
-		fclose($s);
-	}
+	$answer = $GLOBALS['curlfetcher']->post(farmer_url, $serializer->serialize($amf), 'application/x-amf');
 	$amf2 = new AMFObject($answer);
 	$deserializer2 = new AMFDeserializer($amf2->rawData); // deserialize the data
 	$deserializer2->deserialize($amf2); // run the deserializer
@@ -3199,7 +2990,7 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck($vReward['data']['mysterySeed']['rewardLink'],$vReward['data']['mysterySeed']['itemCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['itemCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['reward']['rewardLink'],$vReward['data']['reward']['itemCode'],'Code',$vFound,$vRewardsArray);
-	
+
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['itemCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['goals'][0]['link'],$vReward['goals'][0]['code'],'Code',$vFound,$vRewardsArray);
 
@@ -3218,7 +3009,7 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'OilBarronFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'ConstructionBuildingFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'SocialMissionShareBonusFriendReward','Item',$vFound,$vRewardsArray);
-	
+
 }
 
 
