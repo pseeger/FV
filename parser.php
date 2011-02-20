@@ -1,6 +1,6 @@
 <?php
-define('PX_VER_PARSER', '22120');
-define('PX_DATE_PARSER', '2011-02-06');
+define('PX_VER_PARSER', '22122');
+define('PX_DATE_PARSER', '2011-02-12');
 define('PARSER_MAX_SPEED', '8');
 define('PARSER_SQLITE', 'data.sqlite');
 define('SCK_WRITE_PACKET_SIZE', 8192);
@@ -21,7 +21,7 @@ $use_proxy = false;
 if (file_exists('proxy.txt')) {
 	$proxy_settings = file('proxy.txt');
 	if (count($proxy_settings))
-		$use_proxy = true;
+	$use_proxy = true;
 }
 
 class Curlfetcher {
@@ -70,6 +70,10 @@ class Curlfetcher {
 		}
 		return $res;
 	}
+
+	public function setCookieJar($location) {
+		curl_setopt($this->ch, CURLOPT_COOKIEFILE, $location);
+	}
 }
 if(function_exists('curl_exec')) $GLOBALS['curlfetcher'] = new Curlfetcher();
 
@@ -109,7 +113,7 @@ if (file_exists($timezonefile)) {
 }
 
 if($is_debug)
-  @error_log(print_r($GLOBALS['argv'],true));
+@error_log(print_r($GLOBALS['argv'],true));
 
 # connect
 $vDataDB=Parser_SQlite_Connect(PARSER_SQLITE);
@@ -126,7 +130,7 @@ function GetData($answer) {
 	if ($pos !== false) {
 		return substr($answer, $pos + 4, strlen($answer));
 	} else
-		return null;
+	return null;
 }
 // ------------------------------------------------------------------------------
 // CreateRequestAMF creates AMF object
@@ -148,10 +152,10 @@ function CreateRequestAMF($request = '', $function = '') {
 
 	$amf->_bodys[0]->_value[1][0]['params'] = array();
 	if ($request)
-		$amf->_bodys[0]->_value[1][0]['params'][0] = $request;
+	$amf->_bodys[0]->_value[1][0]['params'][0] = $request;
 
 	if ($function)
-		$amf->_bodys[0]->_value[1][0]['functionName'] = $function;
+	$amf->_bodys[0]->_value[1][0]['functionName'] = $function;
 
 	$amf->_bodys[0]->_value[2] = 0;
 
@@ -285,195 +289,16 @@ function EchoData($data) {
 // proxy_GET can use a proxy to get the gameSettings/description xml files
 // ------------------------------------------------------------------------------
 function proxy_GET($url) {
-	global $use_proxy;
-	global $proxy_settings;
-	global $Load_Farm_Read_Size;
-	$p = parse_url($url);
-	$Load_Farm_Read_Size = 0;
-	$headers = array();
-	$headers[] = 'GET ' . $url . ' HTTP/1.1';
-	$headers[] = 'User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; GTB6.5; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET4.0C)';
-	$headers[] = 'Host: ' . (($p['host'])?$p['host']:farmer);
-	$headers[] = 'Accept: */*';
-	$headers[] = 'Accept-Encoding: gzip';
-
-	if ($use_proxy) {
-		if (isset($proxy_settings[2]) && isset($proxy_settings[3])) { // is set proxy user and password
-			$authorization = base64_encode(trim($proxy_settings[2]) . ':' . trim($proxy_settings[3]));
-			$headers[] = "Proxy-Authorization: Basic $authorization";
-		}
-	}
-	$s = Connect(@$p['host']);
-	stream_set_blocking($s, 0);
-
-	$request = implode("\r\n", $headers);
-	$request .= "\r\n\r\n";
-
-	fullwrite($s, $request);
-
-	$answer = '';
-	// wait max 50 seconds for data
-	$max_tick = 500;
-
-	$cur_tick = 0;
-	$is_bad = false;
-
-	while (!strlen($answer)) {
-		$answer .= fullread($s, 1024);
-
-		if (!strlen($answer)) {
-			usleep(100000);
-			$cur_tick ++;
-
-			if ($cur_tick > $max_tick) {
-				$is_bad = true;
-				break;
-			}
-		}
-	}
-
-	if ($is_bad) {
-		fclose($s);
-		AddLog2("HTTP Timeout: no answer");
-		return 0;
-	}
-
-	if (strpos($answer, '404 Not Found') !== false) {
-		fclose($s);
-		AddLog2("HTTP Error 404: Not Found ($url)");
-		return 0;
-	}
-
-	if (strpos($answer, '500 Internal Server Error') !== false) {
-		AddLog2("HTTP Error 500: Internal Server Error ($url)");
-		fclose($s);
-		return 0;
-	}
-
-	preg_match('/Content-Type:[\s](.*?)[\s]/si', $answer, $matchzip);
-
-	preg_match('/Content-length:[\s]([0-9]*)[\s]/si', $answer, $match);
-	$answer = GetData($answer);
-
-	while (true) {
-		if ($Load_Farm_Read_Size == 0) {
-			$Load_Farm_Read_Size = $match[1];
-		}
-		if ($Load_Farm_Read_Size == 0) {
-			echo "\n*****\n";
-			echo '(Proxy GET) Read: ' . strlen($answer) . ' wanted: ' . $match[1] . ' wtf?';
-			die("\n\nERROR: Lost connection to server\n*****\n\n");
-		}
-
-		$answer .= fullread($s, $Load_Farm_Read_Size);
-
-		if (strlen($answer) >= $match[1])
-			break;
-		usleep(100000);
-	}
-	if ($Load_Farm_Read_Size == $match[1]) {
-		$Load_Farm_Read_Size = 0;
-	}
-
-	if (@$matchzip[1] == "application/x-gzip") {
-		unset ($matchzip);
-#		return gzuncompress(substr(base64_decode($answer), 3));
-		return gzuncompress($answer);
-	} else {
-		return $answer;
-	}
+	return $GLOBALS['curlfetcher']->get($url);
 }
 // ------------------------------------------------------------------------------
 // proxy_GET_FB can use a proxy to get FB-Sites
 // ------------------------------------------------------------------------------
 function proxy_GET_FB($url, $vPostGet='GET', $vPostData='') {
-/*
+	$GLOBALS['curlfetcher']->setCookieJar(F('cookies.txt'));
+	if($vPostGet=='POST') return $GLOBALS['curlfetcher']->post($url, $vPostData, 'application/x-www-form-urlencoded');
+	else return $GLOBALS['curlfetcher']->get($url);
 }
-function proxy_GET_FB_old($url, $vPostGet='GET', $vPostData='') {	
-*/	global $use_proxy;
-	global $proxy_settings;
-	global $Cnt302;
-
-	// Header
-	$headers = array();
-	$p = parse_url($url);
-	$headers[] = $vPostGet.' '.$p['path'].'?'.$p['query'].' HTTP/1.1';
-	$headers[] = 'User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; GTB6.5; Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1) ; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET4.0C)';
-	$headers[] = 'Host: '.$p['host'];
-	$headers[] = 'Accept: */*';
-	$headers[] = 'Connection: Close';
-	$headers[] = 'Cookie: '.Parser_GetCookieString();
-	if($vPostGet=='POST') $headers[] = 'Content-Length: '.strlen($vPostData);
-	$headers[] = 'Pragma: no-cache';
-	$headers[] = 'Accept-Language: en-US';
-	$px_Setopts = LoadSavedSettings();
-	if (@$px_Setopts['e_gzip']) {
-#		$headers[] = 'Accept-Encoding: gzip';
-	}
-
-	if ($use_proxy) {
-		if (isset($proxy_settings[2]) && isset($proxy_settings[3])) { // is set proxy user and password
-			$authorization = base64_encode(trim($proxy_settings[2]) . ':' . trim($proxy_settings[3]));
-			$headers[] = "Proxy-Authorization: Basic $authorization";
-		}
-	}
-
-	$request = implode("\r\n", $headers);
-	$request .= "\r\n\r\n";
-	if($vPostGet=='POST') $request .= $vPostData;
-
-	if ($use_proxy)
-		$s = fsockopen(trim($proxy_settings[0]), intval($proxy_settings[1]));
-	else
-		$s = fsockopen('apps.facebook.com', 80);
-	if (!$s) {
-		RaiseError(3);
-		exit;
-	}
-	stream_set_blocking($s, 0);
-	fullwrite($s, $request);
-	$vHTTPResponse = '';
-	// wait max 10 seconds for data
-	$max_tick = 100;
-	$cur_tick = 0;
-	$is_bad = false;
-
-	while (!feof($s)){
-		$vHTTPResponse .= fgets($s, 1024);
-		if (!strlen($vHTTPResponse)){
-			usleep(100000);
-			$cur_tick ++;
-			if ($cur_tick > $max_tick){
-				$is_bad = true;
-				break;
-			}
-		}
-	}
-	fclose($s);
-	if ($is_bad){
-		AddLog2("proxy_GET_FB: XML-proxy: -no answer-");
-		return 0;
-	}
-
-	if (strpos($vHTTPResponse, 'login.php') !== false){
-		AddLog2("proxy_GET_FB: not logged in? Check cookie-settings");
-	}
-
-	if (strpos($vHTTPResponse, '404 Not Found') !== false){
-		AddLog2("proxy_GET_FB: Error 404");
-	}
-
-	if (strpos($vHTTPResponse, '500 Internal Server Error') !== false) {
-		AddLog2("proxy_GET_FB: Error 500/ISE");
-	}
-
-	if (strpos($vHTTPResponse,'Content-Encoding: gzip')!==false) {
-		return(gzinflate(substr(GetData($vHTTPResponse),10)));
-	} else {
-		return(GetData($vHTTPResponse));
-	}
-}
-
 // ------------------------------------------------------------------------------
 // Request sends AMF request to the farmville server
 //  @param resourse $s socket connection
@@ -580,7 +405,7 @@ function Request($s, $result) {
 		$answer .= fullread($s, $Load_Farm_Read_Size);
 
 		if (strlen($answer) >= $match[1])
-			break;
+		break;
 		usleep(100000);
 	}
 	if ($Load_Farm_Read_Size == $match[1]) {
@@ -726,17 +551,17 @@ function DoInit() {
 		// save giftbox info for plugins
 		$ingiftbox = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['storageData']['-1'];
 		foreach ($ingiftbox as $key => $item)
-			$ingiftbox[$key] = isset($item[0])?$item[0]:0;
+		$ingiftbox[$key] = isset($item[0])?$item[0]:0;
 		save_botarray ($ingiftbox, F('ingiftbox.txt'));
 		// save consumable info for plugins
 		$inconbox = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['storageData']['-6'];
 		foreach ($inconbox as $key => $item)
-			$inconbox[$key] = isset($item[0])?$item[0]:0;
+		$inconbox[$key] = isset($item[0])?$item[0]:0;
 		save_botarray ($inconbox, F('inconbox.txt'));
 		// save storage info for plugins
 		$instorage = @$amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['storageData']['-2'];
 		foreach ($instorage as $key => $item)
-			$instorage[$key] = $item[0];
+		$instorage[$key] = $item[0];
 		save_botarray ($instorage, F('instorage.txt'));
 		// save neighbors list
 		$neighbors = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['neighbors'];
@@ -842,23 +667,16 @@ function Arbeit() {
 	}
 
 	AddLog2("start");
-
 	Hook('before_work');
 
 	// Init
 	$res = DoInit();
-	if ($res != 'OK') {
-		RaiseError(2);
-	} else {
-		$res_str = ''; //for main logs
-	}
-
+	if ($res != 'OK') RaiseError(2);
+	else $res_str = ''; //for main logs
 	Hook('before_load_settings');
 
 	// load settings
-	if (!function_exists('LoadSavedSettings')) {
-		die("\n\nSettings plugin installed incorrectly no LoadSavedSettings found!\n\n");
-	}
+	if (!function_exists('LoadSavedSettings')) die("\n\nSettings plugin installed incorrectly no LoadSavedSettings found!\n\n");
 
 	$px_Setopts = LoadSavedSettings();
 	$enable_harvest = @$px_Setopts['e_harvest']; //harvest crops
@@ -882,8 +700,7 @@ function Arbeit() {
 	$enable_harvest_building_turkeyroost = @$px_Setopts['e_h_building_turkeyroost'];
 	$enable_harvest_building_wworkshop = @$px_Setopts['e_h_building_wworkshop'];
 	$enable_harvest_building_snowman = @$px_Setopts['e_h_building_snowman'];
-	$enable_harvest_building_snowman = @$px_Setopts['e_h_building_duckpond'];
-	$enable_harvest_building_snowman = @$px_Setopts['e_h_building_ccastle'];
+	$enable_harvest_building_ccastle = @$px_Setopts['e_h_building_ccastle'];
 	$enable_harvest_arborist = @$px_Setopts['e_h_arborist'];
 	$enable_harvest_arborist_at = @$px_Setopts['e_h_arborist_at'];
 	$enable_harvest_arborist_min = @$px_Setopts['e_h_arborist_min'];
@@ -892,9 +709,9 @@ function Arbeit() {
 	$enable_harvest_farmhands_min = @$px_Setopts['e_h_farmhands_min'];
 	$enable_lonlyanimals = @$px_Setopts['lonlyanimals'];
 	$enable_wanderinganimals = @$px_Setopts['wanderinganimals'];
-	$enable_harvest_spec = $px_Setopts['e_harvest_spec'];	  //   harvest ONLY specific crops?
-	$spec_crop = $px_Setopts['spec_crop'];				  //   which specific crop?
-	$spec_crop_quantity = $px_Setopts['spec_crop_quantity'];   //   specific crop quantity
+	$enable_harvest_spec = $px_Setopts['e_harvest_spec'];	//harvest ONLY specific crops?
+	$spec_crop = $px_Setopts['spec_crop'];	//which specific crop?
+	$spec_crop_quantity = $px_Setopts['spec_crop_quantity'];	//specific crop quantity
 	$enable_acceptneighborhelp = @$px_Setopts['acceptneighborhelp'];
 	$enable_acceptgifts = @$px_Setopts['acceptgifts'];
 	$enable_acceptgifts_sendback = @$px_Setopts['acceptgifts_sendback'];
@@ -920,29 +737,20 @@ function Arbeit() {
 
 					$vResponse = proxy_GET_FB("http://www.facebook.com/ajax/reqs.php?__a=1", 'POST', $vData['post_data']);
 
-
 					$vResponse = proxy_GET_FB($vData['action_url']);
-					if (!empty($vResponse)) {
-						AddLog2('Parser_gift_reqs: '.$vGCount.' accept - Success');
-					} else {
-						AddLog2('Parser_gift_reqs: '.$vGCount.' accept - Failed');
-					}
+					if (!empty($vResponse)) AddLog2('Parser_gift_reqs: '.$vGCount.' accept - Success');
+					else AddLog2('Parser_gift_reqs: '.$vGCount.' accept - Failed');
 
 					if ($enable_acceptgifts_sendback) {
-
 						preg_match_all('/<form.*?action="(.*?)".*?<\/form>/ims', $vResponse, $vTYForms);
-
 
 						foreach($vTYForms[0] as $vJ => $vTYForm) {
 							if(stripos($vTYForm, 'thank you') !== false || stripos($vTYForm, 'send to') !== false) {
-
 								AddLog2('Parser_gift_reqs: send thankyou-gift '.Units_GetRealnameByName($vWhat[4]).' ('.$vWhat[4].') to '.$vWhat[2]);
 								error_log('"'.$vWhat[2].'";"'.$vWhat[4].'";"'.date('Y.m.d H:i:s').'"'."\n",3,LogF('gifts_send_thankyou.csv'));
 
 								preg_match_all('/.*action="([^"]*)".*/ims', $vTYForm, $vAction);
-
 								preg_match_all('/.*giftRecipient=([^&]*).*type="([^"]*)".*content="([^"]*)".*id="([^"]*)".*post_form_id=([^&]*).*/ims', $vTYForm, $vTYFields);
-
 
 								$vPostData='app_id=102452128776&to_ids[0]='.$vTYFields[1][0].'&request_type='.urlencode($vTYFields[2][0]).'&invite=false&content='.urlencode(html_entity_decode($vTYFields[3][0])).'&preview=true&is_multi=false&is_in_canvas=true&form_id='.$vTYFields[4][0].'&prefill=true&message=&donot_send=false&include_ci=false&__d=1&post_form_id='.$vTYFields[5][0].'&fb_dtsg='.$vData['fb_dtsg'].'&lsd&post_form_id_source=AsyncRequest';
 
@@ -952,17 +760,10 @@ function Arbeit() {
 								#$vPostData=str_replace('&request_type=','&&request_type=',$vPostData);
 								$vPostData=str_replace('&preview=true&','&preview=false&',$vPostData);
 								$vResponse3 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
-								if (stripos(strip_tags($vResponse3),'"error":0')) {
-									AddLog2('Parser_gift_reqs: send thankyou-gift - Success');
-								} else {
-									AddLog2('Parser_gift_reqs: send thankyou-gift - Failed');
-								}
-
+								if (stripos(strip_tags($vResponse3),'"error":0')) AddLog2('Parser_gift_reqs: send thankyou-gift - Success');
+								else AddLog2('Parser_gift_reqs: send thankyou-gift - Failed');
 
 								$vResponse4 = proxy_GET_FB(html_entity_decode($vAction[1][0]), 'POST', '');
-
-
-								#break;
 								unset($vResponse2,$vResponse3,$vResponse4);
 							}
 						}
@@ -998,7 +799,7 @@ function Arbeit() {
 		$cntplots = 0;
 		foreach($plot_list as $plot) {
 			if (($plot['state'] == 'planted'))
-				$cntplots ++;
+			$cntplots ++;
 		}
 		unset($plot_list);
 
@@ -1022,7 +823,7 @@ function Arbeit() {
 			case 1:
 				AddLog2('n0m mod: Harvest only ' . $spec_crop_quantity . ' of ' . $spec_crop . ' crops!');
 				$iPlotCount = 0;
-		foreach($plot_list as $plot) {
+				foreach($plot_list as $plot) {
 					//   if the crop is ready
 					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')){
 						//   if that's a specified crop
@@ -1037,22 +838,22 @@ function Arbeit() {
 				}
 
 				AddLog2('Ready plots: ' . count($plots));
-			break;
-			//   harvest all
+				break;
+				//   harvest all
 			default:
 				foreach($plot_list as $plot) {
 					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')){
-				$plots[] = $plot;
-		}
+						$plots[] = $plot;
+					}
 				}
 				AddLog2('n0m mod: Harvest ALL ( ' . count($plots) . ' ) crops!');
-			break;
+				break;
 		}
 
 		unset($plot_list);
 
 		if (count($plots) > 0)
-			Do_Farm_Work_Plots($plots, 'harvest'); //harvest land
+		Do_Farm_Work_Plots($plots, 'harvest'); //harvest land
 		unset($plots);
 	}
 
@@ -1068,103 +869,104 @@ function Arbeit() {
 		if ($enable_harvest_building_dairy == 1) {
 			$x = GetObjects("DairyFarmBuilding");
 			if (is_array($x))
-				$building_list = array_merge($building_list, $x);
+			$building_list = array_merge($building_list, $x);
 		}
 		if ($enable_harvest_building_coop == 1) {
 			$x = GetObjects("ChickenCoopBuilding");
 			if (is_array($x))
-				$building_list = array_merge($building_list, $x);
+			$building_list = array_merge($building_list, $x);
 		}
 		if ($enable_harvest_building_horse == 1) {
 			$x = GetObjects("HorseStableBuilding");
 			if (is_array($x))
-				$building_list = array_merge($building_list, $x);}
-		if ($enable_harvest_building_nursery == 1) {
-			$x = GetObjects("NurseryBuilding");
-			if (is_array($x))
+			$building_list = array_merge($building_list, $x);}
+			if ($enable_harvest_building_nursery == 1) {
+				$x = GetObjects("NurseryBuilding");
+				if (is_array($x))
 				$building_list = array_merge($building_list, $x);
-		}
-		if ($enable_harvest_building_bees == 1) {
-			$x = GetObjects("BeehiveBuilding");
-			if (is_array($x))
-			$building_list = array_merge($building_list, $x);
-		}
+			}
+			if ($enable_harvest_building_bees == 1) {
+				$x = GetObjects("BeehiveBuilding");
+				if (is_array($x))
+				$building_list = array_merge($building_list, $x);
+			}
 
-		if ($enable_harvest_building_pigs == 1) {
-			$x = GetObjects("PigpenBuilding");
-			if (is_array($x))
-			$building_list = array_merge($building_list, $x);
-		}
+			if ($enable_harvest_building_pigs == 1) {
+				$x = GetObjects("PigpenBuilding");
+				if (is_array($x))
+				$building_list = array_merge($building_list, $x);
+			}
 
-		if ($enable_harvest_building_hauntedhouse == 1) {
-			$x = GetObjects("HalloweenHauntedHouseBuilding");
-			if (is_array($x))
-			$building_list = array_merge($building_list, $x);
-		}
-		if ($enable_harvest_building_trough == 1) {
-			$x = GetObjects("FeedTroughBuilding");
-			if (is_array($x))
+			if ($enable_harvest_building_hauntedhouse == 1) {
+				$x = GetObjects("HalloweenHauntedHouseBuilding");
+				if (is_array($x))
 				$building_list = array_merge($building_list, $x);
-		}
-		if ($enable_harvest_building_orchard == 1) {
-			$x = GetObjects("OrchardBuilding");
-			if (is_array($x))
+			}
+			if ($enable_harvest_building_trough == 1) {
+				$x = GetObjects("FeedTroughBuilding");
+				if (is_array($x))
 				$building_list = array_merge($building_list, $x);
-		}
-		if ($enable_harvest_building_turkeyroost == 1) {
-			$x = GetObjects("TurkeyRoostBuilding");
-			if (is_array($x))
+			}
+			if ($enable_harvest_building_orchard == 1) {
+				$x = GetObjects("OrchardBuilding");
+				if (is_array($x))
 				$building_list = array_merge($building_list, $x);
-		}
-		if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_ccastle == 1  || $enable_harvest_building_duckpond == 1) {
-			$x = GetObjects("FeatureBuilding");
-			if (is_array($x))
+			}
+			if ($enable_harvest_building_turkeyroost == 1) {
+				$x = GetObjects("TurkeyRoostBuilding");
+				if (is_array($x))
 				$building_list = array_merge($building_list, $x);
-		}
-		if (count($building_list) > 0) {
-			$buildings = array();
-			foreach($building_list as $plot) {
-				if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['m_hasAnimal'] == 1))
+			}
+			if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_duckpond == 1 || $enable_harvest_building_ccastle == 1)
+			{
+				$x = GetObjects("FeatureBuilding");
+				if (is_array($x))
+				$building_list = array_merge($building_list, $x);
+			}
+			if (count($building_list) > 0) {
+				$buildings = array();
+				foreach($building_list as $plot) {
+					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['m_hasAnimal'] == 1))
 					$buildings[] = $plot;
-			}
-			if (count($buildings) > 0)
-				Do_Farm_Work($buildings); //harvest buildings
-			unset($buildings);
-			$buildings = array();
-			foreach($building_list as $plot) {
-				if ($plot['className'] == 'HalloweenHauntedHouseBuilding') {
-				list($vUSec,$vSec) = explode(" ", microtime());
-				$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
-					if($plot['plantTime']<($vPlantTime-86400000))
-						$buildings[] = $plot;
 				}
-			}
-			if (count($buildings) > 0)
+				if (count($buildings) > 0)
 				Do_Farm_Work($buildings); //harvest buildings
-			unset($buildings);
-			$buildings = array();
-			foreach($building_list as $plot) {
-				if ($plot['className'] == 'FeatureBuilding') {
-					if(($enable_harvest_building_wworkshop == 1 && $plot['itemName']=='winterworkshop_finished')
-					  ||
-					  ($enable_harvest_building_snowman == 1 && $plot['itemName']=='snowman2010_finished')
-					  ||
-					  ($enable_harvest_building_duckpond == 1 && $plot['itemName']=='duckpond_finished')
-					  ||
-					  ($enable_harvest_building_ccastle == 1 && $plot['itemName']=='valentines2011_finished')
+				unset($buildings);
+				$buildings = array();
+				foreach($building_list as $plot) {
+					if ($plot['className'] == 'HalloweenHauntedHouseBuilding') {
+						list($vUSec,$vSec) = explode(" ", microtime());
+						$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
+						if($plot['plantTime']<($vPlantTime-82800000))
+						$buildings[] = $plot;
+					}
+				}
+				if (count($buildings) > 0)
+				Do_Farm_Work($buildings); //harvest buildings
+				unset($buildings);
+				$buildings = array();
+				foreach($building_list as $plot) {
+					if ($plot['className'] == 'FeatureBuilding') {
+						if(($enable_harvest_building_wworkshop == 1 && $plot['itemName']=='winterworkshop_finished')
+						||
+						($enable_harvest_building_snowman == 1 && $plot['itemName']=='snowman2010_finished')
+						||
+						($enable_harvest_building_duckpond == 1 && $plot['itemName']=='duckpond_finished')
+						||
+						($enable_harvest_building_ccastle == 1 && $plot['itemName']=='valentines2011_finished')
 
-					  ) {
-					list($vUSec,$vSec) = explode(" ", microtime());
-					$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
-					if($plot['plantTime']<($vPlantTime-86400000))
-						$buildings[] = $plot;
+						) {
+							list($vUSec,$vSec) = explode(" ", microtime());
+							$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
+							if($plot['plantTime']<($vPlantTime-86400000))
+							$buildings[] = $plot;
+						}
+					}
 				}
-			}
-			}
-			if (count($buildings) > 0)
+				if (count($buildings) > 0)
 				Do_Farm_Work($buildings); //harvest buildings
-			unset($building_list);
-		}
+				unset($building_list);
+			}
 	}
 
 	Hook('after_harvest_buildings'); //after building harvest
@@ -1180,7 +982,7 @@ function Arbeit() {
 
 		foreach($animals as $animal) {
 			if (($animal['state'] != "grown") && ($animal['state'] != "ripe"))
-				continue;
+			continue;
 
 			$px_animal_check = $animal['itemName'];
 
@@ -1208,31 +1010,31 @@ function Arbeit() {
 
 		if ($enable_harvest_farmhands) {
 
-		  $vRatio=round((count($transform_animals)+count($harvest_animals))*100/count($animals));
+			$vRatio=round((count($transform_animals)+count($harvest_animals))*100/count($animals));
 
-		  if($vRatio>=$enable_harvest_farmhands_at) {
+			if($vRatio>=$enable_harvest_farmhands_at) {
 
-			  $inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
-			  if((!isset($inconbox['AA'])) || $inconbox['AA']==0) {
-				  AddLog2("farmhands: you dont have farmhands");
-			  } elseif($inconbox['AA']<=$enable_harvest_farmhands_min) {
-				  AddLog2("farmhands: you dont have enough farmhands (".$inconbox['AA'].")");
-			  } else {
-				  AddLog2("farmhands: harvest now, ".$vRatio."% ready (".$inconbox['AA']." farmhands remaining)");
-				  $need_reload=Do_Farmhands_Arborists('farmhands');
-			  }
+				$inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
+				if((!isset($inconbox['AA'])) || $inconbox['AA']==0) {
+					AddLog2("farmhands: you dont have farmhands");
+				} elseif($inconbox['AA']<=$enable_harvest_farmhands_min) {
+					AddLog2("farmhands: you dont have enough farmhands (".$inconbox['AA'].")");
+				} else {
+					AddLog2("farmhands: harvest now, ".$vRatio."% ready (".$inconbox['AA']." farmhands remaining)");
+					$need_reload=Do_Farmhands_Arborists('farmhands');
+				}
 
 
-		  } else {
-			  AddLog2("farmhands: now ".$vRatio."% ready, harvest later at ".$enable_harvest_farmhands_at."%");
-		  }
+			} else {
+				AddLog2("farmhands: now ".$vRatio."% ready, harvest later at ".$enable_harvest_farmhands_at."%");
+			}
 
 		} else {
 
 			if (count($transform_animals) > 0)
-				Do_Farm_Work($transform_animals, "transform");
+			Do_Farm_Work($transform_animals, "transform");
 			if (count($harvest_animals) > 0)
-				Do_Farm_Work($harvest_animals);
+			Do_Farm_Work($harvest_animals);
 		}
 
 		unset($transform_animals, $harvest_animals);
@@ -1249,32 +1051,32 @@ function Arbeit() {
 		$plot_list = GetObjects('Tree'); //get list of trees
 		foreach($plot_list as $plot) {
 			if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe'))
-				$trees[] = $plot;
+			$trees[] = $plot;
 		}
 
 		if ($enable_harvest_arborist) {
 
-		  $vRatio=round(count($trees)*100/count($plot_list));
+			$vRatio=round(count($trees)*100/count($plot_list));
 
-		  if($vRatio>=$enable_harvest_arborist_at) {
-			  $inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
-			  if((!isset($inconbox['A9'])) || $inconbox['A9']==0) {
-				  AddLog2("arborists: you dont have arborists");
-			  } elseif($inconbox['A9']<=$enable_harvest_arborist_min) {
-				  AddLog2("farmhands: you dont have enough arborists (".$inconbox['A9'].")");
-			  } else {
-				  AddLog2("arborists: harvest now, ".$vRatio."% ready (".$inconbox['A9']." arborists remaining)");
-				  $need_reload=Do_Farmhands_Arborists('arborists');
-			  }
+			if($vRatio>=$enable_harvest_arborist_at) {
+				$inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
+				if((!isset($inconbox['A9'])) || $inconbox['A9']==0) {
+					AddLog2("arborists: you dont have arborists");
+				} elseif($inconbox['A9']<=$enable_harvest_arborist_min) {
+					AddLog2("farmhands: you dont have enough arborists (".$inconbox['A9'].")");
+				} else {
+					AddLog2("arborists: harvest now, ".$vRatio."% ready (".$inconbox['A9']." arborists remaining)");
+					$need_reload=Do_Farmhands_Arborists('arborists');
+				}
 
-		  } else {
-			  AddLog2("arborists: now ".$vRatio."% ready, harvest later at ".$enable_harvest_arborist_at."%");
-		  }
+			} else {
+				AddLog2("arborists: now ".$vRatio."% ready, harvest later at ".$enable_harvest_arborist_at."%");
+			}
 
 		} else {
 
 			if (count($trees) > 0)
-				Do_Farm_Work($trees); //harvest trees
+			Do_Farm_Work($trees); //harvest trees
 
 		}
 		unset($trees,$plot_list);
@@ -1296,12 +1098,12 @@ function Arbeit() {
 		$plot_list = GetObjects('Plot');
 		foreach($plot_list as $plot) {
 			if (($plot['state'] == 'withered') || ($plot['state'] == 'fallow'))
-				$plots[] = $plot;
+			$plots[] = $plot;
 		}
 		unset($plot_list);
 
 		if (count($plots) > 0)
-			Do_Farm_Work_Plots($plots, 'plow'); //plow land
+		Do_Farm_Work_Plots($plots, 'plow'); //plow land
 		unset($plots);
 	}
 
@@ -1326,7 +1128,7 @@ function Arbeit() {
 			$one_seed_array = @explode(':', $one_seed_string);
 
 			if($one_seed_array[0]=='') {
-			  ;
+				;
 			} elseif($one_seed_array[1]=='Default') {
 				$seed_default=$one_seed_array[0];
 			} else {
@@ -1349,9 +1151,9 @@ function Arbeit() {
 		$plowed_plots = array();
 		foreach($plots as $plot) {
 			if ($plot['state'] == 'plowed')
-				$plowed_plots[] = $plot;
+			$plowed_plots[] = $plot;
 			if ($enable_combine && (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['state'] == 'withered') || ($plot['state'] == 'fallow')))
-				$plowed_plots[] = $plot;
+			$plowed_plots[] = $plot;
 
 		}
 
@@ -1362,7 +1164,7 @@ function Arbeit() {
 				$px_itemName = explode(':', $itemName);
 
 				if (empty($px_itemName[0]))
-					break 2; //seedlist is empty
+				break 2; //seedlist is empty
 				$plot['itemName'] = $px_itemName[0];
 				$seed_plots[] = $plot;
 
@@ -1374,7 +1176,7 @@ function Arbeit() {
 						$seed_list[$seed_key] = "$px_itemName[0]:$px_itemName[1]";
 					}
 					if($keep_seed)
-						$append_seed_array[$px_itemName[0]]++;
+					$append_seed_array[$px_itemName[0]]++;
 				}
 				break;
 			} //seedlist
@@ -1408,26 +1210,169 @@ function Arbeit() {
 
 	Hook('after_work');
 
-	Parser_Check_Images();
 
 	AddLog2("memory_peak_usage: ".round(memory_get_peak_usage(true)/1024/1024,2)."MB");
 	AddLog2("finish");
 }
 
-// ------------------------------------------------------------------------------
-// Parser_Check_Images
-// ------------------------------------------------------------------------------
-function Parser_Check_Images() {
-	global $vDataDB,$flashRevision;
-	AddLog2("parser: check images");
+function Parser_Get_Locale() {
+	global $flashRevision;
+	global $vDataDB;
 
-	if(!file_exists('swfdump.exe')) {
-		AddLog2("parser: swfdump.exe missing");
-		return'';
+	$vDir = './farmville-flash';
+	if (!file_exists($vDir)) mkdir($vDir);
+	$time_limit = 7 * 24 * 60 * 60; // number of seconds to 'keep' the log DAYSxHOURSxMINSxSECS
+	if ($df = opendir($vDir)) {
+		while (false !== ($file = readdir($df))) {
+			if ($file != "." && $file != "..") {
+				$file1 = $vDir . '/' . $file;
+				$last_modified = filemtime($file1);
+				if (time() - $last_modified > $time_limit) unlink($file1);
+			}
+		}
+		closedir($df);
+	}
+	$flashVars = parse_flashvars();
+
+	$vFlashFile = $flashRevision . '_flashLocaleA.swf';
+	$vLocalFile='farmville-flash/' . $vFlashFile;
+	$vRemoteFile=$flashVars['localization_url'];
+	parser_download($vLocalFile,$vRemoteFile);
+	$vFlashlocalDumpFile=$vLocalFile.'.txt.';
+	if (!file_exists($vFlashlocalDumpFile)) {
+		$vFlashDump = shell_exec('swfdump.exe -a ' . $vLocalFile . ' 2>&1 ');
+		file_put_contents($vFlashlocalDumpFile, $vFlashDump);
+		unset($vFlashDump);
 	}
 
-	$vHaveFlash=false;
+	$vFlashFile = $flashRevision . '_assethash.swf';
+	$vLocalFile='farmville-flash/' . $vFlashFile;
+	$vRemoteFile=$flashVars['assethash_url'];
+	parser_download($vLocalFile,$vRemoteFile);
+	$vAssethashDumpFile=$vLocalFile.'.txt.';
+	if (!file_exists($vAssethashDumpFile)) {
+		$vFlashDump = shell_exec('swfdump.exe -a ' . $vLocalFile . ' 2>&1 ');
+		file_put_contents($vAssethashDumpFile, $vFlashDump);
+		unset($vFlashDump);
+	}
 
+	$vFlashDump = file_get_contents($vFlashlocalDumpFile);
+	$vDataDB->queryExec('BEGIN TRANSACTION');
+	$vSQL = "select * from units where field='name' and name not in (select name from units where field='realname' and name<>content)";
+	$vResult = $vDataDB->query($vSQL);
+	while ($vRow = $vResult->fetch(SQLITE_ASSOC)) {
+		$vImage = $vRow['content'];
+		$vName = $vRow['name'];
+		$vHashImage = '';
+		$vUrlPosition = strpos($vFlashDump, 'pushstring "' . $vImage . '_friendlyName');
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_description') : $vUrlPosition;
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_Title') : $vUrlPosition;
+		if ($vUrlPosition !== false) {
+			$vUrlPosition += 12;
+			$vUrlLength = strlen($vImage) - strlen(basename($vImage)) + 36;
+			$vUrlPosition2 = strpos($vFlashDump, "pushstring", $vUrlPosition);
+			if ($vUrlPosition2 !== false) {
+				$tmpLength = (strpos($vFlashDump, '"', ($vUrlPosition2 + 12))) - ($vUrlPosition2 + 12);
+				$vHashImage = substr($vFlashDump, $vUrlPosition2 + 12, $tmpLength);
+			}
+		}
+		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
+			$vDataDB->query('insert into units("name","field","content") values("' . $vName . '", "realname" , "' . $vHashImage . '")');
+			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
+		} else {
+			$vDataDB->query('insert into units("name","field","content") values("' . $vName . '","realname","' . $vImage . '")');
+			AddLog2("Parser: No Description - " . $vName);
+		}
+
+	}
+	$vDataDB->queryExec('COMMIT TRANSACTION');
+	$vDataDB->queryExec('BEGIN TRANSACTION');
+	$vSQL = "select * from collectables where field='name' and name not in (select name from collectables where field='realname' and name<>content)";
+	$vResult = $vDataDB->query($vSQL);
+	while ($vRow = $vResult->fetch(SQLITE_ASSOC)) {
+		$vImage = $vRow['content'];
+		$vName = $vRow['name'];
+		$vUrlPosition = strpos($vFlashDump, 'pushstring "' . $vImage . '_friendlyName');
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_description') : $vUrlPosition;
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_Title') : $vUrlPosition;
+		if ($vUrlPosition !== false) {
+			$vUrlPosition += 12;
+			$vUrlLength = strlen($vImage) - strlen(basename($vImage)) + 36;
+			$vUrlPosition2 = strpos($vFlashDump, "pushstring", $vUrlPosition);
+			if ($vUrlPosition2 !== false) {
+				$tmpLength = (strpos($vFlashDump, '"', ($vUrlPosition2 + 12))) - ($vUrlPosition2 + 12);
+				$vHashImage = substr($vFlashDump, $vUrlPosition2 + 12, $tmpLength);
+			}
+		}
+		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
+			$vDataDB->query('insert into collectables("name","field","content") values("' . $vName . '", "realname" , "' . $vHashImage . '")');
+			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
+		} else {
+			$vDataDB->query('insert into collectables("name","field","content") values("' . $vName . '","realname","' . $vImage . '")');
+			AddLog2("Parser: No Description - " . $vName);
+		}
+
+	}
+	$vDataDB->queryExec('COMMIT TRANSACTION');
+	$vDataDB->queryExec('BEGIN TRANSACTION');
+	$vSQL = "select * from achievements where field='name' and name not in (select name from achievements where field='realname' and name<>content)";
+	$vResult = $vDataDB->query($vSQL);
+	while ($vRow = $vResult->fetch(SQLITE_ASSOC)) {
+		$vImage = $vRow['content'];
+		$vName = $vRow['name'];
+		$vUrlPosition = strpos($vFlashDump, 'pushstring "' . $vImage . '_friendlyName');
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_description') : $vUrlPosition;
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_Title') : $vUrlPosition;
+		if ($vUrlPosition !== false) {
+			$vUrlPosition += 12;
+			$vUrlLength = strlen($vImage) - strlen(basename($vImage)) + 36;
+			$vUrlPosition2 = strpos($vFlashDump, "pushstring", $vUrlPosition);
+			if ($vUrlPosition2 !== false) {
+				$tmpLength = (strpos($vFlashDump, '"', ($vUrlPosition2 + 12))) - ($vUrlPosition2 + 12);
+				$vHashImage = substr($vFlashDump, $vUrlPosition2 + 12, $tmpLength);
+			}
+		}
+		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
+			$vDataDB->query('insert into achievements("name","field","content") values("' . $vName . '", "realname" , "' . $vHashImage . '")');
+			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
+		} else {
+			$vDataDB->query('insert into achievements("name","field","content") values("' . $vName . '","realname","' . $vImage . '")');
+			AddLog2("Parser: No Description - " . $vName);
+		}
+
+	}
+	$vDataDB->queryExec('COMMIT TRANSACTION');
+	$vDataDB->queryExec('BEGIN TRANSACTION');
+	$vSQL = "select * from quests where field='title' and name not in (select name from quests where field='realname' and name<>content)";
+	$vResult = $vDataDB->query($vSQL);
+	while ($vRow = $vResult->fetch(SQLITE_ASSOC)) {
+		$vImage = $vRow['content'];
+		$vName = $vRow['name'];
+		$vFName = str_replace('_Title', '', $vImage);
+		$vUrlPosition = strpos($vFlashDump, 'pushstring "' . $vImage);
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_description') : $vUrlPosition;
+		$vUrlPosition = $vUrlPosition === false ? strpos($vFlashDump, 'pushstring "' . $vImage . '_Title') : $vUrlPosition;
+		if ($vUrlPosition !== false) {
+			$vUrlPosition += 12;
+			$vUrlLength = strlen($vImage) - strlen(basename($vImage)) + 36;
+			$vUrlPosition2 = strpos($vFlashDump, "pushstring", $vUrlPosition);
+			if ($vUrlPosition2 !== false) {
+				$tmpLength = (strpos($vFlashDump, '"', ($vUrlPosition2 + 12))) - ($vUrlPosition2 + 12);
+				$vHashImage = substr($vFlashDump, $vUrlPosition2 + 12, $tmpLength);
+			}
+		}
+		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
+			$vDataDB->query('insert into quests("name","field","content") values("' . $vImage . '", "realname" , "' . $vHashImage . '")');
+			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
+		} else {
+			$vDataDB->query('insert into quests("name","field","content") values("' . $vImage . '","realname","' . $vImage . '")');
+			AddLog2("Parser: No Description - " . $vName);
+		}
+
+	}
+	$vDataDB->queryExec('COMMIT TRANSACTION');
+
+	$vFlashDump = file_get_contents($vAssethashDumpFile);
 	$vDataDB->queryExec('BEGIN TRANSACTION');
 	$vSQL='select * from units where field="iconurl" and name not in (select name from units where field="imageready")';
 	$vResult = @$vDataDB->query($vSQL);
@@ -1438,64 +1383,8 @@ function Parser_Check_Images() {
 		$vName=$vRow['name'];
 
 		if (!file_exists($vImage)) {
-			if(!$vHaveFlash) {
-
-			  $vWorld=unserialize(file_get_contents(F('world.txt'))); //get the last world
-			  $vFlashVersion=$vWorld['data'][0]['data']['userInfo']['player']['_explicitType'];
-			  if(strlen($vFlashVersion)==0)
-				  $vFlashVersion=$vWorld['data'][0]['data']['userInfo']['player']['energyManager']['_explicitType'];
-			  if(strlen($vFlashVersion)==0)
-				  $vFlashVersion=$vWorld['data'][0]['data']['userInfo']['player']['licenseManager']['_explicitType'];
-			  unset($vWorld);
-
-			  $vDir='./farmville-flash';
-			  if (!is_dir($vDir)) {
-				  @mkdir($vDir);
-			  }
-			  $time_limit = 7*24*60*60; // number of seconds to 'keep' the log DAYSxHOURSxMINSxSECS
-			  if ($df = opendir($vDir)) {
-				  while (false !== ($file = readdir($df))) {
-					  if ($file != "." && $file != "..") {
-						  $file1=$vDir.'/'.$file;
-						  $last_modified = filemtime($file1);
-						  if(time()-$last_modified > $time_limit){
-							  unlink($file1);
-						  }
-					  }
-				  }
-				  closedir($df);
-			  }
-
-			  $vFlashRelease = explode('.', $vFlashVersion);
-			  $vFlashFile='FarmGame.'.$vFlashRelease[3].'.'.$flashRevision.'.swf';
-			  $vFlashURL = 'http://static.farmville.com/embeds/v'.$flashRevision.'/'.$vFlashFile;
-			  if (!file_exists('farmville-flash/'.$vFlashFile)) {
-
-				  $vFlashContent = file_get_contents($vFlashURL);
-				  if($vFlashContent === false) {
-					  AddLog2('Unable to get Flash File');
-					  return;
-				  } else {
-					  file_put_contents('farmville-flash/'.$vFlashFile, $vFlashContent);
-				  }
-			  }
-			  if (!file_exists('farmville-flash/'.$vFlashFile.'.txt.')) {
-				  $vFlashDump=shell_exec('swfdump.exe -a farmville-flash/'.$vFlashFile.' 2>&1 ');
-				  #$vFlashDump=substr($vFlashDump,strpos($vFlashDump, "StorageConfigSettings=StorageConfigSettings"));
-				  $vFlashDump=substr($vFlashDump,strpos($vFlashDump, "slot 0: class <q>[public]Classes.Yimf::YimfMap=YimfMap"));
-				  $vLastPos=strpos($vFlashDump,'Display::AssetHashMap');
-				  if($vLastPos>1000) {
-					  $vFlashDump=substr($vFlashDump,0,$vLastPos);
-				  }
-				  file_put_contents('farmville-flash/'.$vFlashFile.'.txt.', $vFlashDump);
-			  } else {
-				  $vFlashDump = file_get_contents('farmville-flash/'.$vFlashFile.'.txt.');
-			  }
-			  $vHaveFlash=true;
-			}
-
 			$vHashImage='';
-			$vUrlPosition = strpos($vFlashDump, "pushstring \"".$vImage);
+			$vUrlPosition = strpos($vFlashDump, 'pushstring "'.$vImage);
 			if($vUrlPosition !== false) {
 				$vUrlPosition += 12;
 				$vUrlLength = strlen($vImage) - strlen(basename($vImage)) + 36;
@@ -1504,16 +1393,12 @@ function Parser_Check_Images() {
 					$vHashImage = substr($vFlashDump, $vUrlPosition2 + 12, $vUrlLength);
 				}
 			}
-
 			if(strlen($vHashImage)>0) {
-
 				$vFolder = substr($vImage, 0, strrpos($vImage, "/"));
 				if (!is_dir($vFolder)) {
 					@mkdir($vFolder, 0777, true);
 				}
-				#http://static-0.farmville.com/prod/hashed/assets/animals/c8cebb78febd1ab62ffb9db67d283e89.png
 				$vRemoteUrl = 'http://static.farmville.com/prod/hashed/'.$vHashImage;
-
 				$vImageData = file_get_contents($vRemoteUrl);
 				if($vImageData) {
 					file_put_contents($vImage, $vImageData);
@@ -1521,18 +1406,15 @@ function Parser_Check_Images() {
 					AddLog2("parser: get images ".$vImage);
 					error_log('"'.$vImage.'";"'.$vHashImage.'";"'.date('Y.m.d H:i:s').'"'."\n",3,LogF('image_download_log.csv'));
 				}
-
 			}
-
 		} else {
 			@$vDataDB->queryExec('insert into units("name","field","content") values("'.$vName.'","imageready","found")');
 		}
-
 	}
 	$vDataDB->queryExec('COMMIT TRANSACTION');
-	AddLog2("parser: check images done");
-
 }
+
+
 // ------------------------------------------------------------------------------
 // Parser_SQlite_Connect
 // ------------------------------------------------------------------------------
@@ -1548,6 +1430,23 @@ function Parser_SQlite_Connect($vDBFile) {
 	$vDB->queryExec('PRAGMA journal_mode=MEMORY');
 	$vDB->queryExec('PRAGMA temp_store=MEMORY');
 	return $vDB;
+}
+
+// ------------------------------------------------------------------------------
+// Units_GetSQL
+// ------------------------------------------------------------------------------
+function Units_GetSQL($vSQL) {
+	global $vDataDB;
+	$vResult = @$vDataDB->query($vSQL);
+	while ($vRow = $vResult->fetch(SQLITE_ASSOC)) {
+		#$vReturn[$vRow['name']][$vRow['field']]=$vRow['content'];
+		unset($vTmpArray);
+		foreach($vRow as $vName=>$vValue) {
+			$vTmpArray[$vName]=$vValue;
+		}
+		$vReturn[]=$vTmpArray;
+	}
+	return($vReturn);
 }
 
 // ------------------------------------------------------------------------------
@@ -1743,6 +1642,43 @@ function parse_flashvars() {
 }
 
 // ------------------------------------------------------------------------------
+// Download XML/SWF
+// ------------------------------------------------------------------------------
+function parser_download($vLocalFile,$vRemoteFile,$vOverrideURL='') {
+	if(strlen($vLocalFile)==0) {
+		AddLog2("DL: vLocalFile missing");
+		return '';
+	}
+	if(strlen($vRemoteFile)==0) {
+		AddLog2("DL: vRemoteFile missing");
+		return '';
+	}
+	global $vNotFound, $sqlite_update;
+	if (!file_exists($vLocalFile)) {
+		$vContent = '';
+		if (strlen($vOverrideURL)>0 && file_exists($vOverrideURL)) {
+			$vContent = file_get_contents(trim(file_get_contents($vOverrideURL)));
+			if (empty($vContent)) { // Null if the file doesn't exist / server returned 404 error
+				AddLog2("File: override_url.txt contains invalid url, skipping..");
+			} else AddLog2("Loaded settings from override_url.txt.");
+		}
+		if (empty($vContent)) {
+			AddLog2("DL: $vRemoteFile");
+			$vContent = proxy_GET($vRemoteFile);
+		}
+		if (empty($vContent)) {
+			AddLog2("Couldn't find $vRemoteFile");
+			$vNotFound++;
+		} else {
+			AddLog2("Download completed.");
+			file_put_contents($vLocalFile,$vContent);
+			$sqlite_update = 1;
+		}
+		unset($vContent);
+	}
+}
+
+// ------------------------------------------------------------------------------
 // GetUnitList
 // ------------------------------------------------------------------------------
 function GetUnitList() {
@@ -1823,91 +1759,91 @@ function GetUnitList() {
 	} else $sqlite_update = 1;
 
 	if ($sqlite_update == 1) {
-	  $vDataDB=null;
-	  @copy(PARSER_SQLITE,'./farmville-sqlite/'.date('Ymd_His').'.sqlite');
-	  @unlink(PARSER_SQLITE);
-	  $vDataDB=Parser_SQlite_Connect(PARSER_SQLITE);
+		$vDataDB=null;
+		@copy(PARSER_SQLITE,'./farmville-sqlite/'.date('Ymd_His').'.sqlite');
+		@unlink(PARSER_SQLITE);
+		$vDataDB=Parser_SQlite_Connect(PARSER_SQLITE);
 	}
 
 	# check units table
 	if (@$vDataDB->query('SELECT * FROM units limit 1') === false) {
-	  $vSQL='CREATE TABLE
+		$vSQL='CREATE TABLE
 			  units (
 				name CHAR(25),
 				field CHAR(25),
 				content CHAR(250)
 			  )';
-	  $vDataDB->queryExec($vSQL);
-	  $vDataDB->queryExec('CREATE INDEX units_idx_1 ON units(name,field)');
-	  $vDataDB->queryExec('CREATE INDEX units_idx_2 ON units(field,content)');
-	  $sqlite_update = 1;
+		$vDataDB->queryExec($vSQL);
+		$vDataDB->queryExec('CREATE INDEX units_idx_1 ON units(name,field)');
+		$vDataDB->queryExec('CREATE INDEX units_idx_2 ON units(field,content)');
+		$sqlite_update = 1;
 	}
 
 	# check achievements table
 	if (@$vDataDB->query('SELECT * FROM achievements limit 1') === false) {
-	  $vSQL='CREATE TABLE
+		$vSQL='CREATE TABLE
 			  achievements (
 				name CHAR(25),
 				field CHAR(25),
 				content CHAR(250)
 			  )';
-	  $vDataDB->queryExec($vSQL);
-	  $vDataDB->queryExec('CREATE INDEX achievements_idx_1 ON achievements(name,field)');
-	  $vDataDB->queryExec('CREATE INDEX achievements_idx_2 ON achievements(field,content)');
-	  $sqlite_update = 1;
+		$vDataDB->queryExec($vSQL);
+		$vDataDB->queryExec('CREATE INDEX achievements_idx_1 ON achievements(name,field)');
+		$vDataDB->queryExec('CREATE INDEX achievements_idx_2 ON achievements(field,content)');
+		$sqlite_update = 1;
 	}
 
 	# check collectables table
 	if (@$vDataDB->query('SELECT * FROM collectables limit 1') === false) {
-	  $vSQL='CREATE TABLE
+		$vSQL='CREATE TABLE
 			  collectables (
 				name CHAR(25),
 				field CHAR(25),
 				content CHAR(250)
 			  )';
-	  $vDataDB->queryExec($vSQL);
-	  $vDataDB->queryExec('CREATE INDEX collectables_idx_1 ON collectables(name,field)');
-	  $vDataDB->queryExec('CREATE INDEX collectables_idx_2 ON collectables(field,content)');
-	  $sqlite_update = 1;
+		$vDataDB->queryExec($vSQL);
+		$vDataDB->queryExec('CREATE INDEX collectables_idx_1 ON collectables(name,field)');
+		$vDataDB->queryExec('CREATE INDEX collectables_idx_2 ON collectables(field,content)');
+		$sqlite_update = 1;
 	}
 	# check storage table
 	if (@$vDataDB->query('SELECT * FROM storage limit 1') === false) {
-	  $vSQL='CREATE TABLE
+		$vSQL='CREATE TABLE
 			  storage (
 				name CHAR(25),
 				field CHAR(25),
 				content CHAR(250)
 			  )';
-	  $vDataDB->queryExec($vSQL);
-	  $vDataDB->queryExec('CREATE INDEX storage_idx_1 ON storage(name,field)');
-	  $vDataDB->queryExec('CREATE INDEX storage_idx_2 ON storage(field,content)');
-	  $sqlite_update = 1;
+		$vDataDB->queryExec($vSQL);
+		$vDataDB->queryExec('CREATE INDEX storage_idx_1 ON storage(name,field)');
+		$vDataDB->queryExec('CREATE INDEX storage_idx_2 ON storage(field,content)');
+		$sqlite_update = 1;
 	}
 	# check crafting table
 	if (@$vDataDB->query('SELECT * FROM crafting limit 1') === false) {
-	  $vSQL='CREATE TABLE
+		$vSQL='CREATE TABLE
 			  crafting (
 				name CHAR(25),
 				field CHAR(25),
 				content CHAR(250)
 			  )';
-	  $vDataDB->queryExec($vSQL);
-	  $vDataDB->queryExec('CREATE INDEX crafting_idx_1 ON crafting(name,field)');
-	  $vDataDB->queryExec('CREATE INDEX crafting_idx_2 ON crafting(field,content)');
-	  $sqlite_update = 1;
+		$vDataDB->queryExec($vSQL);
+		$vDataDB->queryExec('CREATE INDEX crafting_idx_1 ON crafting(name,field)');
+		$vDataDB->queryExec('CREATE INDEX crafting_idx_2 ON crafting(field,content)');
+		$sqlite_update = 1;
 	}
 	# check quests table
 	if (@$vDataDB->query('SELECT * FROM quests limit 1') === false) {
-	  $vSQL='CREATE TABLE
+		$vSQL='CREATE TABLE
 			  quests (
 				name CHAR(25),
 				field CHAR(50),
 				content CHAR(250)
 			  )';
-	  $vDataDB->queryExec($vSQL);
-	  $vDataDB->queryExec('CREATE INDEX quests_idx_1 ON quests(name,field)');
-	  $vDataDB->queryExec('CREATE INDEX quests_idx_2 ON quests(field,content)');
-	  $sqlite_update = 1;
+		$vDataDB->queryExec($vSQL);
+		$vDataDB->queryExec('CREATE INDEX quests_idx_1 ON quests(name,field)');
+		$vDataDB->queryExec('CREATE INDEX quests_idx_2 ON quests(field,content)');
+		$sqlite_update = 1;
 	}
 
 	// Force download when key files are missing
@@ -1925,204 +1861,59 @@ function GetUnitList() {
 	$flashVars = parse_flashvars();
 	$vNotFound=0;
 
-	$vFlashLocale='./farmville-xml/'.$flashRevision.'_flashLocaleXml.xml';
-	if (!file_exists($vFlashLocale)) {
-		// load description
-		$xml_locales = '';
-		if (file_exists('desc_url.txt')) {
-			$geturl = trim(file_get_contents('desc_url.txt'));
-			$xml_locales = file_get_contents($geturl);
-			if (!$xml_locales) { // Null if the file doesn't exist / server returned 404 error
-				AddLog2("File: desc_url.txt contains invalid url, skipping..");
-			} else {
-				AddLog2("Loaded settings from desc_url.txt.");
-			}
-		}
-		if (!$xml_locales) {
-			AddLog2("DL: v$flashRevision descriptions xml");
-			//$geturl = "http://" . farmer . "/v$flashRevision/flashLocaleXml.xml";
-			$geturl = "http://static.farmville.com/xml/gz/v$flashRevision/flashLocaleXml.xml";
-			$xml_locales = proxy_GET($geturl);
-		}
-		if (!$xml_locales) {
-			AddLog2("Couldn't find descriptions xml.");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vFlashLocale,$xml_locales);
-			$sqlite_update = 1;
-		}
-		unset($xml_locales);
-	}
-
 	$vGameSetting='./farmville-xml/'.$flashRevision.'_gameSettings.xml';
-	if (!file_exists($vGameSetting)) {
-		$xml_units = '';
-		if (file_exists('override_url.txt')) {
-			$geturl = trim(file_get_contents('override_url.txt'));
-			$xml_units = file_get_contents($geturl);
-			if (!$xml_units) { // Null if the file doesn't exist / server returned 404 error
-				AddLog2("File: override_url.txt contains invalid url, skipping..");
-			} else {
-				AddLog2("Loaded settings from override_url.txt.");
-			}
-		}
-		if (!$xml_units) {
-			AddLog2("DL: v$flashRevision settings file.");
-			//$geturl = "http://static-facebook.farmville.com/v$flashRevision/gameSettings.xml.gz";
-			$geturl = $flashVars['game_config_url'];
-			$xml_units = proxy_GET($geturl);
-		}
-		if (!$xml_units) {
-			AddLog2("Couldn't find a settings xml...");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vGameSetting,$xml_units);
-			$sqlite_update = 1;
-		}
-		unset($xml_units);
-	}
+	$vRemoteFile=$flashVars['game_config_url'];
+	$vOverrideURL='override_url.txt';
+	parser_download($vGameSetting,$vRemoteFile,$vOverrideURL);
 
 	$vItemsSetting='./farmville-xml/'.$flashRevision.'_items.xml';
-	if (!file_exists($vItemsSetting)) {
-		$xml_items = '';
-		if (file_exists('override_items_url.txt')) {
-			$geturl = trim(file_get_contents('override_items_url.txt'));
-			$xml_items = file_get_contents($geturl);
-			if (!$xml_items) { // Null if the file doesn't exist / server returned 404 error
-				AddLog2("File: override_items_url.txt contains invalid url, skipping..");
-			} else {
-				AddLog2("Loaded settings from override_items_url.txt.");
-			}
-		}
-		if (!$xml_items) {
-			AddLog2("DL: v$flashRevision items xml.");
-			//$geturl = "http://static-facebook.farmville.com/v$flashRevision/items.xml.gz";
-			$geturl = $flashVars['items_url'];
-			$xml_items = proxy_GET($geturl);
-		}
-		if (!$xml_items) {
-			AddLog2("Couldn't find a items xml...");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vItemsSetting,$xml_items);
-			$sqlite_update = 1;
-		}
-		unset($xml_items);
-	}
+	$vRemoteFile=$flashVars['items_url'];
+	$vOverrideURL='override_url.txt';
+	parser_download($vItemsSetting,$vRemoteFile,$vOverrideURL);
 
 	$vStorageConfig='./farmville-xml/'.$flashRevision.'_StorageConfig.xml';
-	if (!file_exists($vStorageConfig)) {
-		$xml_storage='';
-		AddLog2("DL: v$flashRevision storageconfig xml");
-		$geturl = "http://fb-tc-1.farmville.com/v$flashRevision/StorageConfig.xml.gz";
-		$xml_storage = proxy_GET($geturl);
-		if (!$xml_storage) {
-			AddLog2("Storageconfig xml attempt #2");
-			$geturl = "http://fb-ak-1.farmville.com/StorageConfig.xml";
-			$xml_storage = proxy_GET($geturl);
-		}
-		if (!$xml_storage) {
-			AddLog2("Couldn't find a storageconfig xml...");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vStorageConfig,$xml_storage);
-			$sqlite_update = 1;
-		}
-		unset($xml_storage);
+	if (isset($flashVars['xml_url']) && !empty($flashVars['xml_url'])) {
+		$vRemoteFile = $flashVars['xml_url'] . 'StorageConfig.xml.gz';
+	} else {
+		$vRemoteFile = $flashVars['app_url'] . 'v' . $flashRevision . '/StorageConfig.xml.gz';
 	}
+	parser_download($vStorageConfig,$vRemoteFile);
 
 	$vQuestsConfig='./farmville-xml/'.$flashRevision.'_Quests.xml';
-	if (!file_exists($vQuestsConfig)) {
-		$xml_quests='';
-		AddLog2("DL: v$flashRevision quests xml");
-		$geturl = "http://static.farmville.com/xml/gz/v$flashRevision/quests.xml.gz";
-		$xml_quests = proxy_GET($geturl);
-		if (!$xml_quests) {
-			AddLog2("Couldn't find a quests xml...");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vQuestsConfig,$xml_quests);
-			$sqlite_update = 1;
-		}
-		unset($xml_quests);
-	}
+	$vRemoteFile=$flashVars['social_quest_url'];
+	parser_download($vQuestsConfig,$vRemoteFile);
 
 	$vCraftingConfig='./farmville-xml/'.$flashRevision.'_Crafting.xml';
-	if (!file_exists($vCraftingConfig)) {
-		$xml_crafting='';
-		AddLog2("DL: v$flashRevision crafting xml");
-		$geturl = "http://static.farmville.com/xml/gz/v$flashRevision/crafting.xml.gz";
-		$xml_crafting = proxy_GET($geturl);
-		if (!$xml_crafting) {
-			AddLog2("Couldn't find a crafting xml...");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vCraftingConfig,$xml_crafting);
-			$sqlite_update = 1;
-		}
-		unset($xml_crafting);
+	if (isset($flashVars['xml_url']) && !empty($flashVars['xml_url'])) {
+		$vRemoteFile = $flashVars['xml_url'] . 'crafting.xml.gz';
+	} else {
+		$vRemoteFile = $flashVars['app_url'] . 'v' . $flashRevision . '/crafting.xml.gz';
 	}
+	parser_download($vCraftingConfig,$vRemoteFile);
 
 	$vMarketDataConfig='./farmville-xml/'.$flashRevision.'_MarketData.xml';
-	if (!file_exists($vMarketDataConfig)) {
-		$xml_marketdata='';
-		AddLog2("DL: v$flashRevision marketdata xml");
-		$geturl = "http://static.farmville.com/xml/gz/v$flashRevision/MarketData.xml.gz";
-		$xml_marketdata = proxy_GET($geturl);
-		if (!$xml_marketdata) {
-			AddLog2("Couldn't find a marketdata xml...");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vMarketDataConfig,$xml_marketdata);
-			$sqlite_update = 1;
-		}
-		unset($xml_marketdata);
-	}
+	$vRemoteFile="http://static.farmville.com/xml/gz/v$flashRevision/MarketData.xml.gz";
+	parser_download($vMarketDataConfig,$vRemoteFile);
 
 	$vDialogsConfig='./farmville-xml/'.$flashRevision.'_Dialogs.xml';
-	if (!file_exists($vDialogsConfig)) {
-		$xml_dialogs='';
-		AddLog2("DL: v$flashRevision dialogs xml");
-		$geturl = "http://static.farmville.com/xml/gz/v$flashRevision/dialogs.xml.gz";
-		$xml_dialogs = proxy_GET($geturl);
-		if (!$xml_dialogs) {
-			AddLog2("Couldn't find a dialogs xml...");
-			$vNotFound++;
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vDialogsConfig,$xml_dialogs);
-			$sqlite_update = 1;
-		}
-		unset($xml_dialogs);
-	}
+	$vRemoteFile=$flashVars['dialogs_url'];
+	parser_download($vDialogsConfig,$vRemoteFile);
 
 	$vAvatarConfig='./farmville-xml/'.$flashRevision.'_avatar.xml';
-	if (!file_exists($vAvatarConfig)) {
-		$xml_avatar='';
-		AddLog2("DL: v$flashRevision avatar xml");
-		$geturl = "http://fb-tc-1.farmville.com/xml/gz/v$flashRevision/avatar.xml.gz";
-		$xml_avatar = proxy_GET($geturl);
-		if (!$xml_avatar) {
-			AddLog2("AvatarConfig xml attempt #2");
-			$geturl = "http://fb-tc-0.farmville.com/avatar.xml";
-			$xml_avatar = proxy_GET($geturl);
-		}
-		if (!$xml_avatar) {
-			AddLog2("Couldn't find a avatar xml...");
-		} else {
-			AddLog2("Download completed.");
-			file_put_contents($vAvatarConfig,$xml_avatar);
-			$sqlite_update = 1;
-		}
-		unset($xml_avatar);
-	}
+	$vRemoteFile="http://static.farmville.com/xml/gz/v$flashRevision/avatar.xml.gz";
+	parser_download($vAvatarConfig,$vRemoteFile);
+
+	$vWorldSettings='./farmville-xml/'.$flashRevision.'_worldSettings.xml';
+	$vRemoteFile="http://static.farmville.com/xml/gz/v$flashRevision/worldSettings.xml.gz";
+	parser_download($vWorldSettings,$vRemoteFile);
+
+	$vDoobersConfig='./farmville-xml/'.$flashRevision.'_doobers.xml';
+	$vRemoteFile="http://static.farmville.com/xml/gz/v$flashRevision/doobers.xml.gz";
+	parser_download($vDoobersConfig,$vRemoteFile);
+
+	$vQuestsSettins='./farmville-xml/'.$flashRevision.'_questSettings.xml';
+	$vRemoteFile=$flashVars['quest_url'];
+	parser_download($vQuestsSettins,$vRemoteFile);
 
 	if ($sqlite_update == 1 && $vNotFound > 0) {
 		AddLog2("Error Downloading latest game files! Running with old data!!");
@@ -2179,6 +1970,40 @@ function GetUnitList() {
 							$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","masterymax","'.$vSubElement['count'].'");');
 						}
 						$vCntMastery++;
+					} elseif($vSubName=='storageType') {
+						if(strlen($vSubElement['itemClass'])>0) {
+							$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","storageType","'.$vSubElement['itemClass'].'");');
+						}
+					} elseif($vSubName=='upgrade') {
+						$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_level","'.$vSubElement['level'].'");');
+						$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubElement['level'].'_capacity","'.$vSubElement['capacity'].'");');
+						$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubElement['level'].'_matsNeeded","'.$vSubElement['matsNeeded'].'");');
+						foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) {
+							if($vSubSubName=='part') {
+								$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubElement['level'].'_part","'.$vSubSubElement['name'].'");');
+								$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubElement['level'].'_'.$vSubSubElement['name'].'_need","'.$vSubSubElement['need'].'");');
+							}
+						}
+					} elseif($vSubName=='features') {
+						foreach ($vSubElement->children() as $vSubTmpName => $vSubTmpElement) {
+							foreach ($vSubTmpElement->children() as $vSubSubName => $vSubSubElement) {
+								if($vSubSubName=='upgrade') {
+									$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_level","'.$vSubSubElement['level'].'");');
+									$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubSubElement['level'].'_capacity","'.$vSubSubElement['capacity'].'");');
+									$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubSubElement['level'].'_matsNeeded","'.$vSubSubElement['matsNeeded'].'");');
+									foreach ($vSubSubElement->children() as $vSubSubSubName => $vSubSubSubElement) {
+										if($vSubSubSubName=='part') {
+											$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubSubElement['level'].'_part","'.$vSubSubSubElement['name'].'");');
+											$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","upgrade_'.$vSubSubElement['level'].'_'.$vSubSubSubElement['name'].'_need","'.$vSubSubSubElement['need'].'");');
+										}
+									}
+								}
+							}
+						}
+					} elseif($vSubName=='defaultItem') {
+						$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","defaultItem_name","'.$vSubElement['name'].'");');
+						$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","defaultItem_amount","'.$vSubElement['amount'].'");');
+
 					} elseif($vSubName<>'sounds') {
 						$vDataDB->queryExec('insert into units(name,field,content) values("'.$vItemName.'","'.$vSubName.'","'.(string)$vSubElement.'");');
 					}
@@ -2249,45 +2074,6 @@ function GetUnitList() {
 						$vDataDB->queryExec('insert into achievements(name,field,content) values("'.$vItemName.'","count","'.$vSubElement['count'].'");');
 						$vDataDB->queryExec('insert into achievements(name,field,content) values("'.$vItemName.'","xp","'.$vSubElement['xp'].'");');
 						$vDataDB->queryExec('insert into achievements(name,field,content) values("'.$vItemName.'","coins","'.$vSubElement['coins'].'");');
-					}
-				}
-			}
-		}
-		unset($xmlDoc);
-
-		$xmlDoc = simplexml_load_file($vFlashLocale);
-		foreach ($xmlDoc->bundle as $vItem) {
-			$vType=(string)$vItem['name'];
-			if($vType=='Items' || $vType=='Collections' || $vType=='Achievements') {
-				foreach ($vItem->children() as $vSubElement) {
-					$vName=(string)$vSubElement['key'];
-					if(substr($vName,-12)=='friendlyName') {
-						$vName=substr($vName,0,-13);
-						$vRealName=(string)$vSubElement->value;
-						if($vType=='Items') {
-							$vDataDB->queryExec('insert into units(name,field,content) values("'.$vName.'","realname","'.$vRealName.'");');
-						}
-						if($vType=='Collections') {
-							$vDataDB->queryExec('insert into collectables(name,field,content) values("'.$vName.'","realname","'.$vRealName.'");');
-						}
-						if($vType=='Achievements') {
-							$vDataDB->queryExec('insert into achievements(name,field,content) values("'.$vName.'","realname","'.$vRealName.'");');
-							$vDataDB->queryExec('insert into units(name,field,content) values("'.$vName.'","realname","'.$vRealName.'");');
-						}
-					}
-					if(substr($vName,-11)=='description') {
-						$vName=substr($vName,0,-12);
-						$vDescription=(string)$vSubElement->value;
-						if($vType=='Items') {
-							$vDataDB->queryExec('insert into units(name,field,content) values("'.$vName.'","desc","'.$vDescription.'");');
-						}
-						if($vType=='Collections') {
-							$vDataDB->queryExec('insert into collectables(name,field,content) values("'.$vName.'","desc","'.$vDescription.'");');
-						}
-						if($vType=='Achievements') {
-							$vDataDB->queryExec('insert into achievements(name,field,content) values("'.$vName.'","desc","'.$vDescription.'");');
-							$vDataDB->queryExec('insert into units(name,field,content) values("'.$vName.'","desc","'.$vDescription.'");');
-						}
 					}
 				}
 			}
@@ -2486,117 +2272,116 @@ function GetUnitList() {
 		unset($vAchievements);
 
 		file_put_contents('units.txt',serialize(Units_GetAll()));
-
+		file_put_contents('transforms.txt',serialize(GetTransforms(Units_GetAll())));
 		file_put_contents('sqlite_check.txt',$flashRevision);
 	}
-	sleep(10);
 	EchoData('OK');
 }
 // ------------------------------------------------------------------------------
 // RunHttp. Now only parses the GET parameters. HTTP server is moved to farmvillebot.exe
 // ------------------------------------------------------------------------------
 function RunHttp() {
-		global $plugins,$userId,$botlitever,$plugin_developer;
+	global $plugins,$userId,$botlitever,$plugin_developer;
 
-		if (! @trim(file_get_contents('developer.txt')))
-		error_reporting(E_ERROR);
+	if (! @trim(file_get_contents('developer.txt')))
+	error_reporting(E_ERROR);
 
-		$argv = @$GLOBALS['argv'];
-		$userId = @$argv[2];
+	$argv = @$GLOBALS['argv'];
+	$userId = @$argv[2];
 
-		echo "userId $userId;\r\n";
+	echo "userId $userId;\r\n";
 
-		define ('farmer', GetFarmserver());
-		define ('farmer_url', GetFarmUrl());
+	define ('farmer', GetFarmserver());
+	define ('farmer_url', GetFarmUrl());
 
-		$request_uri = @$argv[4];
-		$postdata = urldecode(@$argv[6]);
+	$request_uri = @$argv[4];
+	$postdata = urldecode(@$argv[6]);
 
-		if ($request_uri) {
-				preg_match('/\/plugins\/(.*)\/main.php[\?]*(.*)$/si', $request_uri, $match);
-				$plugin_name = @$match[1];
-				$params_str = @$match[2];
+	if ($request_uri) {
+		preg_match('/\/plugins\/(.*)\/main.php[\?]*(.*)$/si', $request_uri, $match);
+		$plugin_name = @$match[1];
+		$params_str = @$match[2];
 
-				if ($plugin_name) {
-						$_GET = array();
-						$params = explode('&', $params_str);
-						foreach($params as $param) {
-								list($key, $value) = explode('=', $param);
-								$value = urldecode($value);
-								if (isset($_GET[$key])) {
-										if (!is_array($_GET[$key])) {
-												$tmp = $_GET[$key];
-												$_GET[$key] = array();
-												$_GET[$key][] = $tmp;
-										}
-										$_GET[$key][] = $value;
-								} else
-								$_GET[$key] = $value;
-						}
-						$_POST = array();
-						$postparams = explode('&', $postdata);
-						foreach($postparams as $param) {
-								list($key, $value) = explode('=', $param);
-								$value = urldecode($value);
-								if (isset($_POST[$key])) {
-										if (!is_array($_POST[$key])) {
-												$tmp = $_POST[$key];
-												$_POST[$key] = array();
-												$_POST[$key][] = $tmp;
-										}
-										$_POST[$key][] = $value;
-								} else
-								$_POST[$key] = $value;
-						}
-				}
-				// find form function
-				$form_function = $plugin_name . '_form';
-				global $this_plugin;
-
-				foreach ($plugins as $plugin)
-				{
-						if ($plugin['name'] == $plugin_name) {
-								$this_plugin = $plugin;
-								break;
-						}
-				}
-				ob_clean();
-				//ob_start();
-				//We have a function_form() use it
-				if (function_exists($form_function)) {
-						call_user_func($form_function);
-				}
-				$request_uri = substr($request_uri,1);
-
-				//Objects Don't need to call the form function
-				if ($plugin_name == '') {
-						if (stripos($request_uri,'.php')) {
-								include($request_uri);
-						} else {
-								readfile($request_uri);
-						}
-						//CSS
-						if (stripos($request_uri,'.css')) $GLOBALS['http_headers'] = "Content-Type: text/css\r\n";
-						//IMAGES
-						preg_match('/(png|tiff|gif|jpeg|jpg)/i', $request_uri, $matches);
-						$matches[1] = (@$matches[1] == 'jpg') ? 'jpeg' : @$matches[1];
-						if ($matches[1] != '') $GLOBALS['http_headers'] = "Content-Type: image/" . $matches[1] . "\r\n";
-						//JavaScript
-						if (stripos($request_uri,'.js')) $GLOBALS['http_headers'] = "Content-Type: application/javascript\r\n";
-						if (stripos($request_uri,'.php') || stripos($request_uri,'.html')) $GLOBALS['http_headers'] = "Content-Type: text/html\r\n";
-				}
-				$contents = ob_get_contents();
-				$length = strlen($contents);
-				ob_end_clean();
-				if (isset($GLOBALS['http_headers'])) {
-						echo("HTTP/1.1 200 OK\r\nContent-Length: " . $length . "\r\n" . $GLOBALS['http_headers'] . "\r\n");
-						#AddLog2($GLOBALS['http_headers']);
-						unset($GLOBALS['http_headers']);
-				} else {
-						echo("HTTP/1.1 200 OK\r\nContent-Length: " . $length . "\r\nContent-Type: text/html\r\n\r\n");
-				}
-				echo $contents;
+		if ($plugin_name) {
+			$_GET = array();
+			$params = explode('&', $params_str);
+			foreach($params as $param) {
+				list($key, $value) = explode('=', $param);
+				$value = urldecode($value);
+				if (isset($_GET[$key])) {
+					if (!is_array($_GET[$key])) {
+						$tmp = $_GET[$key];
+						$_GET[$key] = array();
+						$_GET[$key][] = $tmp;
+					}
+					$_GET[$key][] = $value;
+				} else
+				$_GET[$key] = $value;
+			}
+			$_POST = array();
+			$postparams = explode('&', $postdata);
+			foreach($postparams as $param) {
+				list($key, $value) = explode('=', $param);
+				$value = urldecode($value);
+				if (isset($_POST[$key])) {
+					if (!is_array($_POST[$key])) {
+						$tmp = $_POST[$key];
+						$_POST[$key] = array();
+						$_POST[$key][] = $tmp;
+					}
+					$_POST[$key][] = $value;
+				} else
+				$_POST[$key] = $value;
+			}
 		}
+		// find form function
+		$form_function = $plugin_name . '_form';
+		global $this_plugin;
+
+		foreach ($plugins as $plugin)
+		{
+			if ($plugin['name'] == $plugin_name) {
+				$this_plugin = $plugin;
+				break;
+			}
+		}
+		ob_clean();
+		//ob_start();
+		//We have a function_form() use it
+		if (function_exists($form_function)) {
+			call_user_func($form_function);
+		}
+		$request_uri = substr($request_uri,1);
+
+		//Objects Don't need to call the form function
+		if ($plugin_name == '') {
+			if (stripos($request_uri,'.php')) {
+				include($request_uri);
+			} else {
+				readfile($request_uri);
+			}
+			//CSS
+			if (stripos($request_uri,'.css')) $GLOBALS['http_headers'] = "Content-Type: text/css\r\n";
+			//IMAGES
+			preg_match('/(png|tiff|gif|jpeg|jpg)/i', $request_uri, $matches);
+			$matches[1] = (@$matches[1] == 'jpg') ? 'jpeg' : @$matches[1];
+			if ($matches[1] != '') $GLOBALS['http_headers'] = "Content-Type: image/" . $matches[1] . "\r\n";
+			//JavaScript
+			if (stripos($request_uri,'.js')) $GLOBALS['http_headers'] = "Content-Type: application/javascript\r\n";
+			if (stripos($request_uri,'.php') || stripos($request_uri,'.html')) $GLOBALS['http_headers'] = "Content-Type: text/html\r\n";
+		}
+		$contents = ob_get_contents();
+		$length = strlen($contents);
+		ob_end_clean();
+		if (isset($GLOBALS['http_headers'])) {
+			echo("HTTP/1.1 200 OK\r\nContent-Length: " . $length . "\r\n" . $GLOBALS['http_headers'] . "\r\n");
+			#AddLog2($GLOBALS['http_headers']);
+			unset($GLOBALS['http_headers']);
+		} else {
+			echo("HTTP/1.1 200 OK\r\nContent-Length: " . $length . "\r\nContent-Type: text/html\r\n\r\n");
+		}
+		echo $contents;
+	}
 }
 function GetTransforms($array) {
 	$ret = array();
@@ -2703,7 +2488,7 @@ function AddLog2($str) {
 function DebugLog($str) {
 	global $is_debug;
 	if ($is_debug)
-		echo $str . "\r\n";
+	echo $str . "\r\n";
 }
 // ------------------------------------------------------------------------------
 // F creates a full file name
@@ -2772,7 +2557,7 @@ function GetObjects($className = '') {
 		$resobjects = array();
 		foreach ($objects as $object)
 		if ($object['className'] == $className)
-			$resobjects[] = $object;
+		$resobjects[] = $object;
 		DebugLog(" << GetObjects");
 		return $resobjects;
 	} else {
@@ -2797,11 +2582,11 @@ function GetObjects2($className = '') {
 
 		foreach ($object_file_1 as $object)
 		if ($object['className'] == $className)
-			$resobjects[] = $object;
+		$resobjects[] = $object;
 
 		foreach ($object_file_2 as $object)
 		if ($object['className'] == $className)
-			$resobjects[] = $object;
+		$resobjects[] = $object;
 
 		return $resobjects;
 	} else {
@@ -2894,15 +2679,15 @@ function Do_Biplane_Instantgrow() {
 	$res = CheckAMF2Response($amf2);
 
 	if($res=='OK') {
-	  $vSucess = $amf2->_bodys[0]->_value['data'][0]['success'];
-	  $vCost = $amf2->_bodys[0]->_value['data'][0]['cost'];
-	  if($vSucess=="1") {
-		AddLog("biplane success, COST: ".$vCost." CASH");
-		AddLog2("biplane success, COST: ".$vCost." CASH");
-	  } else {
-		AddLog("biplane error: ".implode($amf2->_bodys[0]->_value['data'][0]));
-		AddLog2("biplane error: ".implode($amf2->_bodys[0]->_value['data'][0]));
-	  }
+		$vSucess = $amf2->_bodys[0]->_value['data'][0]['success'];
+		$vCost = $amf2->_bodys[0]->_value['data'][0]['cost'];
+		if($vSucess=="1") {
+			AddLog("biplane success, COST: ".$vCost." CASH");
+			AddLog2("biplane success, COST: ".$vCost." CASH");
+		} else {
+			AddLog("biplane error: ".implode($amf2->_bodys[0]->_value['data'][0]));
+			AddLog2("biplane error: ".implode($amf2->_bodys[0]->_value['data'][0]));
+		}
 	} else {
 		AddLog("biplane error: ".$res);
 		AddLog2("biplane error: ".$res);
@@ -2926,13 +2711,13 @@ function Do_Check_Lonlyanimals() {
 	$res = CheckAMF2Response($amf2);
 
 	if($res=='OK') {
-	  $vAnimal = $amf2->_bodys[0]->_value['data'][1];
-	  if(strlen($vAnimal)>0) {
-		AddLog("lonlyanimal found: ".$vAnimal);
-		AddLog2("lonlyanimal found: ".$vAnimal);
-	  } else {
-		AddLog2("no lonlyanimal found");
-	  }
+		$vAnimal = $amf2->_bodys[0]->_value['data'][1];
+		if(strlen($vAnimal)>0) {
+			AddLog("lonlyanimal found: ".$vAnimal);
+			AddLog2("lonlyanimal found: ".$vAnimal);
+		} else {
+			AddLog2("no lonlyanimal found");
+		}
 	} else {
 		AddLog2("lonlyanimal error: ".$res);
 	}
@@ -2955,13 +2740,13 @@ function Do_Check_Wanderinganimals() {
 	$res = CheckAMF2Response($amf2);
 
 	if($res=='OK') {
-	  $vReward = $amf2->_bodys[0]->_value['data'][0]['data']['rewardUrl'];
-	  if(strlen($vReward)>0) {
-		AddLog("wanderinganimal found");
-		AddLog2("wanderinganimal found");
-	  } else {
-		AddLog2("no wanderinganimal found");
-	  }
+		$vReward = $amf2->_bodys[0]->_value['data'][0]['data']['rewardUrl'];
+		if(strlen($vReward)>0) {
+			AddLog("wanderinganimal found");
+			AddLog2("wanderinganimal found");
+		} else {
+			AddLog2("no wanderinganimal found");
+		}
 	} else {
 		AddLog2("wanderinganimal error: ".$res);
 	}
@@ -3007,9 +2792,9 @@ function Do_Accept_Neighbor_Help() {
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['functionName'] = "NeighborActionService.clearNeighborAction";
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'] = $vParams;
 			if (@!$OKstring)
-				$OKstring = 'accept help '.$vParams[1].' from '.$vParams[0].' on plot '.$vParams[2];
+			$OKstring = 'accept help '.$vParams[1].' from '.$vParams[0].' on plot '.$vParams[2];
 			else
-				$OKstring = $OKstring."\r\n".'accept help '.$vParams[1].' from '.$vParams[0].' on plot '.$vParams[2];
+			$OKstring = $OKstring."\r\n".'accept help '.$vParams[1].' from '.$vParams[0].' on plot '.$vParams[2];
 			$vCntSpeed++;
 		}
 
@@ -3043,10 +2828,10 @@ function Do_Farm_Work($plots, $action = "harvest") {
 	$px_Setopts = LoadSavedSettings();
 
 	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1))
-		$px_Setopts['bot_speed'] = 1;
+	$px_Setopts['bot_speed'] = 1;
 
 	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED)
-		$px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
+	$px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
 
 	$count = count($plots);
 
@@ -3074,14 +2859,14 @@ function Do_Farm_Work($plots, $action = "harvest") {
 			$amf->_bodys[0]->_value[1][$i]['params'][2][0]['energyCost'] = 0;
 
 			if (@!$plotsstring)
-				$plotsstring = $plot['itemName'] . " " . GetPlotName($plot);
+			$plotsstring = $plot['itemName'] . " " . GetPlotName($plot);
 			else
-				$plotsstring = $plotsstring . ", " . $plot['itemName'] . " " . GetPlotName($plot);
+			$plotsstring = $plotsstring . ", " . $plot['itemName'] . " " . GetPlotName($plot);
 
 			if (@!$OKstring)
-				$OKstring = $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
+			$OKstring = $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
 			else
-				$OKstring = $OKstring . "\r\n" . $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
+			$OKstring = $OKstring . "\r\n" . $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
 
 			$i++;
 
@@ -3124,30 +2909,30 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 	$px_Setopts = LoadSavedSettings();
 
 	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1))
-		$px_Setopts['bot_speed'] = 1;
+	$px_Setopts['bot_speed'] = 1;
 
 	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED)
-		$px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
+	$px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
 
 	$vMaxEquip=16;
 
 	if ($action == 'combine')
-		$fuel = @$px_Setopts['fuel_combine'];
+	$fuel = @$px_Setopts['fuel_combine'];
 
 	if ($action == 'tractor')
-		$fuel = @$px_Setopts['fuel_plow'];
+	$fuel = @$px_Setopts['fuel_plow'];
 
 	if ($action == 'plow')
-		$fuel = @$px_Setopts['fuel_plow'];
+	$fuel = @$px_Setopts['fuel_plow'];
 
 	if ($action == 'place')
-		$fuel = @$px_Setopts['fuel_place'];
+	$fuel = @$px_Setopts['fuel_place'];
 
 	if ($action == 'harvest')
-		$fuel = @$px_Setopts['fuel_harvest'];
+	$fuel = @$px_Setopts['fuel_harvest'];
 
 	if ((@!$fuel) || (@$fuel < 0))
-		$fuel = 0;
+	$fuel = 0;
 
 	if ($fuel == 0 && $action == 'combine') {
 		return;
@@ -3184,15 +2969,15 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['id'] = -1;
 			if ($action == 'combine')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'q1:96';  # fully expanded combine
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'q1:96';  # fully expanded combine
 			if ($action == 'harvest')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'V1:32';  # fully expanded harvester
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'V1:32';  # fully expanded harvester
 			if ($action == 'tractor')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
 			if ($action == 'plow')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
 			if ($action == 'place')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'S1:32';  # fully expanded seeder
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'S1:32';  # fully expanded seeder
 
 			$vCntEquip=0; $vSeed=''; $vLastSeed='';
 			while(count($plots)>0 && $vCntEquip<$vMaxEquip && $fuel>0) {
@@ -3208,19 +2993,19 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 				}
 
 				if (@!$plotsstring)
-					$plotsstring = $vPlot['itemName'] . " " . GetPlotName($vPlot);
+				$plotsstring = $vPlot['itemName'] . " " . GetPlotName($vPlot);
 				else
-					$plotsstring = $plotsstring . ", " . $vPlot['itemName'] . " " . GetPlotName($vPlot);
+				$plotsstring = $plotsstring . ", " . $vPlot['itemName'] . " " . GetPlotName($vPlot);
 
 				if (@!$OKstring)
-					$OKstring = $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
+				$OKstring = $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
 				else
-					$OKstring = $OKstring . "\r\n" . $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
+				$OKstring = $OKstring . "\r\n" . $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
 
 				$fuel--;
 				if ($action == 'tractor') {
-#					$vCnt63000++;
-#					$vPlot['id'] = $vCnt63000;
+					#					$vCnt63000++;
+					#					$vPlot['id'] = $vCnt63000;
 					$vPlot['id'] = $vCnt63000 ++;
 					$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][2][$vCntEquip] = $vPlot;
 				} else {
@@ -3232,15 +3017,15 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 			}
 
 			if ($action == 'combine')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
 			if ($action == 'tractor')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
 			if ($action == 'harvest')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
 			if ($action == 'plow')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
 			if ($action == 'place')
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
+			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
 
 			$vCntSpeed++;
 		}
@@ -3359,7 +3144,7 @@ function CheckAMF2Response($amf2) {
 		$res = "BAD AMF REPLY (OOS?)";
 	} else if (isset($amf2->_bodys[0]->_value['data'][0]['data']) && ($amf2->_bodys[0]->_value['data'][0]['data']=='success')) {
 		$res = 'OK';
-	 } else if (isset($amf2->_bodys[0]->_value['data'][0]['data']) && ($amf2->_bodys[0]->_value['data'][0]['data']=='6uccess')) {
+	} else if (isset($amf2->_bodys[0]->_value['data'][0]['data']) && ($amf2->_bodys[0]->_value['data'][0]['data']=='6uccess')) {
 		$res = 'OK';
 	} else if (isset($amf2->_bodys[0]->_value['data'][0]['errorType']) && ($amf2->_bodys[0]->_value['data'][0]['errorType'] <> 0)) {
 		$res = $amf2->_bodys[0]->_value['data'][0]['errorType'] . " " . $amf2->_bodys[0]->_value['data'][0]['errorData'].' '.$amf2->_bodys[0]->_value['data'][0]['data']['error'];
@@ -3396,6 +3181,7 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['gift'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['harvestItem'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['expansionRewardLink'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['itemFoundRewardUrl'],$vReward['data']['itemShareName'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['data']['rewardLink'],$vReward['data']['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
 
@@ -3412,10 +3198,13 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck($vReward['data']['itemBuffRewardUrl'],$vReward['data']['itemBuffCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['mysterySeed']['rewardLink'],$vReward['data']['mysterySeed']['itemCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['itemCode'],'Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['reward']['rewardLink'],$vReward['data']['reward']['itemCode'],'Code',$vFound,$vRewardsArray);
+	
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['itemCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['goals'][0]['link'],$vReward['goals'][0]['code'],'Code',$vFound,$vRewardsArray);
 
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'PigpenSlopFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PigpenSlopFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'ValentineRedeemFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PotOfGoldRedeemFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'EasterBasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
@@ -3428,6 +3217,8 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'WanderingStallionFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'OilBarronFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'ConstructionBuildingFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'SocialMissionShareBonusFriendReward','Item',$vFound,$vRewardsArray);
+	
 }
 
 
@@ -3493,8 +3284,8 @@ function CheckAMF2Rewards($amf2) {
 				if(!in_array($vRewardTmp['rewardLink'],$vSeen) && substr($vRewardTmp['rewardLink'],0,10)=='reward.php' && strpos($vRewardTmp['rewardLink'],' ')===false && $vRewardTmp['timestamp']>(time()-(60*60*24))) {
 					$vRewardsArrayNew[]=$vRewardTmp;
 					$vSeen[]=$vRewardTmp['rewardLink'];
-		}
-	}
+				}
+			}
 		}
 		foreach($vRewardsArray as $vRewardTmp) {
 			if(!in_array($vRewardTmp['rewardLink'],$vSeen) && substr($vRewardTmp['rewardLink'],0,10)=='reward.php' && strpos($vRewardTmp['rewardLink'],' ')===false && $vRewardTmp['timestamp']>(time()-(60*60*24))) {
@@ -3577,9 +3368,9 @@ function Parser_ReadReq() {
 		$vAppId = '';
 		for($vJ = 0; $vJ < count($vNameValues[1]); $vJ++) {
 			if($vNameValues[1][$vJ] == 'params[app_id]')
-				$vAppId = $vNameValues[2][$vJ];
+			$vAppId = $vNameValues[2][$vJ];
 			if($vPost != '')
-				$vPost .= '&';
+			$vPost .= '&';
 			$vPost .= $vNameValues[1][$vJ].'='.urlencode(html_entity_decode($vNameValues[2][$vJ], ENT_QUOTES, 'UTF-8'));
 		}
 		if($vAppId=='102452128776') {
@@ -3664,7 +3455,7 @@ function pluginload() {
 		}
 	}
 	if (PX_VER_PARSER != PX_VER_SETTINGS)
-		echo "\r\n******\r\nERROR: PX's updated parser version (" . PX_VER_PARSER . ") doesn't match settings version (" . PX_VER_SETTINGS . ")\r\n******\r\n";
+	echo "\r\n******\r\nERROR: PX's updated parser version (" . PX_VER_PARSER . ") doesn't match settings version (" . PX_VER_SETTINGS . ")\r\n******\r\n";
 }
 
 
@@ -3713,6 +3504,7 @@ switch ($cmd) {
 		echo "##### Loading units.txt #####\r\n";
 		$work_timer_start = time();
 		GetUnitList();
+		Parser_Get_Locale();
 		$work_timer_end = time() - $work_timer_start;
 		echo "##### GetUnitList completed in: $work_timer_end sec #####\r\n";
 		break;
@@ -3726,7 +3518,7 @@ switch ($cmd) {
 		Arbeit();
 		$work_timer_end = time() - $work_timer_start;
 		echo "##### Work completed in: $work_timer_end sec #####\r\n";
-	break;
+		break;
 
 	case 'run_http_lite':
 		global $botlitever;

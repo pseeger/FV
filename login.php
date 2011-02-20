@@ -8,7 +8,7 @@ foreach($accounts as $login_email=>$login_pass) {
 			CURLOPT_USERAGENT=> 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
 			CURLOPT_FOLLOWLOCATION=>true,
 			CURLOPT_SSL_VERIFYPEER=>false,
-			CURLOPT_COOKIEJAR=>'cookies.txt',
+			CURLOPT_COOKIEJAR=>'/tmp/fblogincookies.txt',
 			CURLOPT_RETURNTRANSFER=>true,
 			CURLOPT_AUTOREFERER=>true,
 			CURLOPT_HEADER=>false));
@@ -37,6 +37,8 @@ foreach($accounts as $login_email=>$login_pass) {
 	file_put_contents('FBID_'.$params['master_id'].'/flashVars.txt',$res);
 	file_put_contents('FBID_/params.txt',implode(';',$params));
 	file_put_contents('FBID_/flashVars.txt',$res);
+	curl_close($ch);
+	rename('/tmp/fblogincookies.txt','FBID_'.$params['master_id'].'/cookies.txt');
 	if(count($cmd)<1) $cmd[]='php -c localphp.ini parser.php get_unit_list_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 	$cmd[]='php -c localphp.ini parser.php arbeit_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 }
