@@ -199,7 +199,7 @@ function SaveAuthParams() {
 // GetSequense
 // ------------------------------------------------------------------------------
 function GetSequense() {
-	global $sequence;
+	global $userId, $flashRevision, $token, $sequence, $flashSessionKey, $xp, $energy;
 	LoadAuthParams();
 	$sequence ++;
 	SaveAuthParams();
@@ -209,7 +209,7 @@ function GetSequense() {
 // SetSequense
 // ------------------------------------------------------------------------------
 function SetSequense($new_sequence) {
-	global $sequence;
+	global $userId, $flashRevision, $token, $sequence, $flashSessionKey, $xp, $energy;
 	LoadAuthParams();
 	$sequence = $new_sequence;
 	SaveAuthParams();
@@ -412,7 +412,9 @@ function DoInit() {
 	AddLog2("result $res");
 	AddLog2("Init Time: " . (time()-$T) . " Seconds");
 
-	$GLOBALS['vCnt63000']=63000;
+	global $vCnt63000;
+	$vCnt63000 = 63000;
+	//$GLOBALS['vCnt63000']=63000;
 
 	return $res;
 }
@@ -785,7 +787,7 @@ function Arbeit() {
 		AddLog2("harvest trees");
 		$trees = array();
 		$plot_list = GetObjects('Tree'); //get list of trees
-		foreach($plot_list as $plot) if (($plot['state'] === 'grown') || ($plot['state'] === 'ripe')) $trees[] = $plot;
+		foreach($plot_list as $plot) if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')) $trees[] = $plot;
 
 		if ($enable_harvest_arborist) {
 			$vRatio=round(count($trees)*100/count($plot_list));
@@ -808,7 +810,6 @@ function Arbeit() {
 
 	if ($enable_hoe) { // we've selected to auto-plow plots
 		AddLog2("plowing plots");
-
 		if ($need_reload) {
 			$res = DoInit(); //reload farm
 			$need_reload = false;
@@ -816,12 +817,11 @@ function Arbeit() {
 
 		$plots = array();
 		$plot_list = GetObjects('Plot');
-		foreach($plot_list as $plot) {
-			if (($plot['state'] === 'withered') || ($plot['state'] === 'fallow')) $plots[] = $plot;
-		}
+		foreach($plot_list as $plot) if (($plot['state'] == 'withered') || ($plot['state'] == 'fallow')) $plots[] = $plot;
 		unset($plot_list);
-
+		AddLog2('Preparing to plow ' . count($plots) . ' plots');
 		if (count($plots) > 0) Do_Farm_Work_Plots($plots, 'plow'); //plow land
+		AddLog2('Plowed Plots');
 		unset($plots);
 	}
 
@@ -2334,13 +2334,8 @@ function Do_Farmhands_Arborists($vWhat) {
 
 	$res=RequestAMF($amf);
 
-	if($res=='OK') {
-		AddLog($vWhat." OK");
-		AddLog2($vWhat." OK");
-	} else {
-		AddLog($vWhat." error: ".$res);
-		AddLog2($vWhat." error: ".$res);
-	}
+	if($res=='OK')	AddLog2($vWhat." OK");
+	else AddLog2($vWhat." error: ".$res);
 	return true;
 
 }
@@ -2376,17 +2371,9 @@ function Do_Biplane_Instantgrow() {
 	if($res=='OK') {
 		$vSucess = $amf2->_bodys[0]->_value['data'][0]['success'];
 		$vCost = $amf2->_bodys[0]->_value['data'][0]['cost'];
-		if($vSucess=="1") {
-			AddLog("biplane success, COST: ".$vCost." CASH");
-			AddLog2("biplane success, COST: ".$vCost." CASH");
-		} else {
-			AddLog("biplane error: ".implode($amf2->_bodys[0]->_value['data'][0]));
-			AddLog2("biplane error: ".implode($amf2->_bodys[0]->_value['data'][0]));
-		}
-	} else {
-		AddLog("biplane error: ".$res);
-		AddLog2("biplane error: ".$res);
-	}
+		if($vSucess==1) AddLog2("biplane success, COST: ".$vCost." CASH");
+		else AddLog2("biplane error: ".implode($amf2->_bodys[0]->_value['data'][0]));
+	} else AddLog2("biplane error: ".$res);
 	return $res;
 
 }
@@ -2410,12 +2397,8 @@ function Do_Check_Lonlyanimals() {
 		if(strlen($vAnimal)>0) {
 			AddLog("lonlyanimal found: ".$vAnimal);
 			AddLog2("lonlyanimal found: ".$vAnimal);
-		} else {
-			AddLog2("no lonlyanimal found");
-		}
-	} else {
-		AddLog2("lonlyanimal error: ".$res);
-	}
+		} else AddLog2("no lonlyanimal found");
+	} else AddLog2("lonlyanimal error: ".$res);
 	return $res;
 
 }
@@ -2439,12 +2422,8 @@ function Do_Check_Wanderinganimals() {
 		if(strlen($vReward)>0) {
 			AddLog("wanderinganimal found");
 			AddLog2("wanderinganimal found");
-		} else {
-			AddLog2("no wanderinganimal found");
-		}
-	} else {
-		AddLog2("wanderinganimal error: ".$res);
-	}
+		} else AddLog2("no wanderinganimal found");
+	} else AddLog2("wanderinganimal error: ".$res);
 	return $res;
 
 }
@@ -2502,7 +2481,6 @@ function Do_Accept_Neighbor_Help() {
 			AddLog2('accept neighbor help: OK');
 		} else {
 			if ($res) {
-				AddLog("Error: $res on accept neighbor help");
 				AddLog2("Error: $res on accept neighbor help");
 				if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
 					DoInit();
@@ -2518,21 +2496,18 @@ function Do_Accept_Neighbor_Help() {
 //  @param array $plots
 //  @param string $action (optional)
 // ------------------------------------------------------------------------------
-function Do_Farm_Work($plots, $action = "harvest") {
+function Do_Farm_Work($plots, $action = 'harvest') {
 	global $need_reload;
 	$px_Setopts = LoadSavedSettings();
 
-	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1))
-	$px_Setopts['bot_speed'] = 1;
-
-	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED)
-	$px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
+	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1)) $px_Setopts['bot_speed'] = 1;
+	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED) $px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
 
 	$count = count($plots);
 
 	if ($count > 0) {
 		global $userId;
-		$amf = new AMFObject("");
+		$amf = new AMFObject('');
 		$amf->_bodys[0] = new MessageBody();
 
 		$amf->_bodys[0]->targetURI = 'FlashService.dispatchBatch';
@@ -2553,15 +2528,11 @@ function Do_Farm_Work($plots, $action = "harvest") {
 
 			$amf->_bodys[0]->_value[1][$i]['params'][2][0]['energyCost'] = 0;
 
-			if (@!$plotsstring)
-			$plotsstring = $plot['itemName'] . " " . GetPlotName($plot);
-			else
-			$plotsstring = $plotsstring . ", " . $plot['itemName'] . " " . GetPlotName($plot);
+			if (@!$plotsstring) $plotsstring = $plot['itemName'] . ' ' . GetPlotName($plot);
+			else $plotsstring = $plotsstring . ", " . $plot['itemName'] . ' ' . GetPlotName($plot);
 
-			if (@!$OKstring)
-			$OKstring = $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
-			else
-			$OKstring = $OKstring . "\r\n" . $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
+			if (@!$OKstring) $OKstring = $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
+			else $OKstring = $OKstring . "\r\n" . $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
 
 			$i++;
 
@@ -2574,14 +2545,11 @@ function Do_Farm_Work($plots, $action = "harvest") {
 				unset($amf->_bodys[0]->_value[1]);
 				$need_reload = true;
 
-				if ($res === 'OK') {
-					AddLog($OKstring);
-				} else {
-					if ($res) {
-						AddLog("Error: $res on " . $OKstring);
-						if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
-							DoInit();
-						}
+				if ($res === 'OK') AddLog($OKstring);
+				elseif($res) {
+					AddLog("Error: $res on " . $OKstring);
+					if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
+						DoInit();
 					}
 				}
 				unset($plotsstring, $OKstring);
@@ -2611,7 +2579,7 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 
 	$vMaxEquip=16;
 
-	foreach(array('combine','plow','place','harvest') as $action) $fuel = @$px_Setopts['fuel_'.$action];
+	foreach(array('combine','plow','place','harvest') as $fuelaction) $fuel = @$px_Setopts['fuel_'.$fuelaction];
 	if ($action == 'tractor') $fuel = @$px_Setopts['fuel_plow'];
 
 	if ((@!$fuel) || (@$fuel < 0)) $fuel = 0;
@@ -2670,8 +2638,6 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 
 				$fuel--;
 				if ($action == 'tractor') {
-					#					$vCnt63000++;
-					#					$vPlot['id'] = $vCnt63000;
 					$vPlot['id'] = $vCnt63000 ++;
 					$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][2][$vCntEquip] = $vPlot;
 				} else $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][2][$vCntEquip]['id'] = $vPlot['id'];
@@ -2689,7 +2655,7 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 		AddLog2($action . ' ' . $plotsstring);
 
 		$res = RequestAMF($amf);
-		AddLog2("result $res");
+		AddLog2("Result $res");
 		unset($amf->_bodys[0]->_value[1]);
 		$need_reload = true;
 
