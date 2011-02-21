@@ -121,18 +121,6 @@ $vDataDB=Parser_SQlite_Connect(PARSER_SQLITE);
 $Load_Farm_Read_Size = 0; //0 = Read all, any other number sets the size read
 
 // ------------------------------------------------------------------------------
-// GetData gets data from http $answer
-//  @param string $answer http answer
-//  @return string data
-// ------------------------------------------------------------------------------
-function GetData($answer) {
-	$pos = strpos($answer, "\r\n\r\n");
-	if ($pos !== false) {
-		return substr($answer, $pos + 4, strlen($answer));
-	} else
-	return null;
-}
-// ------------------------------------------------------------------------------
 // CreateRequestAMF creates AMF object
 //  @param string $request
 //  @param string $function
@@ -211,7 +199,7 @@ function SaveAuthParams() {
 // GetSequense
 // ------------------------------------------------------------------------------
 function GetSequense() {
-	global $userId, $flashRevision, $token, $sequence, $flashSessionKey, $xp, $energy;
+	global $sequence;
 	LoadAuthParams();
 	$sequence ++;
 	SaveAuthParams();
@@ -221,7 +209,7 @@ function GetSequense() {
 // SetSequense
 // ------------------------------------------------------------------------------
 function SetSequense($new_sequence) {
-	global $userId, $flashRevision, $token, $sequence, $flashSessionKey, $xp, $energy;
+	global $sequence;
 	LoadAuthParams();
 	$sequence = $new_sequence;
 	SaveAuthParams();
@@ -231,32 +219,6 @@ function SetSequense($new_sequence) {
 // *********************************************************************
 function save_botarray ($array, $filename) {
 	file_put_contents($filename,serialize($array));
-}
-// ********
-// These functions might fix our problem with big farms
-// ********
-function fullwrite ($sd, $buf) {
-	$total = 0;
-	$len = strlen($buf);
-
-	while ($total < $len && ($written = fwrite($sd, $buf))) {
-		$total += $written;
-		$buf = substr($buf, $written);
-	}
-
-	return $total;
-}
-
-function fullread ($sd, $len) {
-	$ret = '';
-	$read = 0;
-
-	while ($read < $len && ($buf = fread($sd, $len - $read))) {
-		$read += strlen($buf);
-		$ret .= $buf;
-	}
-
-	return $ret;
 }
 
 function Connect($server = '') {
@@ -305,7 +267,6 @@ function GetFarmserver() {
 		preg_match('/http:\/\/(.*?)\//', $app_url, $match);
 		$res = $match[1];
 	}
-
 	return $res;
 }
 // ------------------------------------------------------------------------------
@@ -319,7 +280,6 @@ function GetFarmUrl() {
 		$app_url = (@$flashVars['app_url'])?$flashVars['app_url']:'http://fb-ak-0.farmville.com/';
 		$res = $app_url.'flashservices/gateway.php';
 	}
-
 	return $res;
 }
 // ------------------------------------------------------------------------------
@@ -381,36 +341,26 @@ function DoInit() {
 		$objects = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['world']['objectsArray'];
 		// FarmFIX/object split
 		$my_farm_is_fucked_up = 0;
-		if (file_exists('farmfix.txt')) {
-			$my_farm_is_fucked_up = trim(file_get_contents('farmfix.txt'));
-		}
+		if (file_exists('farmfix.txt')) $my_farm_is_fucked_up = trim(file_get_contents('farmfix.txt'));
 
 		if ($my_farm_is_fucked_up == 1) {
 			$obj_total = count($objects);
 
-			if ($obj_total <= 800) {
-				AddLog2("You should turn off Object Split if your farm works without it.");
-			}
+			if ($obj_total <= 800) AddLog2("You should turn off Object Split if your farm works without it.");
 
 			if ($obj_total > 1) {
 				// 1ST FILE
-				for ($i = 0; $i <= round($obj_total / 2); $i++) {
-					$obj_split_one[] = $objects[$i];
-				}
+				for ($i = 0; $i <= round($obj_total / 2); $i++) $obj_split_one[] = $objects[$i];
 				save_botarray ($obj_split_one, F('objects_1.txt'));
 				// end 1ST FILE
 				// 2nd FILE
-				for ($i = round($obj_total / 2) + 1; $i < $obj_total; $i++) {
-					$obj_split_two[] = $objects[$i];
-				}
+				for ($i = round($obj_total / 2) + 1; $i < $obj_total; $i++)	$obj_split_two[] = $objects[$i];
 				save_botarray ($obj_split_two, F('objects_2.txt'));
 				// end 2nd FILE
 			}
 		} //FarmFIX
-		else {
-			// save objects to file
-			save_botarray ($objects, F('objects.txt'));
-		}
+		else save_botarray ($objects, F('objects.txt'));
+
 		// save collection counters to a file
 		$c_count = @$amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['collectionCounters'];
 		save_botarray ($c_count, F('ccount.txt'));
@@ -422,18 +372,15 @@ function DoInit() {
 		save_botarray ($animallinks, F('ralinks.txt'));
 		// save giftbox info for plugins
 		$ingiftbox = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['storageData']['-1'];
-		foreach ($ingiftbox as $key => $item)
-		$ingiftbox[$key] = isset($item[0])?$item[0]:0;
+		foreach ($ingiftbox as $key => $item) $ingiftbox[$key] = isset($item[0])?$item[0]:0;
 		save_botarray ($ingiftbox, F('ingiftbox.txt'));
 		// save consumable info for plugins
 		$inconbox = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['storageData']['-6'];
-		foreach ($inconbox as $key => $item)
-		$inconbox[$key] = isset($item[0])?$item[0]:0;
+		foreach ($inconbox as $key => $item) $inconbox[$key] = isset($item[0])?$item[0]:0;
 		save_botarray ($inconbox, F('inconbox.txt'));
 		// save storage info for plugins
 		$instorage = @$amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['storageData']['-2'];
-		foreach ($instorage as $key => $item)
-		$instorage[$key] = $item[0];
+		foreach ($instorage as $key => $item) $instorage[$key] = $item[0];
 		save_botarray ($instorage, F('instorage.txt'));
 		// save neighbors list
 		$neighbors = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['neighbors'];
@@ -453,15 +400,9 @@ function DoInit() {
 		$earned_ribbons = @$amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['achievements'];
 
 		$ribbon_merge = array();
-		foreach($px_achievements as $name => $data) {
-			$ribbon_merge[$name]['count'] = $data;
-		}
+		foreach($px_achievements as $name => $data) $ribbon_merge[$name]['count'] = $data;
 
-		if (@count($earned_ribbons) > 0) {
-			foreach($earned_ribbons as $name => $data) {
-				$ribbon_merge[$name]['earned'] = $data;
-			}
-		}
+		if (@count($earned_ribbons) > 0) foreach($earned_ribbons as $name => $data) $ribbon_merge[$name]['earned'] = $data;
 		save_botarray($ribbon_merge, F('ach_count.txt'));
 		// save_botarray ($array, $filename);
 	}
@@ -469,12 +410,9 @@ function DoInit() {
 	Hook('after_load_farm');
 
 	AddLog2("result $res");
-	$T2 = time();
-	$T2 -= $T;
-	AddLog2("Init Time: " . $T2 . " Seconds");
+	AddLog2("Init Time: " . (time()-$T) . " Seconds");
 
-	global $vCnt63000;
-	$vCnt63000=63000;
+	$GLOBALS['vCnt63000']=63000;
 
 	return $res;
 }
@@ -522,15 +460,12 @@ function Arbeit() {
 
 	if(is_file(LogF("log2.txt"))) {
 		$vDir='./farmville-logs';
-		if (!is_dir($vDir)) {
-			@mkdir($vDir);
-		}
+		if (!is_dir($vDir)) @mkdir($vDir);
 		copy(LogF("log2.txt"),'./farmville-logs/'.$userId.'_log2_'.date('Ymd_His').'.log');
-
 	}
 
 	#// clear advanced log
-	$f = fopen(LogF("log2.txt"), "w+");
+	$f = fopen(LogF('log2.txt'), "w+");
 	fclose($f);
 
 	while(file_exists('notrun_parser.txt') || file_exists('notrun_parser_'.$userId.'.txt')) {
@@ -628,8 +563,6 @@ function Arbeit() {
 
 								$vResponse2 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
 
-
-								#$vPostData=str_replace('&request_type=','&&request_type=',$vPostData);
 								$vPostData=str_replace('&preview=true&','&preview=false&',$vPostData);
 								$vResponse3 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
 								if (stripos(strip_tags($vResponse3),'"error":0')) AddLog2('Parser_gift_reqs: send thankyou-gift - Success');
@@ -713,11 +646,7 @@ function Arbeit() {
 				break;
 				//   harvest all
 			default:
-				foreach($plot_list as $plot) {
-					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')){
-						$plots[] = $plot;
-					}
-				}
+				foreach($plot_list as $plot) if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')) $plots[] = $plot;
 				AddLog2('n0m mod: Harvest ALL ( ' . count($plots) . ' ) crops!');
 				break;
 		}
@@ -749,56 +678,51 @@ function Arbeit() {
 			'turkeyroost' => 'TurkeyRoostBuilding'
 			);
 
-		foreach($buildingassoc as $setting=>$objectname) {
-			$varname = 'enable_harvest_building'.$setting;
-			if($$varname == 1) {
-				$x = GetObjects($objectname);
-				//Check whether $building_list+=$x would work 
-				if(is_array($x)) $building_list = array_merge($building_list, $x);
-			}
-		}
-		if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_duckpond == 1 || $enable_harvest_building_ccastle == 1)
-		{
-			$x = GetObjects("FeatureBuilding");
-			if (is_array($x)) $building_list = array_merge($building_list, $x);
-		}
-		if (count($building_list) > 0) {
-			$buildings = array();
-			foreach($building_list as $plot) {
-				if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['m_hasAnimal'] == 1)) $buildings[] = $plot;
-			}
-			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
-			$buildings = array();
-			foreach($building_list as $plot) {
-				if ($plot['className'] == 'HalloweenHauntedHouseBuilding') {
-					list($vUSec,$vSec) = explode(" ", microtime());
-					$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
-					if($plot['plantTime']<($vPlantTime-82800000)) $buildings[] = $plot;
+			foreach($buildingassoc as $setting=>$objectname) {
+				$varname = 'enable_harvest_building'.$setting;
+				if($$varname == 1) {
+					$x = GetObjects($objectname);
+					//Check whether $building_list+=$x would work
+					if(is_array($x)) $building_list = array_merge($building_list, $x);
 				}
 			}
-			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
-			$buildings = array();
-			foreach($building_list as $plot) {
-				if ($plot['className'] == 'FeatureBuilding') {
-					if(($enable_harvest_building_wworkshop == 1 && $plot['itemName']=='winterworkshop_finished')
-					||
-					($enable_harvest_building_snowman == 1 && $plot['itemName']=='snowman2010_finished')
-					||
-					($enable_harvest_building_duckpond == 1 && $plot['itemName']=='duckpond_finished')
-					||
-					($enable_harvest_building_ccastle == 1 && $plot['itemName']=='valentines2011_finished')
-
-					) {
+			if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_duckpond == 1 || $enable_harvest_building_ccastle == 1)
+			{
+				$x = GetObjects("FeatureBuilding");
+				if (is_array($x)) $building_list = array_merge($building_list, $x);
+			}
+			if (count($building_list) > 0) {
+				$buildings = array();
+				foreach($building_list as $plot) {
+					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['m_hasAnimal'] == 1)) $buildings[] = $plot;
+				}
+				if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
+				$buildings = array();
+				foreach($building_list as $plot) {
+					if ($plot['className'] == 'HalloweenHauntedHouseBuilding') {
 						list($vUSec,$vSec) = explode(" ", microtime());
 						$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
-						if($plot['plantTime']<($vPlantTime-86400000))
-						$buildings[] = $plot;
+						if($plot['plantTime']<($vPlantTime-82800000)) $buildings[] = $plot;
 					}
 				}
+				if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
+				$buildings = array();
+				foreach($building_list as $plot) {
+					if ($plot['className'] == 'FeatureBuilding') {
+						if(($enable_harvest_building_wworkshop == 1 && $plot['itemName']=='winterworkshop_finished')
+						|| ($enable_harvest_building_snowman == 1 && $plot['itemName']=='snowman2010_finished')
+						|| ($enable_harvest_building_duckpond == 1 && $plot['itemName']=='duckpond_finished')
+						|| ($enable_harvest_building_ccastle == 1 && $plot['itemName']=='valentines2011_finished')
+						) {
+							list($vUSec,$vSec) = explode(" ", microtime());
+							$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
+							if($plot['plantTime']<($vPlantTime-86400000)) $buildings[] = $plot;
+						}
+					}
+				}
+				if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
+				unset($building_list);
 			}
-			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
-			unset($building_list);
-		}
 	}
 
 	Hook('after_harvest_buildings'); //after building harvest
@@ -824,7 +748,6 @@ function Arbeit() {
 					}
 				}
 			} else {
-				AddLog("H_Animal not set.. skipping animal harvest");
 				AddLog2("H_Animal not set.. skipping animal harvest");
 				break;
 			}
@@ -838,7 +761,6 @@ function Arbeit() {
 		if ($enable_harvest_farmhands) {
 			$vRatio=round((count($transform_animals)+count($harvest_animals))*100/count($animals));
 			if($vRatio>=$enable_harvest_farmhands_at) {
-
 				$inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
 				if((!isset($inconbox['AA'])) || $inconbox['AA']==0) AddLog2("farmhands: you dont have farmhands");
 				elseif($inconbox['AA']<=$enable_harvest_farmhands_min) AddLog2("farmhands: you dont have enough farmhands (".$inconbox['AA'].")");
@@ -863,9 +785,7 @@ function Arbeit() {
 		AddLog2("harvest trees");
 		$trees = array();
 		$plot_list = GetObjects('Tree'); //get list of trees
-		foreach($plot_list as $plot) {
-			if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')) $trees[] = $plot;
-		}
+		foreach($plot_list as $plot) if (($plot['state'] === 'grown') || ($plot['state'] === 'ripe')) $trees[] = $plot;
 
 		if ($enable_harvest_arborist) {
 			$vRatio=round(count($trees)*100/count($plot_list));
@@ -897,7 +817,7 @@ function Arbeit() {
 		$plots = array();
 		$plot_list = GetObjects('Plot');
 		foreach($plot_list as $plot) {
-			if (($plot['state'] == 'withered') || ($plot['state'] == 'fallow')) $plots[] = $plot;
+			if (($plot['state'] === 'withered') || ($plot['state'] === 'fallow')) $plots[] = $plot;
 		}
 		unset($plot_list);
 
@@ -1976,9 +1896,7 @@ function GetUnitList() {
 		foreach ($xmlDoc->quest as $vQuest) {
 			$vQuestID=(string)$vQuest['id'];
 			if(strlen($vQuestID)>0) {
-				foreach($vQuest->attributes() as $vField => $vContent) {
-					$vDataDB->queryExec('insert into quests(name,field,content) values("'.$vQuestID.'","'.$vField.'","'.$vContent.'");');
-				}
+				foreach($vQuest->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into quests(name,field,content) values("'.$vQuestID.'","'.$vField.'","'.$vContent.'");');
 				foreach ($vQuest->children() as $vSubName => $vSubElement) {
 					if($vSubName=='text') {
 						foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) {
@@ -1998,9 +1916,7 @@ function GetUnitList() {
 						$vDataDB->queryExec('insert into quests(name,field,content) values("'.$vQuestID.'","completionRequirements_'.$vCompleteName.'_timeLimit","'.$vSubElement['timeLimit'].'");');
 
 						foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) {
-							if($vSubSubName=='requirement') {
-								$vDataDB->queryExec('insert into quests(name,field,content) values("'.$vQuestID.'","completionRequirements_'.$vCompleteName.'_'.(string)$vSubSubElement['action'].'_'.(string)$vSubSubElement['type'].'","'.(string)$vSubSubElement['many'].'");');
-							}
+							if($vSubSubName=='requirement') $vDataDB->queryExec('insert into quests(name,field,content) values("'.$vQuestID.'","completionRequirements_'.$vCompleteName.'_'.(string)$vSubSubElement['action'].'_'.(string)$vSubSubElement['type'].'","'.(string)$vSubSubElement['many'].'");');
 							if($vSubSubName=='reward') {
 								if((string)$vSubSubElement['type']=='generic') {
 									$vDataDB->queryExec('insert into quests(name,field,content) values("'.$vQuestID.'","completionRequirements_'.$vCompleteName.'_reward_generic_coins","'.(string)$vSubSubElement['coins'].'");');
@@ -2183,11 +2099,7 @@ function RunHttp() {
 }
 function GetTransforms($array) {
 	$ret = array();
-	foreach ($array as $item) {
-		if (@$item['action'] == "transform") {
-			$ret[] = $item['name'];
-		}
-	}
+	foreach ($array as $item) if (@$item['action'] == "transform") $ret[] = $item['name'];
 	return $ret;
 }
 // ------------------------------------------------------------------------------
@@ -2368,31 +2280,17 @@ function GetObjects($className = '') {
 //  @return array List of objects
 // ------------------------------------------------------------------------------
 function GetObjects2($className = '') {
-	$object_file_1_str = file_get_contents(F('objects_1.txt'));
-	$object_file_1 = unserialize($object_file_1_str);
-
-	$object_file_2_str = file_get_contents(F('objects_2.txt'));
-	$object_file_2 = unserialize($object_file_2_str);
+	$object_file_1 = unserialize(file_get_contents(F('objects_1.txt')));
+	$object_file_2 = unserialize(file_get_contents(F('objects_2.txt')));
 
 	if ($className) {
 		$resobjects = array();
-
-		foreach ($object_file_1 as $object)
-		if ($object['className'] == $className)
-		$resobjects[] = $object;
-
-		foreach ($object_file_2 as $object)
-		if ($object['className'] == $className)
-		$resobjects[] = $object;
-
+		foreach ($object_file_1 as $object) if($object['className'] == $className) $resobjects[] = $object;
+		foreach ($object_file_2 as $object) if($object['className'] == $className) $resobjects[] = $object;
 		return $resobjects;
 	} else {
-		foreach ($object_file_1 as $object)
-		$obj_joined[] = $object;
-
-		foreach ($object_file_2 as $object)
-		$obj_joined[] = $object;
-
+		foreach ($object_file_1 as $object) $obj_joined[] = $object;
+		foreach ($object_file_2 as $object) $obj_joined[] = $object;
 		return $obj_joined; //return all objects
 	}
 }
@@ -2713,30 +2611,13 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 
 	$vMaxEquip=16;
 
-	if ($action == 'combine')
-	$fuel = @$px_Setopts['fuel_combine'];
+	foreach(array('combine','plow','place','harvest') as $action) $fuel = @$px_Setopts['fuel_'.$action];
+	if ($action == 'tractor') $fuel = @$px_Setopts['fuel_plow'];
 
-	if ($action == 'tractor')
-	$fuel = @$px_Setopts['fuel_plow'];
+	if ((@!$fuel) || (@$fuel < 0)) $fuel = 0;
 
-	if ($action == 'plow')
-	$fuel = @$px_Setopts['fuel_plow'];
-
-	if ($action == 'place')
-	$fuel = @$px_Setopts['fuel_place'];
-
-	if ($action == 'harvest')
-	$fuel = @$px_Setopts['fuel_harvest'];
-
-	if ((@!$fuel) || (@$fuel < 0))
-	$fuel = 0;
-
-	if ($fuel == 0 && $action == 'combine') {
-		return;
-	}
-	if ($fuel == 0 && $action == 'tractor') {
-		return;
-	}
+	if ($fuel == 0 && $action == 'combine') return;
+	if ($fuel == 0 && $action == 'tractor') return;
 	if ($fuel == 0) {
 		Do_Farm_Work($plots, $action);
 		return;
@@ -2758,23 +2639,15 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 		while(count($plots)>0 && $vCntSpeed<$px_Setopts['bot_speed'] && $fuel>0) {
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['sequence'] = GetSequense();
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['functionName'] = "EquipmentWorldService.onUseEquipment";
-			if ($action == 'tractor') {
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][0] = 'plow';
-			} else {
-				$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][0] = $action;
-			}
+			if ($action == 'tractor') $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][0] = 'plow';
+			else $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][0] = $action;
 
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['id'] = -1;
-			if ($action == 'combine')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'q1:96';  # fully expanded combine
-			if ($action == 'harvest')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'V1:32';  # fully expanded harvester
-			if ($action == 'tractor')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
-			if ($action == 'plow')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
-			if ($action == 'place')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'S1:32';  # fully expanded seeder
+			if ($action == 'combine')	$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'q1:96';  # fully expanded combine
+			if ($action == 'harvest')	$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'V1:32';  # fully expanded harvester
+			if ($action == 'tractor')	$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
+			if ($action == 'plow')		$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'T1:32';  # fully expanded tractor
+			if ($action == 'place')		$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][1]['key'] = 'S1:32';  # fully expanded seeder
 
 			$vCntEquip=0; $vSeed=''; $vLastSeed='';
 			while(count($plots)>0 && $vCntEquip<$vMaxEquip && $fuel>0) {
@@ -2789,15 +2662,11 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 					}
 				}
 
-				if (@!$plotsstring)
-				$plotsstring = $vPlot['itemName'] . " " . GetPlotName($vPlot);
-				else
-				$plotsstring = $plotsstring . ", " . $vPlot['itemName'] . " " . GetPlotName($vPlot);
+				if (@!$plotsstring) $plotsstring = $vPlot['itemName'] . " " . GetPlotName($vPlot);
+				else $plotsstring = $plotsstring . ", " . $vPlot['itemName'] . " " . GetPlotName($vPlot);
 
-				if (@!$OKstring)
-				$OKstring = $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
-				else
-				$OKstring = $OKstring . "\r\n" . $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
+				if (@!$OKstring) $OKstring = $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
+				else $OKstring = $OKstring . "\r\n" . $action . " " . $vPlot['itemName'] . " on plot " . GetPlotName($vPlot);
 
 				$fuel--;
 				if ($action == 'tractor') {
@@ -2805,47 +2674,33 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 					#					$vPlot['id'] = $vCnt63000;
 					$vPlot['id'] = $vCnt63000 ++;
 					$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][2][$vCntEquip] = $vPlot;
-				} else {
-					$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][2][$vCntEquip]['id'] = $vPlot['id'];
-				}
-
+				} else $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][2][$vCntEquip]['id'] = $vPlot['id'];
 				$vCntEquip++;
-
 			}
 
-			if ($action == 'combine')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
-			if ($action == 'tractor')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
-			if ($action == 'harvest')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
-			if ($action == 'plow')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
-			if ($action == 'place')
-			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
-
+			if ($action == 'combine') $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
+			if ($action == 'tractor') $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
+			if ($action == 'harvest') $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
+			if ($action == 'plow') $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = 'plowed';
+			if ($action == 'place') $amf->_bodys[0]->_value[1][$vCntSpeed]['params'][3] = $vSeed;
 			$vCntSpeed++;
 		}
 
-		AddLog2($action . " " . $plotsstring);
+		AddLog2($action . ' ' . $plotsstring);
 
 		$res = RequestAMF($amf);
 		AddLog2("result $res");
 		unset($amf->_bodys[0]->_value[1]);
 		$need_reload = true;
 
-		if ($res === 'OK') {
-			AddLog($OKstring);
-		} else {
-			if ($res) {
-				AddLog("Error: $res on " . $OKstring);
-				if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
-					DoInit();
-				}
+		if ($res === 'OK') AddLog($OKstring);
+		elseif ($res) {
+			AddLog("Error: $res on " . $OKstring);
+			if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
+				DoInit();
 			}
 		}
 		unset($plotsstring, $OKstring);
-
 	}
 
 	$px_Setopts = LoadSavedSettings();
@@ -2894,13 +2749,9 @@ function RequestAMFIntern($amf) {
 // ------------------------------------------------------------------------------
 function CheckAMF2Response($amf2) {
 	if (@$amf2->_bodys[0]->_value['errorType'] != 0) {
-		if ($amf2->_bodys[0]->_value['errorData'] == "There is a new version of the farm game released") {
+		if ($amf2->_bodys[0]->_value['errorData'] == "There is a new version of the farm game released" ||
+		$amf2->_bodys[0]->_value['errorData'] == "Client has a newer version than backend") {
 			AddLog2("New version of the game released");
-			echo "\n*****\nGame version out of date\n*****\n";
-			unlink('sqlite_check.txt');
-			RestartBot();
-		} else if ($amf2->_bodys[0]->_value['errorData'] == "Client has a newer version than backend") {
-			AddLog2("Client has a newer version than backend");
 			echo "\n*****\nGame version out of date\n*****\n";
 			unlink('sqlite_check.txt');
 			RestartBot();
@@ -2933,9 +2784,7 @@ function CheckAMF2Response($amf2) {
 	} else if (!isset($amf2->_bodys[0]->_value['data'][0])) {
 		echo "\n*****\nError:\n BAD AMF REPLY - Possible Server problem or farm badly out of sync\n*****\n";
 		$res = "BAD AMF REPLY (OOS?)";
-	} else if (isset($amf2->_bodys[0]->_value['data'][0]['data']) && ($amf2->_bodys[0]->_value['data'][0]['data']=='success')) {
-		$res = 'OK';
-	} else if (isset($amf2->_bodys[0]->_value['data'][0]['data']) && ($amf2->_bodys[0]->_value['data'][0]['data']=='6uccess')) {
+	} else if (isset($amf2->_bodys[0]->_value['data'][0]['data']) && ($amf2->_bodys[0]->_value['data'][0]['data']=='success') || ($amf2->_bodys[0]->_value['data'][0]['data']=='6uccess')) {
 		$res = 'OK';
 	} else if (isset($amf2->_bodys[0]->_value['data'][0]['errorType']) && ($amf2->_bodys[0]->_value['data'][0]['errorType'] <> 0)) {
 		$res = $amf2->_bodys[0]->_value['data'][0]['errorType'] . " " . $amf2->_bodys[0]->_value['data'][0]['errorData'].' '.$amf2->_bodys[0]->_value['data'][0]['data']['error'];
@@ -3212,13 +3061,11 @@ function pluginload() {
 		while (($file = readdir($dh)) !== false) {
 			if (is_dir($dir . '/' . $file)) {
 				if ($file != '.' && $file != '..') {
-					$plugin = array();
-					$plugin['name'] = $file;
-					$plugin['folder'] = $dir . '/' . $file;
-					$plugin['main'] = file_exists($dir . '/' . $file . '/main.php') ? $dir . '/' . $file . '/main.php' : '';
-					$plugin['hooks'] = array();
-
-					$plugins[] = $plugin;
+					$plugins[] = array(
+						'name' => $file,
+						'folder' => $dir. '/' . $file,
+						'main' => file_exists($dir . '/' . $file . '/main.php') ? $dir . '/' . $file . '/main.php' : '',
+						'hooks' => array());
 				}
 			}
 		}
