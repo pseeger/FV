@@ -25,6 +25,4 @@ define ('farmer_url', GetFarmUrl());
 	}
 }
 else include('plugins/'.$plugin.'/'.$file);
-
-echo 'Ready';
 ?>

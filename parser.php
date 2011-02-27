@@ -1,7 +1,7 @@
 <?php
-define('PX_VER_PARSER', '22122');
-define('PX_DATE_PARSER', '2011-02-12');
-define('PARSER_MAX_SPEED', '8');
+define('PX_VER_PARSER', '22124');
+define('PX_DATE_PARSER', '2011-02-27');
+define('PARSER_MAX_SPEED', 8);
 define('PARSER_SQLITE', 'data.sqlite');
 define('SCK_WRITE_PACKET_SIZE', 8192);
 define('SCK_READ_PACKET_SIZE', 4096);
@@ -294,7 +294,7 @@ function DoInit() {
 
 	Hook('before_load_farm');
 
-	global $userId, $flashRevision, $token, $sequence, $flashSessionKey, $xp, $energy;
+	global $userId, $flashRevision, $token, $sequence, $flashSessionKey, $xp, $energy, $servertime;
 	LoadAuthParams();
 	SetSequense(0);
 
@@ -307,13 +307,12 @@ function DoInit() {
 	$amf2=RequestAMFIntern($amf);
 	$res=CheckAMF2Response($amf2);
 	if ($res == 'OK') {
-
 		LoadAuthParams();
 		// get flashSessionKey
 		$sequence = 1;
-		if (isset($amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['flashSessionKey'])) {
-			$flashSessionKey = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['flashSessionKey'];
-		}
+		if (isset($amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['flashSessionKey'])) $flashSessionKey = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['flashSessionKey'];
+		$servertime = $amf2->_bodys[0]->_value['data'][0]['serverTime'];
+
 		// save to file $flashSessionKey, $xp, $energy
 		$xp = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['xp'];
 		$energy = $amf2->_bodys[0]->_value['data'][0]['data']['energy'];
@@ -385,6 +384,13 @@ function DoInit() {
 		// save neighbors list
 		$neighbors = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['neighbors'];
 		save_botarray ($neighbors, F('neighbors.txt'));
+		$pneighbors = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['pendingNeighbors'];
+		save_botarray ($pneighbors, F('pneighbors.txt'));
+		$nAQ = @$amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['neighborActionQueue']['m_actionQueue'];
+		save_botarray ($nAQ, F('nactionqueue.txt'));
+		$nAL = @$amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['neighborActionLimits']['m_neighborActionLimits'][date('ymd', $servertime)];
+		save_botarray ($nAL, F('nactionlimit.txt'));
+
 		// save crop mastery list
 		$px_cropmastery = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['masteryCounters'];
 		save_botarray ($px_cropmastery, F('cropmastery.txt'));
@@ -475,6 +481,8 @@ function Arbeit() {
 		sleep(30);
 	}
 
+	parse_neighbors();
+
 	AddLog2("start");
 	Hook('before_work');
 
@@ -510,6 +518,8 @@ function Arbeit() {
 	$enable_harvest_building_wworkshop = @$px_Setopts['e_h_building_wworkshop'];
 	$enable_harvest_building_snowman = @$px_Setopts['e_h_building_snowman'];
 	$enable_harvest_building_ccastle = @$px_Setopts['e_h_building_ccastle'];
+	$enable_harvest_building_lcottage = @$px_Setopts['e_h_building_lcottage'];
+
 	$enable_harvest_arborist = @$px_Setopts['e_h_arborist'];
 	$enable_harvest_arborist_at = @$px_Setopts['e_h_arborist_at'];
 	$enable_harvest_arborist_min = @$px_Setopts['e_h_arborist_min'];
@@ -527,9 +537,9 @@ function Arbeit() {
 	$enable_acceptgifts_twice = @$px_Setopts['acceptgifts_twice'];
 	$enable_acceptgifts_num = @$px_Setopts['acceptgifts_num'];
 	if(strlen($enable_acceptgifts_num)==0) $enable_acceptgifts_num=10;
+	$enable_sendgifts = @$px_Setopts['sendgifts'];
 
 	if($enable_acceptgifts) {
-
 		$vGiftReqs=Parser_ReadReq();
 		save_botarray($vGiftReqs, F('gift_reqs.txt'));
 		AddLog2('Parser_gift_reqs: '.count($vGiftReqs).' to accept');
@@ -541,8 +551,8 @@ function Arbeit() {
 					if($vGCount>=$enable_acceptgifts_num) break;
 					$vGCount++;
 					$vWhat=explode('&',str_replace(array('?','='),array('&','&'),$vData['action_url']));
-					AddLog2('Parser_gift_reqs: '.$vGCount.' accept '.Units_GetRealnameByName($vWhat[4]).' ('.$vWhat[4].') from '.$vWhat[2]);
-					error_log('"'.$vWhat[2].'";"'.$vWhat[4].'";"'.date('Y.m.d H:i:s').'"'."\n",3,LogF('gifts_accepted.csv'));
+					AddLog2('Parser_gift_reqs: '.$vGCount.' accept '.Units_GetRealnameByName($vWhat[4]).' ('.$vWhat[4].') from '.GetNeighborRealName($vWhat[2]).' ('.$vWhat[2].')');
+					error_log('"'.GetNeighborRealName($vWhat[2]).'";"'.$vWhat[2].'";"'.$vWhat[4].'";"'.date('Y.m.d H:i:s').'"'."\n",3,LogF('gifts_accepted.csv'));
 
 					$vResponse = proxy_GET_FB("http://www.facebook.com/ajax/reqs.php?__a=1", 'POST', $vData['post_data']);
 
@@ -555,8 +565,8 @@ function Arbeit() {
 
 						foreach($vTYForms[0] as $vJ => $vTYForm) {
 							if(stripos($vTYForm, 'thank you') !== false || stripos($vTYForm, 'send to') !== false) {
-								AddLog2('Parser_gift_reqs: send thankyou-gift '.Units_GetRealnameByName($vWhat[4]).' ('.$vWhat[4].') to '.$vWhat[2]);
-								error_log('"'.$vWhat[2].'";"'.$vWhat[4].'";"'.date('Y.m.d H:i:s').'"'."\n",3,LogF('gifts_send_thankyou.csv'));
+								AddLog2('Parser_gift_reqs: send thankyou-gift '.Units_GetRealnameByName($vWhat[4]).' ('.$vWhat[4].') to '.GetNeighborRealName($vWhat[2]).' ('.$vWhat[2].')');
+								error_log('"'.GetNeighborRealName($vWhat[2]).'";"'.$vWhat[2].'";"'.$vWhat[4].'";"'.date('Y.m.d H:i:s').'"'."\n",3,LogF('gifts_send_thankyou.csv'));
 
 								preg_match_all('/.*action="([^"]*)".*/ims', $vTYForm, $vAction);
 								preg_match_all('/.*giftRecipient=([^&]*).*type="([^"]*)".*content="([^"]*)".*id="([^"]*)".*post_form_id=([^&]*).*/ims', $vTYForm, $vTYFields);
@@ -580,6 +590,8 @@ function Arbeit() {
 			}
 		}
 	}
+
+	if($enable_sendgifts) Parser_SendGift();
 
 	Hook('after_load_settings');
 
@@ -688,7 +700,7 @@ function Arbeit() {
 					if(is_array($x)) $building_list = array_merge($building_list, $x);
 				}
 			}
-			if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_duckpond == 1 || $enable_harvest_building_ccastle == 1)
+			if ($enable_harvest_building_wworkshop == 1 || $enable_harvest_building_snowman == 1 || $enable_harvest_building_duckpond == 1 || $enable_harvest_building_ccastle == 1 || $enable_harvest_building_lcottage == 1)
 			{
 				$x = GetObjects("FeatureBuilding");
 				if (is_array($x)) $building_list = array_merge($building_list, $x);
@@ -715,6 +727,7 @@ function Arbeit() {
 						|| ($enable_harvest_building_snowman == 1 && $plot['itemName']=='snowman2010_finished')
 						|| ($enable_harvest_building_duckpond == 1 && $plot['itemName']=='duckpond_finished')
 						|| ($enable_harvest_building_ccastle == 1 && $plot['itemName']=='valentines2011_finished')
+						|| ($enable_harvest_building_lcottage == 1 && $plot['itemName']=='stpatty2011_finished')
 						) {
 							list($vUSec,$vSec) = explode(" ", microtime());
 							$vPlantTime=(string)$vSec.substr((string)$vUSec, 2, 3);
@@ -996,10 +1009,8 @@ function Parser_Get_Locale() {
 		}
 		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
 			$vDataDB->query('insert into units("name","field","content") values("' . $vName . '", "realname" , "' . $vHashImage . '")');
-			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
 		} else {
 			$vDataDB->query('insert into units("name","field","content") values("' . $vName . '","realname","' . $vImage . '")');
-			AddLog2("Parser: No Description - " . $vName);
 		}
 
 	}
@@ -1024,10 +1035,8 @@ function Parser_Get_Locale() {
 		}
 		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
 			$vDataDB->query('insert into collectables("name","field","content") values("' . $vName . '", "realname" , "' . $vHashImage . '")');
-			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
 		} else {
 			$vDataDB->query('insert into collectables("name","field","content") values("' . $vName . '","realname","' . $vImage . '")');
-			AddLog2("Parser: No Description - " . $vName);
 		}
 
 	}
@@ -1052,10 +1061,8 @@ function Parser_Get_Locale() {
 		}
 		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
 			$vDataDB->query('insert into achievements("name","field","content") values("' . $vName . '", "realname" , "' . $vHashImage . '")');
-			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
 		} else {
 			$vDataDB->query('insert into achievements("name","field","content") values("' . $vName . '","realname","' . $vImage . '")');
-			AddLog2("Parser: No Description - " . $vName);
 		}
 
 	}
@@ -1081,10 +1088,8 @@ function Parser_Get_Locale() {
 		}
 		if (strlen($vHashImage) > 0 && strpos($vHashImage,'\\') === false) {
 			$vDataDB->query('insert into quests("name","field","content") values("' . $vImage . '", "realname" , "' . $vHashImage . '")');
-			AddLog2("Parser: Got Description - " . $vName . ' - ' . $vHashImage);
 		} else {
 			$vDataDB->query('insert into quests("name","field","content") values("' . $vImage . '","realname","' . $vImage . '")');
-			AddLog2("Parser: No Description - " . $vName);
 		}
 
 	}
@@ -1132,6 +1137,18 @@ function Parser_Get_Locale() {
 	$vDataDB->queryExec('COMMIT TRANSACTION');
 }
 
+// ------------------------------------------------------------------------------
+// Parser_Get_FlashVars
+// ------------------------------------------------------------------------------
+function Parser_Get_FlashVars() {
+	AddLog2("Downloading latest flashVars.");
+	$vHTML=proxy_GET_FB('http://apps.facebook.com/onthefarm/index.php?ref=bookmarks');
+	preg_match_all('/<iframe[^>]*"([^"]*flash\.php[^"]*)"/ims', $vHTML, $vIFrames);
+	unset($vHTML);
+	$vHTML=proxy_GET_FB(html_entity_decode($vIFrames[1][0]));
+	file_put_contents(F('flashVars.txt'), $vHTML);
+	unset($vHTML);
+}
 
 // ------------------------------------------------------------------------------
 // Parser_SQlite_Connect
@@ -1203,6 +1220,16 @@ function Units_GetRealnameByName($vName) {
 	return($vReturn==''?$vName:$vReturn);
 }
 
+// ------------------------------------------------------------------------------
+// GetNeighborRealName
+// ------------------------------------------------------------------------------
+function GetNeighborRealName($uid) {
+	global $vDataDB;
+	$vSQL='SELECT fullname FROM neighbors WHERE neighborid=\'' . $uid . '\' LIMIT 1';
+	$vResult = $vDataDB->query($vSQL);
+	$vReturn=$vResult->fetchSingle();
+	return($vReturn==''?$uid:$vReturn);
+}
 
 // ------------------------------------------------------------------------------
 // Units_GetNameByRealname
@@ -1354,10 +1381,42 @@ function Quests_GetAll() {
 // parse_flashvars
 // ------------------------------------------------------------------------------
 function parse_flashvars() {
+	clearstatcache();
+	// Check if file exists, Get fresh file if older than 12 hours, Check if file is too small
+	if ((!file_exists(F('flashVars.txt'))) || (filesize(F('flashVars.txt')) < 6) || (filemtime(F('flashVars.txt')) < (time() - 43200))) {
+		Parser_Get_FlashVars();
+		unlink('sqlite_check.txt');
+	}
 	$temp = file_get_contents(F('flashVars.txt'));
 	preg_match('/var flashVars = (\{[^}]*\})/sim', $temp, $flash);
 	return json_decode($flash[1],true);
 }
+
+function parse_neighbors() {
+	global $vDataDB;
+	$temp = file_get_contents(F('flashVars.txt'));
+	preg_match('/var g_friendData = \[([^]]*)\]/sim', $temp, $friend);
+	if (!isset($friend[1])) return;
+	preg_match_all('/\{([^}]*)\}/sim', $friend[1], $friend2);
+	foreach($friend2[1] as $f) {
+		preg_match_all('/"([^"]*)":"([^"]*)"/im', $f, $fr);
+		$newarray[] = array_combine($fr[1], $fr[2]);
+	}
+	unset($friend2, $fr);
+	$uSQL = '';
+	foreach ($newarray as $friends) {
+		if ($friends['is_app_user'] != 1) continue;
+		$friends['pic_square'] = str_replace('\\/', '\\', $friends['pic_square']);
+		$friends['name'] = str_replace("'", "''", $friends['name']);
+		$friends['name'] = preg_replace('/\\\u([0-9a-z]{4})/', '&#x$1;', $friends['name']);
+		$uSQL .= "INSERT OR REPLACE INTO neighbors(neighborid, fullname, profilepic) values('" . $friends['uid'] . "',
+                                '" . $friends['name'] . "', '" . $friends['pic_square'] . "');";
+	}
+	$vDataDB->queryExec($uSQL);
+	unset($uSQL, $newarray);
+	return;
+}
+
 
 // ------------------------------------------------------------------------------
 // Download XML/SWF
@@ -1495,6 +1554,10 @@ function GetUnitList() {
 		$vDataDB->queryExec('CREATE INDEX units_idx_1 ON units(name,field)');
 		$vDataDB->queryExec('CREATE INDEX units_idx_2 ON units(field,content)');
 		$sqlite_update = 1;
+	}
+
+	if (@$vDataDB->query('SELECT * FROM neighbors limit 1') === false) {
+		$vDataDB->queryExec('CREATE TABLE neighbors (neighborid CHAR(25) PRIMARY KEY, fullname CHAR(50), profilepic TEXT)');
 	}
 
 	# check achievements table
@@ -2435,13 +2498,10 @@ function Do_Accept_Neighbor_Help() {
 	global $userId;
 	$vData=array();
 	$px_Setopts = LoadSavedSettings();
-	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] > 50) || (@$px_Setopts['bot_speed'] < 1)) {
-		$vSpeed = 1;
-	} else {
-		$vSpeed=$px_Setopts['bot_speed'];
-	}
-	$vWorld=unserialize(file_get_contents(F('world.txt'))); //get the last world
-	$vNActions = $vWorld['data'][0]['data']['userInfo']['player']['neighborActionQueue']['m_actionQueue'];
+	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] > 50) || (@$px_Setopts['bot_speed'] < 1)) $vSpeed = 1;
+	else $vSpeed=$px_Setopts['bot_speed'];
+
+	$vNActions=unserialize(file_get_contents(F('nactionqueue.txt')));
 	foreach($vNActions as $vActions) {
 		$vNID = $vActions['visitorId'];
 		foreach ($vActions['actions'] as $vAction) {
@@ -2465,10 +2525,8 @@ function Do_Accept_Neighbor_Help() {
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['sequence'] = GetSequense();
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['functionName'] = "NeighborActionService.clearNeighborAction";
 			$amf->_bodys[0]->_value[1][$vCntSpeed]['params'] = $vParams;
-			if (@!$OKstring)
-			$OKstring = 'accept help '.$vParams[1].' from '.$vParams[0].' on plot '.$vParams[2];
-			else
-			$OKstring = $OKstring."\r\n".'accept help '.$vParams[1].' from '.$vParams[0].' on plot '.$vParams[2];
+			if (@!$OKstring) $OKstring = 'accept help '.$vParams[1].' from '.GetNeighborRealName($vParams[0]).' ('.$vParams[0].') on plot '.$vParams[2];
+			else $OKstring = $OKstring."\r\n".'accept help '.$vParams[1].' from '.GetNeighborRealName($vParams[0]).' ('.$vParams[0].') on plot '.$vParams[2];	
 			$vCntSpeed++;
 		}
 
@@ -2498,66 +2556,57 @@ function Do_Accept_Neighbor_Help() {
 // ------------------------------------------------------------------------------
 function Do_Farm_Work($plots, $action = 'harvest') {
 	global $need_reload;
+	global $userId;
 	$px_Setopts = LoadSavedSettings();
 
 	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1)) $px_Setopts['bot_speed'] = 1;
 	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED) $px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
+	$sequence = GetSequense();
 
-	$count = count($plots);
+	//Initialize values for exponential smoothing
+	$t = 1.5;
+	$a = 0.3;
 
-	if ($count > 0) {
-		global $userId;
-		$amf = new AMFObject('');
-		$amf->_bodys[0] = new MessageBody();
+	if($count == 0) return;
 
-		$amf->_bodys[0]->targetURI = 'FlashService.dispatchBatch';
-		$amf->_bodys[0]->responseURI = '/1/onStatus';
-		$amf->_bodys[0]->responseIndex = '/1';
+	$amf = new AMFObject('');
+	$amf->_bodys[0] = new MessageBody();
+	$amf->_bodys[0]->targetURI = 'FlashService.dispatchBatch';
+	$amf->_bodys[0]->responseURI = '/1/onStatus';
+	$amf->_bodys[0]->responseIndex = '/1';
+	$amf->_bodys[0]->_value[0] = GetAMFHeaders();
+	$amf->_bodys[0]->_value[2] = 0;
 
-		$amf->_bodys[0]->_value[0] = GetAMFHeaders();
-		$amf->_bodys[0]->_value[2] = 0;
-		$i = 0;
-
-		foreach($plots as $plot) {
-			$amf->_bodys[0]->_value[1][$i]['functionName'] = "WorldService.performAction";
+	foreach(array_chunk($plots, $px_Setopts['bot_speed']) as $chunk) {
+		for($i=0;$i<count();$i++) {
+			$amf->_bodys[0]->_value[1][$i]['functionName'] = 'WorldService.performAction';
 			$amf->_bodys[0]->_value[1][$i]['params'][0] = $action;
-			$amf->_bodys[0]->_value[1][$i]['sequence'] = GetSequense();
-
+			$amf->_bodys[0]->_value[1][$i]['sequence'] = $sequence++;
 			$amf->_bodys[0]->_value[1][$i]['params'][1] = $plot;
 			$amf->_bodys[0]->_value[1][$i]['params'][2] = array();
 
 			$amf->_bodys[0]->_value[1][$i]['params'][2][0]['energyCost'] = 0;
 
-			if (@!$plotsstring) $plotsstring = $plot['itemName'] . ' ' . GetPlotName($plot);
-			else $plotsstring = $plotsstring . ", " . $plot['itemName'] . ' ' . GetPlotName($plot);
+			$OKstring .= "\r\n" . $action . ' ' . $plot['itemName'] . ' on plot ' . GetPlotName($plot);
+		}
+		$time = microtime(true);
+		$res = RequestAMF($amf);
+		$time = microtime(true) - $time;
+		$t = $a*$t+$time*(1-$a);
+		AddLog2((round($time*1000)) . 'ms / ' . round($t*round(($count+1)/PARSER_MAX_SPEED)) . 's ETA. ' . PARSER_MAX_SPEED . 'x ' . $action . ' ' . $plot['itemName']);
 
-			if (@!$OKstring) $OKstring = $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
-			else $OKstring = $OKstring . "\r\n" . $action . " " . $plot['itemName'] . " on plot " . GetPlotName($plot);
+		unset($amf->_bodys[0]->_value[1]);
 
-			$i++;
-
-			if (($i == $px_Setopts['bot_speed']) || ($i >= $count)) {
-				$count -= $i;
-				$i = 0;
-				AddLog2($action . " " . $plotsstring);
-				$res = RequestAMF($amf);
-				AddLog2("result $res");
-				unset($amf->_bodys[0]->_value[1]);
-				$need_reload = true;
-
-				if ($res === 'OK') AddLog($OKstring);
-				elseif($res) {
-					AddLog("Error: $res on " . $OKstring);
-					if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
-						DoInit();
-					}
-				}
-				unset($plotsstring, $OKstring);
+		if($res!='OK') {
+			AddLog('Error: '.$res.' on ' . print_r($chunk,true));
+			if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
+				SetSequense($sequence);
+				DoInit();
 			}
 		}
-
-		SaveAuthParams();
 	}
+	SetSequense($sequence);
+	SaveAuthParams();
 }
 
 // ------------------------------------------------------------------------------
@@ -2565,17 +2614,14 @@ function Do_Farm_Work($plots, $action = 'harvest') {
 //  @param array $plots
 //  @param string $action (optional)
 // ------------------------------------------------------------------------------
-function Do_Farm_Work_Plots($plots, $action = "harvest") {
+function Do_Farm_Work_Plots($plots, $action = 'harvest') {
 	global $need_reload;
 	global $vCnt63000;
 	if(@strlen($vCnt63000)==0) $vCnt63000=63000;
 	$px_Setopts = LoadSavedSettings();
 
-	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1))
-	$px_Setopts['bot_speed'] = 1;
-
-	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED)
-	$px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
+	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1)) $px_Setopts['bot_speed'] = 1;
+	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED) $px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
 
 	$vMaxEquip=16;
 
@@ -2586,14 +2632,11 @@ function Do_Farm_Work_Plots($plots, $action = "harvest") {
 
 	if ($fuel == 0 && $action == 'combine') return;
 	if ($fuel == 0 && $action == 'tractor') return;
-	if ($fuel == 0) {
-		Do_Farm_Work($plots, $action);
-		return;
-	}
+	if ($fuel == 0) return Do_Farm_Work($plots, $action);
 
 	while(count($plots)>0) {
 		global $userId;
-		$amf = new AMFObject("");
+		$amf = new AMFObject('');
 		$amf->_bodys[0] = new MessageBody();
 
 		$amf->_bodys[0]->targetURI = 'FlashService.dispatchBatch';
@@ -2824,7 +2867,7 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'OilBarronFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'ConstructionBuildingFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'SocialMissionShareBonusFriendReward','Item',$vFound,$vRewardsArray);
-
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'FeedTroughFriendReward','Item',$vFound,$vRewardsArray);
 }
 
 
@@ -2866,7 +2909,6 @@ function CheckAMF2Rewards($amf2) {
 		}
 		if(!$vFound) {
 			file_put_contents('rew_data_raw_'.date('z').'.txt', print_r($vReward,true));
-			AddLog2('Parser_CheckAMF2Rewards: unknown reward found. check rew_data_raw_'.date('z').'.txt immediately, as it gets now overwritten!!');
 			preg_match_all('/reward.php\?frHost=([^&]*)&frId=([^&]*)&frType=([^& ]*)/si', str_replace(array("\r","\n"),array(' ',' '),print_r($vReward,true)), $vRewards);
 			for($vI = 0; $vI < count($vRewards[1]); $vI++) {
 				$vUserID=$vRewards[1][$vI];
@@ -3014,6 +3056,154 @@ function Parser_ReadReq() {
 	unset($vForms);
 	return($vGiftRequests);
 }
+
+function Parser_SendGift() {
+
+	if(!(file_exists('sendgifts.txt') || file_exists(F('sendgifts.txt')))) {
+		return'';
+	}
+
+	AddLog2('Parser_send_gift: check neighbors');
+	$vGift='socialplumbingmysterygift';
+	$vURL='http://apps.facebook.com/onthefarm/';
+	$vHTML=proxy_GET_FB($vURL);
+
+	preg_match_all('/<iframe src="(.*)" name="flashAppIframe"/is', $vHTML, $vIframes);
+	preg_match_all('/post_form_id:"([^"]*)"/ims', $vHTML, $vPostFormIDs);
+	preg_match_all('/fb_dtsg:"([^"]*)"/ims', $vHTML, $vDTGSs);
+	$vPostFormID=$vPostFormIDs[1][0];
+	$vDTGS=$vDTGSs[1][0];
+
+	$vURL=html_entity_decode($vIframes[1][0]);
+	$vHTML=proxy_GET_FB($vURL);
+
+	preg_match_all('/class="gifts_tab " href="(.*)" title="Free Gifts"/is', $vHTML, $vZys);
+
+	$vURL=str_replace('/gifts.php?ref=tab&','/gifts_send.php?gift='.$vGift.'&view=farmville&src=direct&aff=&crt=&sendkey=&',$vZys[1][0]).'&overlayed=true&'.time();
+	$vHTML=proxy_GET_FB($vURL);
+
+	preg_match_all('/FB.init\("([^"]*)", "([^"]*)"\)/is', $vHTML, $vFBInits);
+	$vAppKey='app_key='.$vFBInits[1][0];
+	$vChannelUrl='channel_url='.$vFBInits[2][0];
+
+	$vStart=strpos($vHTML,'<fb:serverfbml><script type="text/fbml">')+strlen('<fb:serverfbml><script type="text/fbml">');
+	$vStop=strpos($vHTML,'</script></fb:serverfbml>',$vStart);
+	$vFBML='fbml='.urlencode(substr($vHTML,$vStart,$vStop-$vStart));
+
+	$vHTML = proxy_GET_FB("http://www.connect.facebook.com/widgets/serverfbml.php", 'POST', $vAppKey.'&'.$vChannelUrl.'&'.$vFBML);
+
+	preg_match_all('/var items=({.*});/im', $vHTML, $vNeighbor1s);
+	preg_match_all('/"([0-9]+)":{/is', $vNeighbor1s[1][0], $vNeighbor2s);
+
+	$vSendNeighborsArray=$vNeighbor2s[1];
+
+	if (file_exists(F('sendgifts.txt'))) {
+		if(file_exists('sendgifts.txt')) {
+			$vGiftsArray=file('sendgifts.txt');
+		} else {
+			$vGiftsArray=file(F('sendgifts.txt'));
+		}
+		foreach($vGiftsArray as $vRow) {
+			list($vFBID,$vGift)=explode(';',trim($vRow));
+			if(strlen($vFBID)>0&&strlen($vGift)>0 && in_array($vFBID,$vSendNeighborsArray) && count($vSend[$vGift])<25) {
+				$vSend[$vGift][]=$vFBID;
+			}
+		}
+	}
+	foreach($vSend as $vGift => $vFBIDs){
+		if(count($vFBIDs)>0) {
+			Parser_SendGift_Do($vFBIDs, $vGift);
+		}
+	}
+
+}
+
+
+function Parser_SendGift_Do($vFBIDs, $vGift) {
+
+	$vLog='Parser_send_gift: send '.Units_GetRealnameByName($vGift).' ('.$vGift.') to ';
+	foreach($vFBIDs as $vFBID) {
+		$vLog.=GetNeighborRealName($vFBID).' ('.$vFBID.') ,';
+		error_log('"'.GetNeighborRealName($vLog).'";"'.$vLog.'";"'.$vGift.'";"'.date('Y.m.d H:i:s').'"'."\n",3,LogF('gifts_send.csv'));
+	}
+	AddLog2(trim($vLog,', '));
+
+	$vURL='http://apps.facebook.com/onthefarm/';
+	$vHTML=proxy_GET_FB($vURL);
+	#file_put_contents('sendgift_1_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n");
+
+	preg_match_all('/<iframe src="(.*)" name="flashAppIframe"/is', $vHTML, $vIframes);
+	preg_match_all('/post_form_id:"([^"]*)"/ims', $vHTML, $vPostFormIDs);
+	preg_match_all('/fb_dtsg:"([^"]*)"/ims', $vHTML, $vDTGSs);
+	#file_put_contents('sendgift_2_'.__LINE__.'.html', print_r($vIframes,true).print_r($vPostFormIDs,true).print_r($vDTGSs,true));
+	$vPostFormID=$vPostFormIDs[1][0];
+	$vDTGS=$vDTGSs[1][0];
+
+	$vURL=html_entity_decode($vIframes[1][0]);
+	$vHTML=proxy_GET_FB($vURL);
+	#file_put_contents('sendgift_3_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n");
+
+	preg_match_all('/class="gifts_tab " href="(.*)" title="Free Gifts"/is', $vHTML, $vZys);
+	#file_put_contents('sendgift_4_'.__LINE__.'.html', print_r($vIframes,true));
+
+	$vURL=str_replace('/gifts.php?ref=tab&','/gifts_send.php?gift='.$vGift.'&view=farmville&src=direct&aff=&crt=&sendkey=&',$vZys[1][0]).'&overlayed=true&'.time();
+	$vHTML=proxy_GET_FB($vURL);
+	#file_put_contents('sendgift_5_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n");
+
+	preg_match_all('/FB.init\("([^"]*)", "([^"]*)"\)/is', $vHTML, $vFBInits);
+	#file_put_contents('sendgift_6_'.__LINE__.'.html', print_r($vFBInits,true));
+	$vAppKey='app_key='.$vFBInits[1][0];
+	$vChannelUrl='channel_url='.$vFBInits[2][0];
+
+	$vStart=strpos($vHTML,'<fb:serverfbml><script type="text/fbml">')+strlen('<fb:serverfbml><script type="text/fbml">');
+	$vStop=strpos($vHTML,'</script></fb:serverfbml>',$vStart);
+	$vFBML='fbml='.urlencode(substr($vHTML,$vStart,$vStop-$vStart));
+	#file_put_contents('sendgift_7_'.__LINE__.'.html', $vAppKey.'&'.$vChannelUrl.'&'.$vFBML);
+
+	$vHTML = proxy_GET_FB("http://www.connect.facebook.com/widgets/serverfbml.php", 'POST', $vAppKey.'&'.$vChannelUrl.'&'.$vFBML);
+	#file_put_contents('sendgift_8_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n");
+
+	$vPostData='prefill=true';
+	$vPostData.='&message=';
+	$vPostData.='&preview=false';
+	$vPostData.='&donot_send=false';
+	$vPostData.='&__d=1';
+	$vPostData.='&post_form_id='.$vPostFormID;
+	$vPostData.='&fb_dtsg='.$vDTGS;
+	$vPostData.='&post_form_id_source=AsyncRequest';
+	$vPostData.='&lsd=';
+
+	preg_match_all('/PlatformInvite.sendInvitation.*(\&#123.*.?125;)[(\(;)]/im', $vHTML, $vDatas);
+	preg_match_all('/<form[^>].*content=\s*["]([^"]+)[^>]*>/im', $vHTML, $vForms);
+	preg_match_all('/<form[^>].*action=\s*["]([^"]+)[^>]*>/im', $vHTML, $vURLs);
+	#file_put_contents('sendgift_9_'.__LINE__.'.html', print_r($vDatas,true).print_r($vForms,true));
+
+	$vPostData.='&'.str_replace('&prefill=&','&',str_replace(array('&quot;','&#123;','&#125;','request_form',':',','),array('','','','form_id','=','&'),$vDatas[1][0]));
+	$vPostData.='&content='.urlencode($vForms[1][0]);
+	$vCnt=0;
+	foreach($vFBIDs as $vFBID) {
+		$vPostData.='&to_ids['.$vCnt.']='.$vFBID;
+		$vCnt++;
+	}
+	#file_put_contents('sendgift_10_'.__LINE__.'.html', print_r($vPostData,true));
+
+	$vURL="http://apps.facebook.com/fbml/ajax/prompt_send.php?__a=1";
+	$vHTML = proxy_GET_FB($vURL, 'POST', $vPostData);
+	#file_put_contents('sendgift_11_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n".$vPostData."\n\n####\n\n");
+
+	$vStart=strpos($vPostData,'&form_id=')+strlen('&form_id=');
+	$vStop=strpos($vPostData,'&',$vStart);
+	$vPostData2='cmfs_typeahead_'.substr($vPostData,$vStart,$vStop-$vStart).'=start';
+	foreach($vFBIDs as $vFBID) {
+		$vPostData2.='&ids%5B%5D='.$vFBID;
+	}
+
+	$vURL=html_entity_decode($vURLs[1][0]);
+	$vHTML = proxy_GET_FB($vURL, 'POST', $vPostData2);
+	#file_put_contents('sendgift_11_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n".$vPostData2."\n\n####\n\n");
+
+}
+
 
 function pluginload() {
 	// get list of plugins
