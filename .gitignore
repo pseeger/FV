@@ -9,3 +9,4 @@ config/
 data.sqlite
 *.csv
 *.exe
+lighty.conf
