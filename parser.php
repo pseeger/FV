@@ -2594,15 +2594,16 @@ function Do_Farm_Work($plots, $action = 'harvest') {
 		$res = RequestAMF($amf);
 		$time = microtime(true) - $time;
 		$t = $a*$t+$time*(1-$a);
-		AddLog2((round($time*1000)) . 'ms / ' . round($t*round(($count--+1))) . 's total. ' . PARSER_MAX_SPEED . 'x ' . $action . ' ' . $chunk[$i]['itemName']);
+		AddLog2((round($time*1000)) . 'ms / ' . round($t*round(($count--+1))) . 's remaining. ' . PARSER_MAX_SPEED . 'x ' . $action . ' ' . $chunk[$i]['itemName']);
 
 		unset($amf->_bodys[0]->_value[1]);
 
 		if($res!='OK') {
-			AddLog('Error: '.$res.' on ' . $chunk[0]['itemName'] . ' ' .GetPlotName($chunk[0]));
+			AddLog2('Error: '.$res.' on ' . $chunk[0]['itemName'] . ' ' .GetPlotName($chunk[0]));
 			if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
 				SetSequense($sequence);
 				DoInit();
+				$sequence=GetSequense();
 			}
 		}
 	}
