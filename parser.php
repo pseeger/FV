@@ -332,9 +332,9 @@ function DoInit() {
 		save_botarray ($amf2->_bodys[0]->_value, F('world.txt'));
 
 		$amf2->rawData='';
-		$f = fopen(F('world_'.$firstname.'.txt'), "w+");
-		fwrite($f, print_r($amf2,true));
-		fclose($f);
+$f = fopen(F('world_'.$firstname.'.txt'), 'w+');
+fwrite($f, print_r($amf2,true));
+fclose($f);
 
 		// get objects on farm
 		$objects = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['world']['objectsArray'];
@@ -2562,10 +2562,11 @@ function Do_Farm_Work($plots, $action = 'harvest') {
 	if ((!@$px_Setopts['bot_speed']) || (@$px_Setopts['bot_speed'] < 1)) $px_Setopts['bot_speed'] = 1;
 	if (@$px_Setopts['bot_speed'] > PARSER_MAX_SPEED) $px_Setopts['bot_speed'] = PARSER_MAX_SPEED;
 	$sequence = GetSequense();
+	$count = ceil(count($plots)/$px_Setopts['bot_speed']);
 
 	//Initialize values for exponential smoothing
 	$t = 1.5;
-	$a = 0.3;
+	$a = 0.1;
 
 	if($count == 0) return;
 
@@ -2578,27 +2579,27 @@ function Do_Farm_Work($plots, $action = 'harvest') {
 	$amf->_bodys[0]->_value[2] = 0;
 
 	foreach(array_chunk($plots, $px_Setopts['bot_speed']) as $chunk) {
-		for($i=0;$i<count();$i++) {
+		for($i=0;$i<count($chunk);$i++) {
 			$amf->_bodys[0]->_value[1][$i]['functionName'] = 'WorldService.performAction';
 			$amf->_bodys[0]->_value[1][$i]['params'][0] = $action;
 			$amf->_bodys[0]->_value[1][$i]['sequence'] = $sequence++;
-			$amf->_bodys[0]->_value[1][$i]['params'][1] = $plot;
+			$amf->_bodys[0]->_value[1][$i]['params'][1] = $chunk[$i];
 			$amf->_bodys[0]->_value[1][$i]['params'][2] = array();
 
 			$amf->_bodys[0]->_value[1][$i]['params'][2][0]['energyCost'] = 0;
 
-			$OKstring .= "\r\n" . $action . ' ' . $plot['itemName'] . ' on plot ' . GetPlotName($plot);
+			$OKstring .= "\r\n" . $action . ' ' . $chunk[$i]['itemName'] . ' on plot ' . GetPlotName($chunk[$i]);
 		}
 		$time = microtime(true);
 		$res = RequestAMF($amf);
 		$time = microtime(true) - $time;
 		$t = $a*$t+$time*(1-$a);
-		AddLog2((round($time*1000)) . 'ms / ' . round($t*round(($count+1)/PARSER_MAX_SPEED)) . 's ETA. ' . PARSER_MAX_SPEED . 'x ' . $action . ' ' . $plot['itemName']);
+		AddLog2((round($time*1000)) . 'ms / ' . round($t*round(($count--+1))) . 's total. ' . PARSER_MAX_SPEED . 'x ' . $action . ' ' . $chunk[$i]['itemName']);
 
 		unset($amf->_bodys[0]->_value[1]);
 
 		if($res!='OK') {
-			AddLog('Error: '.$res.' on ' . print_r($chunk,true));
+			AddLog('Error: '.$res.' on ' . $chunk[0]['itemName'] . ' ' .GetPlotName($chunk[0]));
 			if ((intval($res) == 29) || (strpos($res, 'BAD AMF') !== false)) { // Server sequence was reset
 				SetSequense($sequence);
 				DoInit();
