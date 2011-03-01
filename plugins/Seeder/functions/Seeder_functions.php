@@ -572,7 +572,7 @@ $res = 'OK';
             $res = $amf2->_bodys[0]->_value['data'][0]['errorType'] . " " . $amf2->_bodys[0]->_value['data'][0]['errorData'];
         }
     }
-    fclose($s);
+    @fclose($s);
 //======================================
             AddLog2("result $res");
             $count -= $i;

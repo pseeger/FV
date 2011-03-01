@@ -1,6 +1,9 @@
 #/bin/sh
 
 f=`dirname $0`
+if f=='.'
+        then f=$PWD
+fi
 
 if test -f /usr/sbin/lighttpd
 	then LIGHTTPD=/usr/sbin/lighttpd
