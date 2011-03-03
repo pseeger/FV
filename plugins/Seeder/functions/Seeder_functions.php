@@ -1293,7 +1293,7 @@ function Seeder_GetMarket($itemCode)//changed v1.1.2
 $marketStall = Seeder_Read("marketStall");
 $uids = array();
 
- foreach ($marketStall as $item)
+ if(is_array($marketStall)) foreach ($marketStall as $item)
  {
  $uid = number_format($item['uid'], 0, '', '');
   foreach($item['inventory'] as $inventory)

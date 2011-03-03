@@ -88,6 +88,8 @@ ini_set('display_errors', true);
 $tmp = pack("d", 1); // determine the multi-byte ordering of this machine temporarily pack 1
 define("AMFPHP_BIG_ENDIAN", $tmp == "\0\0\0\0\0\0\360\77");
 $GLOBALS['amfphp']['encoding'] = 'amf3';
+$GLOBALS['amfphp']['native'] = 0; //TODO: Investigate
+$GLOBALS['amfphp']['adapterMappings'] = array(); //TODO: Investigate
 
 define('AMFPHP_BASE', 'amfphp/core/');
 
@@ -693,7 +695,7 @@ function Arbeit() {
 			);
 
 			foreach($buildingassoc as $setting=>$objectname) {
-				$varname = 'enable_harvest_building'.$setting;
+				$varname = 'enable_harvest_building_'.$setting;
 				if($$varname == 1) {
 					$x = GetObjects($objectname);
 					//Check whether $building_list+=$x would work
@@ -708,7 +710,7 @@ function Arbeit() {
 			if (count($building_list) > 0) {
 				$buildings = array();
 				foreach($building_list as $plot) {
-					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['m_hasAnimal'] == 1)) $buildings[] = $plot;
+					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || (@$plot['m_hasAnimal'] == 1)) $buildings[] = $plot;
 				}
 				if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
 				$buildings = array();
@@ -2594,7 +2596,7 @@ function Do_Farm_Work($plots, $action = 'harvest') {
 		$res = RequestAMF($amf);
 		$time = microtime(true) - $time;
 		$t = $a*$t+$time*(1-$a);
-		AddLog2((round($time*1000)) . 'ms / ' . round($t*round(($count--+1))) . 's remaining. ' . PARSER_MAX_SPEED . 'x ' . $action . ' ' . $chunk[$i]['itemName']);
+		AddLog2((round($time*1000)) . 'ms / ' . round($t*round(($count--+1))) . 's remaining. ' . PARSER_MAX_SPEED . 'x ' . $action . ' ' . $chunk[0]['itemName']);
 
 		unset($amf->_bodys[0]->_value[1]);
 
