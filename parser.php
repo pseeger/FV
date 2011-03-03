@@ -135,20 +135,12 @@ function CreateRequestAMF($request = '', $function = '') {
 	$amf->_bodys[0]->targetURI = 'FlashService.dispatchBatch';
 	$amf->_bodys[0]->responseURI = '/1/onStatus';
 	$amf->_bodys[0]->responseIndex = '/1';
-
 	$amf->_bodys[0]->_value[0] = GetAMFHeaders();
-
 	$amf->_bodys[0]->_value[1][0]['sequence'] = GetSequense();
-
 	$amf->_bodys[0]->_value[1][0]['params'] = array();
-	if ($request)
-	$amf->_bodys[0]->_value[1][0]['params'][0] = $request;
-
-	if ($function)
-	$amf->_bodys[0]->_value[1][0]['functionName'] = $function;
-
+	if ($request) $amf->_bodys[0]->_value[1][0]['params'][0] = $request;
+	if ($function) $amf->_bodys[0]->_value[1][0]['functionName'] = $function;
 	$amf->_bodys[0]->_value[2] = 0;
-
 	return $amf;
 }
 // ------------------------------------------------------------------------------
@@ -302,7 +294,7 @@ function DoInit() {
 
 	// Create Init request
 	$amf = CreateRequestAMF('', 'UserService.initUser');
-	$amf->_bodys[0]->_value[1][0]['params'][0] = "";
+	$amf->_bodys[0]->_value[1][0]['params'][0] = '';
 	$amf->_bodys[0]->_value[1][0]['params'][1] = -1;
 	$amf->_bodys[0]->_value[1][0]['params'][2] = true;
 
@@ -320,9 +312,7 @@ function DoInit() {
 		$energy = $amf2->_bodys[0]->_value['data'][0]['data']['energy'];
 		SaveAuthParams();
 		// get extra info
-		$level = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['level'];
-		$gold = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['gold'];
-		$cash = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['cash'];
+		foreach(array('level','gold','cash') as $var) $$var =  $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player'][$var];
 		$sizeX = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['world']['sizeX'];
 		$sizeY = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['world']['sizeY'];
 		$firstname = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['attr']['name'];
@@ -333,10 +323,10 @@ function DoInit() {
 		// save world to file
 		save_botarray ($amf2->_bodys[0]->_value, F('world.txt'));
 
-		$amf2->rawData='';
-$f = fopen(F('world_'.$firstname.'.txt'), 'w+');
-fwrite($f, print_r($amf2,true));
-fclose($f);
+//		$amf2->rawData='';
+//$f = fopen(F('world_'.$firstname.'.txt'), 'w+');
+//fwrite($f, print_r($amf2,true));
+//fclose($f);
 
 		// get objects on farm
 		$objects = $amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['world']['objectsArray'];
@@ -346,11 +336,10 @@ fclose($f);
 
 		if ($my_farm_is_fucked_up == 1) {
 			$obj_total = count($objects);
-
 			if ($obj_total <= 800) AddLog2("You should turn off Object Split if your farm works without it.");
-
 			if ($obj_total > 1) {
 				// 1ST FILE
+				//TODO: replace this with array_chunk
 				for ($i = 0; $i <= round($obj_total / 2); $i++) $obj_split_one[] = $objects[$i];
 				save_botarray ($obj_split_one, F('objects_1.txt'));
 				// end 1ST FILE
@@ -362,6 +351,7 @@ fclose($f);
 		} //FarmFIX
 		else save_botarray ($objects, F('objects.txt'));
 
+		//TODO: Replace with some loops
 		// save collection counters to a file
 		$c_count = @$amf2->_bodys[0]->_value['data'][0]['data']['userInfo']['player']['collectionCounters'];
 		save_botarray ($c_count, F('ccount.txt'));
@@ -418,11 +408,9 @@ fclose($f);
 	Hook('after_load_farm');
 
 	AddLog2("result $res");
-	AddLog2("Init Time: " . (time()-$T) . " Seconds");
+	AddLog2('Init Time: ' . (time()-$T) . ' seconds');
 
-	global $vCnt63000;
-	$vCnt63000 = 63000;
-	//$GLOBALS['vCnt63000']=63000;
+	$GLOBALS['vCnt63000']=63000;
 
 	return $res;
 }
@@ -485,7 +473,7 @@ function Arbeit() {
 
 	parse_neighbors();
 
-	AddLog2("start");
+	AddLog2('start');
 	Hook('before_work');
 
 	// Init
@@ -498,6 +486,7 @@ function Arbeit() {
 	if (!function_exists('LoadSavedSettings')) die("\n\nSettings plugin installed incorrectly no LoadSavedSettings found!\n\n");
 
 	$px_Setopts = LoadSavedSettings();
+	//TODO: Loop it
 	$enable_harvest = @$px_Setopts['e_harvest']; //harvest crops
 	$enable_biplane = @$px_Setopts['e_biplane'];
 	$enable_harvest_animal = @$px_Setopts['e_h_animal']; //get product from livestock
@@ -541,6 +530,7 @@ function Arbeit() {
 	if(strlen($enable_acceptgifts_num)==0) $enable_acceptgifts_num=10;
 	$enable_sendgifts = @$px_Setopts['sendgifts'];
 
+	//TODO: make a seperate function
 	if($enable_acceptgifts) {
 		$vGiftReqs=Parser_ReadReq();
 		save_botarray($vGiftReqs, F('gift_reqs.txt'));
