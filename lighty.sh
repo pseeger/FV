@@ -1,9 +1,8 @@
 #/bin/sh
 
 f=`dirname $0`
-if [ "$f" = '.' ]
-        then echo "."
-	f=$PWD
+if [ "${f:0:1}" != "/" ]
+	then f=$PWD/$f
 fi
 if test -f /usr/sbin/lighttpd
 	then LIGHTTPD=/usr/sbin/lighttpd
