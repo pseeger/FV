@@ -13,7 +13,7 @@ else
 fi
 echo "server.modules = (\"mod_fastcgi\", \"mod_rewrite\")
 server.document-root = \"$f/\"
-index-file.names = ( \"index.php\", \"main.php\")
+index-file.names = ( \"index.html\", \"index.php\", \"main.php\")
 server.port = 5000
 url.rewrite-once = ( \"/plugins/([^/]+)/([^?]+.php)\??(.*)\" => \"http.php?plugin=\$1&url=\$2&\$3\")
 fastcgi.server = ( \".php\" => ((\"bin-path\" => \"/usr/bin/php5-cgi -c $f/localphp.ini \",
