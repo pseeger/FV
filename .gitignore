@@ -5,7 +5,7 @@ assets/
 FBID*
 *.txt
 config/
-data.sqlite
+*.sqlite
 *.csv
 *.exe
 lighty.conf
