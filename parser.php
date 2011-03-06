@@ -2875,7 +2875,7 @@ function CheckAMF2Rewards($amf2) {
 		if(stripos(print_r($vReward,true), 'reward.php') === false) continue;
 		CheckAMF2RewardsSub($vReward,$vFound,$vRewardsArray);
 		foreach(array('harvest','plow','place',0) as $rewardsubtype) 
-			if(isset($vReward['data'][$rewardsubtype] && is_array($vReward['data']['harvest']['data'])) 
+			if(isset($vReward['data'][$rewardsubtype]) && is_array($vReward['data']['harvest']['data'])) 
 				foreach($vReward['data']['harvest']['data'] as $vSubReward) 
 					if(stripos(print_r($vSubReward,true), 'reward.php') !== false) CheckAMF2RewardsSub($vSubReward,$vFound,$vRewardsArray);
 		if(!$vFound) {
