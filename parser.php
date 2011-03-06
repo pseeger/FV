@@ -2815,6 +2815,7 @@ function CheckAMF2RewardsSubCheck2($vRewURL,$vRewItem,$vItemUrl,&$vFound,&$vRewa
 
 
 function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
+	error_reporting(E_WARNING);
 	CheckAMF2RewardsSubCheck($vReward['collectionCounters']['0']['link'],$vReward['collectionCounters']['0']['collectable'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['collectionCounters'][0]['link'],$vReward['collectionCounters'][0]['collectable'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['buyResponse']['buyResults'][0]['rewardLink'],$vReward['data']['buyResponse']['buyResults'][0]['recipe'],'Code',$vFound,$vRewardsArray);
@@ -2846,19 +2847,7 @@ function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'ConstructionBuildingFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'FeedTroughFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'PigpenSlopFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'BushelFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'CellarRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'EasterBasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'HaitiBackpackRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'HalloweenBasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'OilBarronFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PigpenSlopFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PotOfGoldRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'SocialMissionShareBonusFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'TuscanWeddingRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'ValentineRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'WanderingStallionFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'thanksgivingbasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
+	if(isset($vReward['data']['rewardUrl'])) foreach(array('BushelFriendReward','CellarRedeemFriendReward','EasterBasketRedeemFriendReward','HaitiBackpackRedeemFriendReward','HalloweenBasketRedeemFriendReward','OilBarronFriendReward','Item','PigpenSlopFriendReward','PotOfGoldRedeemFriendReward','SocialMissionShareBonusFriendReward','TuscanWeddingRedeemFriendReward','ValentineRedeemFriendReward','WanderingStallionFriendReward','thanksgivingbasketRedeemFriendReward') as $rewardType) CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],$rewardType,$vFound,$vRewardsArray);
 }
 
 
@@ -2894,6 +2883,7 @@ function CheckAMF2Rewards($amf2) {
 			}
 		} else {
 			AddLog2('Parser_CheckAMF2Rewards: rewards found: '.implode('|',$vFound));
+			file_put_contents('raw_rewards'.time(),serialize($amf2->_bodys[0]->_value['data']));
 		}
 	}
 	if(count($vRewardsArray)>0 && is_array($vRewardsArray)) {
