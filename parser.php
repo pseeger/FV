@@ -2815,53 +2815,50 @@ function CheckAMF2RewardsSubCheck2($vRewURL,$vRewItem,$vItemUrl,&$vFound,&$vRewa
 
 
 function CheckAMF2RewardsSub($vReward,&$vFound,&$vRewardsArray) {
-	CheckAMF2RewardsSubCheck($vReward['collectionCounters'][0]['link'],$vReward['collectionCounters'][0]['collectable'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['animalName'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['rewardType'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['animalName'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['bonusCoins'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['gift'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['harvestItem'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['expansionRewardLink'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['itemFoundRewardUrl'],$vReward['data']['itemShareName'],'Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['data']['rewardLink'],$vReward['data']['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
-
 	CheckAMF2RewardsSubCheck($vReward['collectionCounters']['0']['link'],$vReward['collectionCounters']['0']['collectable'],'Code',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data'][0]['rewardLink'],$vReward['data'][0]['recipeId'],'Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['collectionCounters'][0]['link'],$vReward['collectionCounters'][0]['collectable'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['buyResponse']['buyResults'][0]['rewardLink'],$vReward['data']['buyResponse']['buyResults'][0]['recipe'],'Code',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['data']['fuelRewardLink'],'2A','Code',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['fuelRewardLink'],'2A','Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['data']['fuelDiscoveryRewardLink'],'2A','Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['data']['fuelRewardLink'],'2A','Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['data']['rewardLink'],$vReward['data']['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['expansionRewardLink'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['fertilizeRewardLink'],$vReward['data']['goodieBagRewardItemCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['foalRewardLink'],$vReward['data']['foalCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['foundBushel']['bushelsFullRewardUrl'],$vReward['data']['foundBushel']['bushelCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['foundBushel']['openStallRewardUrl'],$vReward['data']['foundBushel']['bushelCode'],'Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['fuelRewardLink'],'2A','Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['itemBuffRewardUrl'],$vReward['data']['itemBuffCode'],'Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['itemFoundRewardUrl'],$vReward['data']['itemShareName'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['mysterySeed']['rewardLink'],$vReward['data']['mysterySeed']['itemCode'],'Code',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['itemCode'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['reward']['rewardLink'],$vReward['data']['reward']['itemCode'],'Code',$vFound,$vRewardsArray);
-
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['animalName'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['bonusCoins'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['gift'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['harvestItem'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['itemCode'],'Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardLink'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['animalName'],'Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['itemCode'],'Code',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['rewardItem'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data']['rewardUrl'],$vReward['data']['rewardType'],'Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck($vReward['data'][0]['rewardLink'],$vReward['data'][0]['recipeId'],'Code',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck($vReward['goals'][0]['link'],$vReward['goals'][0]['code'],'Code',$vFound,$vRewardsArray);
-
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'ConstructionBuildingFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'FeedTroughFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'PigpenSlopFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PigpenSlopFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'ValentineRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PotOfGoldRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'EasterBasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'TuscanWeddingRedeemFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'BushelFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'CellarRedeemFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'EasterBasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'HaitiBackpackRedeemFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'HalloweenBasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'thanksgivingbasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'BushelFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'WanderingStallionFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'OilBarronFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'ConstructionBuildingFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PigpenSlopFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'PotOfGoldRedeemFriendReward','Item',$vFound,$vRewardsArray);
 	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'SocialMissionShareBonusFriendReward','Item',$vFound,$vRewardsArray);
-	CheckAMF2RewardsSubCheck2($vReward['data']['rewardLink'],'FeedTroughFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'TuscanWeddingRedeemFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'ValentineRedeemFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'WanderingStallionFriendReward','Item',$vFound,$vRewardsArray);
+	CheckAMF2RewardsSubCheck2($vReward['data']['rewardUrl'],'thanksgivingbasketRedeemFriendReward','Item',$vFound,$vRewardsArray);
 }
 
 
@@ -2877,30 +2874,10 @@ function CheckAMF2Rewards($amf2) {
 		$vFound=false;
 		if(stripos(print_r($vReward,true), 'reward.php') === false) continue;
 		CheckAMF2RewardsSub($vReward,$vFound,$vRewardsArray);
-		if(is_array($vReward['data']['harvest']['data'])) {
-			foreach($vReward['data']['harvest']['data'] as $vSubReward) {
-				if(stripos(print_r($vSubReward,true), 'reward.php') === false) continue;
-				CheckAMF2RewardsSub($vSubReward,$vFound,$vRewardsArray);
-			}
-		}
-		if(is_array($vReward['data']['plow']['data'])) {
-			foreach($vReward['data']['plow']['data'] as $vSubReward) {
-				if(stripos(print_r($vSubReward,true), 'reward.php') === false) continue;
-				CheckAMF2RewardsSub($vSubReward,$vFound,$vRewardsArray);
-			}
-		}
-		if(is_array($vReward['data']['place']['data'])) {
-			foreach($vReward['data']['place']['data'] as $vSubReward) {
-				if(stripos(print_r($vSubReward,true), 'reward.php') === false) continue;
-				CheckAMF2RewardsSub($vSubReward,$vFound,$vRewardsArray);
-			}
-		}
-		if(is_array($vReward['data'][0]['data'])) {
-			foreach($vReward['data'] as $vSubReward) {
-				if(stripos(print_r($vSubReward,true), 'reward.php') === false) continue;
-				CheckAMF2RewardsSub($vSubReward,$vFound,$vRewardsArray);
-			}
-		}
+		foreach(array('harvest','plow','place',0) as $rewardsubtype) 
+			if(isset($vReward['data'][$rewardsubtype] && is_array($vReward['data']['harvest']['data'])) 
+				foreach($vReward['data']['harvest']['data'] as $vSubReward) 
+					if(stripos(print_r($vSubReward,true), 'reward.php') !== false) CheckAMF2RewardsSub($vSubReward,$vFound,$vRewardsArray);
 		if(!$vFound) {
 			file_put_contents('rew_data_raw_'.date('z').'.txt', print_r($vReward,true));
 			preg_match_all('/reward.php\?frHost=([^&]*)&frId=([^&]*)&frType=([^& ]*)/si', str_replace(array("\r","\n"),array(' ',' '),print_r($vReward,true)), $vRewards);
