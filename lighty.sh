@@ -8,6 +8,8 @@ if test -f /usr/sbin/lighttpd
 	then LIGHTTPD=/usr/sbin/lighttpd
 elif test -f $f/lighttpd
 	then LIGHTTPD=$f/lighttpd
+elif test -f /opt/local/bin/lighttpd
+	then LIGHTTPD=/opt/local/bin/lighttpd
 else
 	echo "Couldn't find lighttpd!"
 fi
