@@ -4,21 +4,22 @@ f=`dirname $0`
 if [ "${f:0:1}" != "/" ]
 	then f=$PWD/$f
 fi
-if test -f /usr/sbin/lighttpd
-	then LIGHTTPD=/usr/sbin/lighttpd
-elif test -f $f/lighttpd
-	then LIGHTTPD=$f/lighttpd
-elif test -f /opt/local/bin/lighttpd
-	then LIGHTTPD=/opt/local/bin/lighttpd
-else
-	echo "Couldn't find lighttpd!"
+PATH=$PATH:/usr/sbin/:/opt/local/sbin/:/usr/local/sbin/:$f/
+if [ ! $(which lighttpd) ]
+	then echo "Couldn't find lighttpd!"
+	exit
 fi
-echo "server.modules = (\"mod_fastcgi\", \"mod_rewrite\")
-server.document-root = \"$f/\"
-index-file.names = ( \"index.html\", \"index.php\", \"main.php\")
-server.port = 5000
-url.rewrite-once = ( \"/plugins/([^/]+)/([^?]+.php)\??(.*)\" => \"http.php?plugin=\$1&url=\$2&\$3\")
+echo " server.document-root = \"$f/\"
+include \"$f/lighty_static.conf\"
 fastcgi.server = ( \".php\" => ((\"bin-path\" => \"/usr/bin/php5-cgi -c $f/localphp.ini \",
 	\"socket\" => \"/tmp/farmphp.socket\",
 	\"max-procs\" => 1)))" > $f/lighty.conf
-`$LIGHTTPD -f $f/lighty.conf`
+
+
+LIGHTTPD_PID=$(pidof lighttpd) 
+if [ $LIGHTTPD_PID > 0 ]; then 
+	echo 'stopping lighttp...'
+	kill -INT $LIGHTTPD_PID 
+	sleep 1 
+fi
+lighttpd -f $f/lighty.conf
