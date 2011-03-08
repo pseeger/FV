@@ -1,8 +1,9 @@
 <?php
 include('config/accounts.php');
-
+echo 'Found '.count($accounts)." accounts\r\n";
 $cmd=array();
 foreach($accounts as $login_email=>$login_pass) {
+	echo 'Logging in '.$login_email."\r\n";
 	$ch = curl_init();
 	curl_setopt_array($ch,array(CURLOPT_URL=>'http://apps.facebook.com/onthefarm/index.php',
 			CURLOPT_USERAGENT=> 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
@@ -21,7 +22,11 @@ foreach($accounts as $login_email=>$login_pass) {
 	$res=curl_exec($ch);
 
 	$c = curl_init();
-	preg_match('/iframe.+?src="(.+?flash.+?)"/',$res,$url);
+	if(!preg_match('/iframe.+?src="(.+?flash.+?)"/',$res,$url)) {
+		echo "Couldn't login, maybe somethings broken?\n\rServer response was written to login_failure_".$login_email.".txt\n\r";
+		file_put_contents('login_failure'.$login_email.'.txt');
+		continue;
+	}
 	curl_setopt_array($c, array(CURLOPT_USERAGENT=> 'Mozilla/5.0 (Windows, U, Windows NT 5.1, en-US, rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
 		CURLOPT_URL=>html_entity_decode($url[1]),
 		CURLOPT_FOLLOWLOCATION=> true,
