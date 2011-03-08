@@ -436,7 +436,7 @@ class fvNeighbors {
                 '%s', '%s', '%s', '%s',
                 '%s', '%s', '%s', '%s',
                 '%s', '%s', '%s'
-              );", $fr['fbid'], $fr['name'], $fr['worldn'], $fr['laston'], $fr['level'], $fr['exp'], $fr['coin'], $fr['cash'], $fr['sizeX'], $fr['sizeY'], $fr['fuel'], $fr['neighcnt'], $fr['objectscnt'], $fr['plots'], time());
+              );", $fr['fbid'], str_replace('\'','',$fr['name']), str_replace('\'','',$fr['worldn']), $fr['laston'], $fr['level'], $fr['exp'], $fr['coin'], $fr['cash'], $fr['sizeX'], $fr['sizeY'], $fr['fuel'], $fr['neighcnt'], $fr['objectscnt'], $fr['plots'], time());
                 $this->_DB->queryExec($sql);
             } else {
                 $sql = sprintf("UPDATE neighborsn SET timestamp='%s',  lastseen='%s' WHERE fbid='%s'", time(), $fr['laston'], $fr['fbid']);
