@@ -38,12 +38,14 @@ foreach($accounts as $login_email=>$login_pass) {
 	$flashVarsParsed = json_decode($flashVars[1],true);
 	$params=array();
 	foreach(array('master_id','flashRevision','token','whatever','whoknows','exp','somethingelse') as $key) @$params[$key]=$flashVarsParsed[$key];
-	file_put_contents('FBID_'.$params['master_id'].'/params.txt',implode(';',$params));
-	file_put_contents('FBID_'.$params['master_id'].'/flashVars.txt',$res);
+	$dirname = 'FBID_'.$params['master_id'];
+	if(is_dir($dirname)) mkdir($dirname);
+	file_put_contents($dirname . '/params.txt',implode(';',$params));
+	file_put_contents($dirname.'/flashVars.txt',$res);
 	file_put_contents('FBID_/params.txt',implode(';',$params));
 	file_put_contents('FBID_/flashVars.txt',$res);
 	curl_close($ch);
-	rename('/tmp/fblogincookies.txt','FBID_'.$params['master_id'].'/cookies.txt');
+	rename('/tmp/fblogincookies.txt',$dirname.'/cookies.txt');
 	if(count($cmd)<1) $cmd[]='php -c localphp.ini parser.php get_unit_list_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 	$cmd[]='php -c localphp.ini parser.php arbeit_lite '.$params['master_id'] . ' ' . $params['flashRevision'] . ' ' . $params['token'] . ' ' . 1 . "\n";
 }
