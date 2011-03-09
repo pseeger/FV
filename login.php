@@ -39,9 +39,10 @@ foreach($accounts as $login_email=>$login_pass) {
 	$params=array();
 	foreach(array('master_id','flashRevision','token','whatever','whoknows','exp','somethingelse') as $key) @$params[$key]=$flashVarsParsed[$key];
 	$dirname = 'FBID_'.$params['master_id'];
-	if(is_dir($dirname)) mkdir($dirname);
+	if(!is_dir($dirname)) mkdir($dirname);
 	file_put_contents($dirname . '/params.txt',implode(';',$params));
 	file_put_contents($dirname.'/flashVars.txt',$res);
+	if(!is_dir('FBID_')) mkdir('FBID_');
 	file_put_contents('FBID_/params.txt',implode(';',$params));
 	file_put_contents('FBID_/flashVars.txt',$res);
 	curl_close($ch);
