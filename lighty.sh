@@ -11,7 +11,7 @@ if [ ! $(which lighttpd) ]
 fi
 echo " server.document-root = \"$f/\"
 include \"$f/lighty_static.conf\"
-fastcgi.server = ( \".php\" => ((\"bin-path\" => \"/usr/bin/php5-cgi -c $f/localphp.ini \",
+fastcgi.server = ( \".php\" => ((\"bin-path\" => \"/usr/bin/php5 -c $f/localphp.ini \",
 	\"socket\" => \"/tmp/farmphp.socket\",
 	\"max-procs\" => 1)))" > $f/lighty.conf
 
