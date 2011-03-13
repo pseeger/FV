@@ -20,20 +20,32 @@ foreach($accounts as $login_email=>$login_pass) {
 	curl_setopt($ch, CURLOPT_HEADER, 0);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 	$res=curl_exec($ch);
+	$refurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
 
 	$c = curl_init();
-	if(!preg_match('/iframe.+?src="(.+?flash.+?)"/',$res,$url)) {
+	if(!preg_match('/<form [^>]*?flash.*?<\/form>/i',$res,$matches)) {
 		echo "Couldn't login, maybe somethings broken?\n\rServer response was written to login_failure_".$login_email.".txt\n\r";
-		file_put_contents('login_failure'.$login_email.'.txt');
+		file_put_contents('login_failure_'.$login_email.'.txt',$res);
 		continue;
 	}
+	$xml = simplexml_load_string($matches[0]);
+	$postdata = array();
+	foreach($xml->input as $obj) {
+		$attrs = $obj->attributes();
+		if(isset($attrs->name) && isset($attrs->value)) $postdata[]=$attrs->name.'='.$attrs->value;
+	}
+	$url = $xml->attributes()->action;
 	curl_setopt_array($c, array(CURLOPT_USERAGENT=> 'Mozilla/5.0 (Windows, U, Windows NT 5.1, en-US, rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
-		CURLOPT_URL=>html_entity_decode($url[1]),
+		CURLOPT_URL=>$url,
 		CURLOPT_FOLLOWLOCATION=> true,
 		CURLOPT_SSL_VERIFYPEER=> false,
-		CURLOPT_COOKIEJAR=> 'cookies.txt',
-		CURLOPT_RETURNTRANSFER=> true));
+		CURLOPT_COOKIEJAR=> '/tmp/fblogincookies.txt',
+		CURLOPT_RETURNTRANSFER=> true,
+		CURLOPT_POST=> 1,
+		CURLOPT_REFERER => $refurl,
+		CURLOPT_POSTFIELDS=>implode($postdata,'&')));
 	$res=curl_exec($c);
+	file_put_contents('/tmp/test',$res);
 	preg_match('/var flashVars.+?({.+?})/',$res,$flashVars);
 	$flashVarsParsed = json_decode($flashVars[1],true);
 	$params=array();
