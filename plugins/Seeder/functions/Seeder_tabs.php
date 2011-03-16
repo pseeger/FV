@@ -33,7 +33,9 @@ Seeder_Write($Seeder_settings,"settings");
   <td <?php echo (($show_tab == "jobs")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=basic')" align="center">
   <font face="Tahoma" size="1"><b>Co-Op Jobs</b></font></td>
   <td <?php echo (($show_tab == "greenhouse")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="location.href('main.php?show_tab=greenhouse&show_subtab=trays')" align="center">
-  <font face="Tahoma" size="1"><b>Green House</b></font></td>
+  <font face="Tahoma" size="1"><b>Greenhouse</b></font></td>
+  <td <?php echo (($show_tab == "trees")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=available')" align="center">
+  <font face="Tahoma" size="1"><b>Trees</b></font></td>
 
   <td align="right">
   <font face="Tahoma" size="1"><b>&nbsp;Sort:
@@ -80,6 +82,18 @@ if ($show_tab == "greenhouse") {
 //======================================
 ?>
  <option <?php echo (($Seeder_settings['show_order'] == "tray")?'selected':'')?> value="realname">Tray</option>
+<?php
+}
+if ($show_tab == "trees") {
+//======================================
+?>
+ <option <?php echo (($Seeder_settings['show_order'] == "creationDateTimestamp")?'selected':'')?> value="creationDateTimestamp">Creation Date</option>
+ <option <?php echo (($Seeder_settings['show_order'] == "growTime")?'selected':'')?> value="plantXp">Grow Time</option>
+ <option <?php echo (($Seeder_settings['show_order'] == "coinYield")?'selected':'')?> value="coinYield">Coin yield</option>
+ <option <?php echo (($Seeder_settings['show_order'] == "profit_time")?'selected':'')?> value="profit_time">Profit/Time</option>
+ <option <?php echo (($Seeder_settings['show_order'] == "profit_orchard")?'selected':'')?> value="profit_orchard">Profit/Orchard</option>
+ <option <?php echo (($Seeder_settings['show_order'] == "mastery_count")?'selected':'')?> value="mastery_count">Mastery count</option>
+ <option <?php echo (($Seeder_settings['show_order'] == "to_mastery")?'selected':'')?> value="to_mastery">To Mastery count</option>
 <?php
 }
 //======================================
@@ -727,6 +741,165 @@ $seedpackage = $gen['itemCode'];
 
 unset($greenhouse);unset($seeds);
 }//if ($show_tab == "greenhouse")
+//======================================
+//======================================
+//Trees
+//======================================
+if ($show_tab == "trees") {
+//======================================
+?>
+
+<table border="0" cellpadding="0" cellspacing="2">
+ <tr height="20">
+  <td <?php echo (($show_subtab == "available")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=available')" align="center">
+  <font face="Tahoma" size="1">Available</font></td>
+  <td <?php echo (($show_subtab == "to_mastery")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=to_mastery')" align="center">
+  <font face="Tahoma" size="1">To Mastery</font></td>
+  <td <?php echo (($show_subtab == "mastered")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=mastered')" align="center">
+  <font face="Tahoma" size="1">Mastered</font></td>
+  <td <?php echo (($show_subtab == "coins")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=coins')" align="center">
+  <font face="Tahoma" size="1">Buyable Coins</font></td>
+  <td <?php echo (($show_subtab == "cash")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=cash')" align="center">
+  <font face="Tahoma" size="1">Buyable Cash</font></td>
+  <td <?php echo (($show_subtab == "giftable")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=giftable')" align="center">
+  <font face="Tahoma" size="1">Giftable</font></td>
+  <td <?php echo (($show_subtab == "reserved")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=reserved')" align="center">
+  <font face="Tahoma" size="1">Reserved</font></td>
+  <td <?php echo (($show_subtab == "limited")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=limited')" align="center">
+  <font face="Tahoma" size="1">Limited</font></td>
+  <td <?php echo (($show_subtab == "locked")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=locked')" align="center">
+  <font face="Tahoma" size="1">Locked</font></td>
+ </tr>
+</table>
+
+<?php
+$trees = Seeder_MakeTrees();
+#print_r($trees);
+
+if ($show_subtab == "available")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'limitedStartTimestamp', '<=', time());
+  $trees = Seeder_ArrayFilter($trees, 'limitedEndTimestamp', '>=', time());
+  $trees = Seeder_ArrayFilter($trees, 'requiredLevel', '<=', $Seeder_info['level']);
+  $trees = Seeder_ArrayFilter($trees, 'locked', '==', "NULL");
+ }
+if ($show_subtab == "to_mastery")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'masterymax', '>', 0);
+  $trees = Seeder_ArrayFilter($trees, 'to_mastery', '>', 0);
+ }
+if ($show_subtab == "mastered")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'masterymax', '>', 0);
+  $trees = Seeder_ArrayFilter($trees, 'to_mastery', '==', 0);
+ }
+if ($show_subtab == "coins")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'buyable', '==', "true");
+  $trees = Seeder_ArrayFilter($trees, 'market', '<>', "cash");
+ }
+if ($show_subtab == "cash")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'buyable', '==', "true");
+  $trees = Seeder_ArrayFilter($trees, 'market', '==', "cash");
+ }
+if ($show_subtab == "giftable")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'giftable', '==', "true");
+ }
+if ($show_subtab == "reserved")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'reserved', '==', 1);
+ }
+if ($show_subtab == "limited")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'limitedEnd', '!=', "NULL");
+ }
+if ($show_subtab == "locked")
+ {
+  $trees = Seeder_ArrayFilter($trees, 'locked', '!=', "NULL");
+ }
+?>
+
+<table border="1" width="100%" cellspacing="0" cellpadding="2" bordercolor="#D4D0C8" style="border-collapse: collapse">
+
+<?php
+if (sizeof($trees) > 0 )
+{
+ #print_r($trees);
+ $trees = Seeder_ArrayOrder($trees, $Seeder_settings['show_order'], $Seeder_settings['show_sort']);
+ foreach ($trees as $tree)
+ {
+ if ($bgcolor == "#FFFFFF") {$bgcolor = "#F4F4ED";} else {$bgcolor = "#FFFFFF";}
+
+?>
+<tr bgcolor="<?php echo $bgcolor;?>">
+<td align="center"  valign="top" width="48">
+ <table border="0" width="100%" cellspacing="0" cellpadding="0">
+ <tr><td align="center"><img border="0" src="<?php echo Seeder_ShowImage($tree['iconurl'])?>" width="48"></td></tr>
+ <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($tree['mastery'] == true)? Seeder_imgPath.$tree['mastery_level']."_star.png":Seeder_imgPath."space.png")?>" width="48" height="16"></td></tr>
+ </table>
+</td>
+
+<td align="left" valign="top"><font size="2" face="Tahoma">
+<b><?php echo $tree['realname'];?></b></font>
+<font size="1" face="Tahoma"><br>
+<?php echo (($tree['creationDate'] != "NULL")? "Creation Date: <b>".$tree['creationDate']."</b><br>":"")?>
+Buyable: <b><?php echo $tree['buyable'];?></b><br>
+Giftable: <b><?php echo $tree['giftable'];?></b><br>
+<?php echo (($tree['market'] != "NULL")? "Market: <b>".$tree['market']."</b><br>":"")?>
+<?php echo (($tree['cash'])? "Cash: <b>".$tree['cash']."</b><br>":"")?>
+Cost: <b><?php echo $tree['cost'];?></b><br>
+<?php echo "Required Level: <font color='".(($tree['requiredLevel'] <= $Seeder_info['level'])?"black":"red")."'><b>".$tree['requiredLevel']."</b></font><br>";?>
+<?php echo (($tree['limitedEnd'] != "NULL")? "Limited : <font color='".((($tree['limitedEndTimestamp'] > time()) && ($tree['limitedStartTimestamp'] < time()))?"blue":"red")."'><b>".$tree['limitedStart']." to ".$tree['limitedEnd']."</b></font><br>":"")?>
+<?php echo (($tree['locked'] != "NULL")? "Locked : <font color='red'><b>".$tree['locked']."</b></font><br>":"")?>
+</font></td>
+
+<td align="left" valign="top"><font size="1" face="Tahoma">
+Grow Time: <b><?php echo Seeder_TimeLeft(time(),($tree['growTime'] * 60 * 60) + time());?></b><br>
+Coin Yield: <b><?php echo $tree['coinYield'];?></b><br>
+Profit/Hour: <b><?php echo $tree['profit_time'];?></b><br>
+Profit/Orchard: <b><?php echo $tree['profit_orchard'];?></b><br>
+</font></td>
+<td align="left" valign="top"><font size="1" face="Tahoma">
+Harvested: <b><?php echo $tree['mastery_count'];?></b><br>
+<?php
+if ($tree['masterymax'] > 0)
+{
+echo "Mastery: <b>".$tree['masterymax']."</b><br>";
+echo "Mastery Level: <b>".(($tree['mastery_level'] == 3)? "<font color='red'>Mastered!</font>":$tree['mastery_level'])."</b><br>";
+echo "To Mastery: <b>".$tree['to_mastery']."</b><br>";
+
+} else {
+echo "Mastery: <b>No Mastery</b><br>";
+}//if ($tree['masterymax'] > 0)
+?>
+</font></td>
+
+<td align="left" valign="top"><font size="1" face="Tahoma">
+<?php
+if ($tree['nextLevel'])
+{
+echo "<table border='0' width='100%' cellspacing='0' cellpadding='2'>";
+echo "<tr><td align='center' valign='top' width='48'><img border='0' src='".Seeder_ShowImagebyCode($tree['nextLevel'])."' width='48'></td></tr>";
+echo "<tr><td valign='top'><font size='1' face='Tahoma'>Next Level: <b>".Units_GetRealnameByCode($tree['nextLevel'])."</b></font></td></tr>";
+echo "</table>";
+} else {echo "Next Level: <b>Unavailable</b><br>";}//if ($tree['nextLevel'])
+?>
+</font></td>
+</tr>
+
+<?php
+}//foreach ($trees as $tree)
+
+} else { //if (sizeof($trees) > 0 )
+echo "<tr bgcolor='#FFFFFF'><td align='left' valign='top'><font size='2' face='Tahoma'><b>No ".(($show_subtab == "bushels")?"bushels":"trees")." found.</b></font><br></td></tr>"."\n";
+}
+?>
+</table>
+<?php
+unset($trees_all);unset($mastery_counters);unset($mastery_levels);
+}//if ($show_tab == "trees")
 //======================================
 ?>
 </table>

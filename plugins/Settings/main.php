@@ -1,6 +1,6 @@
 <?php
- define("PX_VER_SETTINGS", '22124');
- define("PX_DATE_SETTINGS", '2011-02-27');
+ define("PX_VER_SETTINGS", 22126);
+ define("PX_DATE_SETTINGS", '2011-03-16');
 
  define('settings_URL', '/plugins/Settings/main.php');
 

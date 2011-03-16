@@ -61,6 +61,9 @@ $seeds_available = array();
     }
 
     //all filters ok
+//force_planting
+   if ($Seeder_settings['force_planting'] == 1) {$seed_filter = 0;}
+
    if ($seed_filter == 0) {$seeds_available[$name] = $seed;}
 
    }//foreach ($seeds as $seed)
@@ -572,7 +575,7 @@ $res = 'OK';
             $res = $amf2->_bodys[0]->_value['data'][0]['errorType'] . " " . $amf2->_bodys[0]->_value['data'][0]['errorData'];
         }
     }
-    @fclose($s);
+    fclose($s);
 //======================================
             AddLog2("result $res");
             $count -= $i;
@@ -842,10 +845,10 @@ $greenhouse = Seeder_Read("greenhouse");
 $reload = 0;
 
 $seeds_all = Seeder_Read("seeds");
+$seeds = Seeder_ArrayFilter($seeds_all, 'isHybrid', '==', '1');//fix
 $seeds = Seeder_ArrayFilter($seeds_all, 'seedpackages_to_mastery', '>', '0');
 $seeds = Seeder_ArrayFilter($seeds, 'seedpackage_UnlockState', '<=', $Seeder_info['greenhouse_level'] );
 $seeds = Seeder_ArrayOrder($seeds, $Seeder_settings['seeds_order'], $Seeder_settings['seeds_sort']);
-
 
 if (count($seeds) > 0)
 {
@@ -855,6 +858,7 @@ if (count($seeds) > 0)
   $seeds_array[] = $seed;
  }
 
+unset($seeds_all);unset($seeds);
 //======================================
 if (count($seeds_array) > 0 )
 {
@@ -864,7 +868,10 @@ if (count($seeds_array) > 0 )
   if (!@$greenhouse['trays'][$i]['trayResult'])
   {
   Seeder_start_greenhouse($seeds_array[$x],$i);
-  $x += 1;
+
+  $seeds_array[$x]['seedpackages_to_mastery'] -= 50;
+  if ($seeds_array[$x]['seedpackages_to_mastery'] <= 0) {$x += 1;}
+
   $reload = 1;
   }
  }
@@ -874,6 +881,33 @@ if (count($seeds_array) > 0 )
 if ($reload == 1) {DoInit();Seeder_loadWorld();}
 
 } else {AddLog2("Seeder_mastery_greenhouse> Congratulations, All seeds packages done!!!");}//if (count($seeds) > 0)
+
+}
+//========================================================================================================================
+//Seeder_default_greenhouse
+//========================================================================================================================
+function Seeder_default_greenhouse()//added v1.1.7
+{
+global $Seeder_settings, $Seeder_info;
+
+$greenhouse = Seeder_Read("greenhouse");
+$seeds_all = Seeder_Read("seeds");
+$seeds_array[] = $seeds_all[$Seeder_settings['default_greenhouse']];
+unset($seeds_all);
+
+$reload = 0;
+
+ for ($i = 0; $i < $Seeder_info['greenhouse_trays']; $i++)
+ {
+  if (!@$greenhouse['trays'][$i]['trayResult'])
+  {
+  Seeder_start_greenhouse($seeds_array[0],$i);
+  $reload = 1;
+  }
+ }
+//======================================
+
+if ($reload == 1) {DoInit();Seeder_loadWorld();}
 
 }
 //========================================================================================================================
@@ -902,7 +936,8 @@ $x = 0;
 foreach ($seeds_array['genealogy'] as $gen)
 {
 $amf->_bodys[0]->_value[1][0]['params'][2][$x]['code'] = $gen['code'];
-$amf->_bodys[0]->_value[1][0]['params'][2][$x]['quantity'] = $seeds_array['seedpackages_to_mastery'];
+#$amf->_bodys[0]->_value[1][0]['params'][2][$x]['quantity'] = $seeds_array['seedpackages_to_mastery'];
+$amf->_bodys[0]->_value[1][0]['params'][2][$x]['quantity'] = 50;
 $x += 1;
 }
 
@@ -910,7 +945,7 @@ $amf->_bodys[0]->_value[1][0]['sequence'] = GetSequense();
 $amf->_bodys[0]->_value[1][0]['functionName'] = "BreedingService.beginNewBreedingProject";
 
 $res = RequestAMF($amf);
-AddLog2("Seeder_start_greenhouse> Tray: ".$tray." Start: ".$seeds_array['seedpackages_to_mastery']." ".$seeds_array['seedpackage_realname']." result: ".$res);
+AddLog2("Seeder_start_greenhouse> Tray #".$tray." Start: ".$seeds_array['seedpackages_to_mastery']." ".$seeds_array['seedpackage_realname']." result: ".$res);
 
 #DoInit();
 #Seeder_loadWorld();
@@ -938,10 +973,10 @@ for ($i = 0; $i < $Seeder_info['greenhouse_trays']; $i++)
   
   if ($TimeLeft == 0)
   {
-  AddLog2("Seeder_harvest_greenhouse> tray ".$i.": ".Units_GetRealnameByCode($seedpackage)." - Ready!");
+  AddLog2("Seeder_harvest_greenhouse> tray #".$i.": ".Units_GetRealnameByCode($seedpackage)." - Ready!");
   Seeder_harvest_tray($i);
   $reload = 1;
-  } else {  AddLog2("Seeder_harvest_greenhouse> tray ".$i.": ".Units_GetRealnameByCode($seedpackage)." - Harvest in ".$TimeLeft);}
+  } else {  AddLog2("Seeder_harvest_greenhouse> tray #".$i.": ".Units_GetRealnameByCode($seedpackage)." - Harvest in ".$TimeLeft);}
   
  }
 }
@@ -973,7 +1008,7 @@ $amf->_bodys[0]->_value[1][0]['sequence'] = GetSequense();
 $amf->_bodys[0]->_value[1][0]['functionName'] = "BreedingService.finishBreedingProject";
 
 $res = RequestAMF($amf);
-AddLog2("Seeder_harvest_tray> Harvested tray ".$tray.": ".Units_GetRealnameByCode($greenhouse['trays'][$tray]['trayResult'])." result: ".$res);
+AddLog2("Seeder_harvest_tray> Harvested tray #".$tray.": ".Units_GetRealnameByCode($greenhouse['trays'][$tray]['trayResult'])." result: ".$res);
 
 #DoInit();
 #Seeder_loadWorld();
@@ -1293,7 +1328,7 @@ function Seeder_GetMarket($itemCode)//changed v1.1.2
 $marketStall = Seeder_Read("marketStall");
 $uids = array();
 
- if(is_array($marketStall)) foreach ($marketStall as $item)
+ foreach ($marketStall as $item)
  {
  $uid = number_format($item['uid'], 0, '', '');
   foreach($item['inventory'] as $inventory)

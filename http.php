@@ -13,11 +13,12 @@ $plugin = $_GET['plugin'];
 
 
 if(strpos($file,'main.php')===0){
-include('parser.php');
-define ('farmer', GetFarmserver());
-define ('farmer_url', GetFarmUrl());
-	error_reporting(0);
+	include('parser.php');
+	define ('farmer', GetFarmserver());
+	define ('farmer_url', GetFarmUrl());
+	error_reporting(E_ALL);
 	$this_plugin['folder']='plugins/'.$plugin.'/';
+	echo 'Calling function';
 	include('plugins/'.$plugin.'/main.php');
 	$form_function = $plugin. '_form';
 	if (function_exists($form_function)) {

@@ -131,7 +131,7 @@ unset($crafting_items);unset($bushel_code);
 $units_bushel = Units_GetByType('bushel',true);
 $bushels_array = array();
 
-foreach($units_bushel as $unit)
+if(is_array($units_bushel)) foreach($units_bushel as $unit)
 {
  $bushel_crop = Units_GetNameByCode($unit['crop']);
  $bushels_array[$bushel_crop]['bushel_crop']  = $bushel_crop;
@@ -172,8 +172,16 @@ $mastery_levels = @$world['data'][0]['data']['userInfo']['player']['mastery'];
 //======================================
 //licenses
 //======================================
-$licenses = @$world['data'][0]['data']['licenses'];
+$licenses = @$world['data'][0]['data']['userInfo']['player']['licenseManager']['licenses'];//1.1.6b fix
+$licenses_array = array();
 
+foreach ($licenses as $license)
+{
+ $license_code = $license['licensedItem'];
+ $licenses_array[$license_code] = $license_code;
+}
+
+unset($licenses);
 //======================================
 //seedpackages
 //======================================
@@ -417,11 +425,11 @@ foreach($units_seeds as $seed)
 //donation name
 //expires="false"
 
- //licensed
+ //licensed fixed 1.1.6b
  if (@$seed['license'])
  {
  $seeds_array[$name]['license'] = $seed['license'];
- $licensed = @$licenses[$seed_code]; if ($licensed) {$licensed = 1;} else {$licensed = 0;}
+ $licensed = @$licenses_array[$seed_code]; if ($licensed) {$licensed = 1;} else {$licensed = 0;}
  $seeds_array[$name]['licensed'] = $licensed;
  }else {
  $seeds_array[$name]['license'] = "NULL";

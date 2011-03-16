@@ -1,6 +1,6 @@
 <?php
-define('PX_VER_PARSER', '22124');
-define('PX_DATE_PARSER', '2011-02-27');
+define('PX_VER_PARSER', 22126);
+define('PX_DATE_PARSER', '2011-03-16');
 define('PARSER_MAX_SPEED', 8);
 define('PARSER_SQLITE', 'data.sqlite');
 define('SCK_WRITE_PACKET_SIZE', 8192);
@@ -530,6 +530,9 @@ function Arbeit() {
 	if(strlen($enable_acceptgifts_num)==0) $enable_acceptgifts_num=10;
 	$enable_sendgifts = @$px_Setopts['sendgifts'];
 
+	Hook('after_load_settings');
+	if($enable_sendgifts) Parser_SendGift();
+
 	//TODO: make a seperate function
 	if($enable_acceptgifts) {
 		$vGiftReqs=Parser_ReadReq();
@@ -577,16 +580,16 @@ function Arbeit() {
 							}
 						}
 					}
+					$need_reload=true;
 					unset($vResponse);
 				}
 			}
 		}
 	}
-
-	if($enable_sendgifts) Parser_SendGift();
-
-	Hook('after_load_settings');
-
+	if ($need_reload) {
+		$res = DoInit(); //reload farm
+		$need_reload = false;
+	}
 	$need_reload = false;
 
 	if ($enable_lonlyanimals) {
@@ -978,7 +981,19 @@ function Parser_Get_Locale() {
 		file_put_contents($vAssethashDumpFile, $vFlashDump);
 		unset($vFlashDump);
 	}
-
+	$vFlashFile = $flashRevision . '_FarmGame.swf';
+	$vLocalFile='farmville-flash/' . $vFlashFile;
+	$vRemoteFile=$flashVars['swfLocation'];
+	parser_download($vLocalFile,$vRemoteFile);
+	$vGameDumpFile=$vLocalFile.'.txt.';
+	if (!file_exists($vGameDumpFile)) {
+		$vFlashDump = shell_exec('swfdump.exe -a ' . $vLocalFile . ' 2>&1 ');
+		$vFlashDump=substr($vFlashDump,strpos($vFlashDump, "TSeenRevampEmail=TSeenRevampEmail"));
+		$vLastPos=strpos($vFlashDump,'Display::AssetHashMap');
+		if($vLastPos>1000) $vFlashDump=substr($vFlashDump,0,$vLastPos);
+		file_put_contents($vGameDumpFile, $vFlashDump);
+		unset($vFlashDump);
+	}
 	$vFlashDump = file_get_contents($vFlashlocalDumpFile);
 	$vDataDB->queryExec('BEGIN TRANSACTION');
 	$vSQL = "select * from units where field='name' and name not in (select name from units where field='realname' and name<>content)";
@@ -1633,6 +1648,10 @@ function GetUnitList() {
 	AddLog2("Downloading latest game files.");
 	$flashVars = parse_flashvars();
 	$vNotFound=0;
+	$vGameSetting='./farmville-xml/'.$flashRevision.'_flashLocaleXml.xml';
+	$vRemoteFile="http://static.farmville.com/xml/gz/v$flashRevision/flashLocaleXml.xml";
+	$vOverrideURL='desc_url.txt';
+	parser_download($vGameSetting,$vRemoteFile,$vOverrideURL);
 
 	$vGameSetting='./farmville-xml/'.$flashRevision.'_gameSettings.xml';
 	$vRemoteFile=$flashVars['game_config_url'];
@@ -3019,7 +3038,7 @@ function Parser_ReadReq() {
 }
 
 function Parser_SendGift() {
-
+	global $vDataDB,$need_reload;
 	if(!(file_exists('sendgifts.txt') || file_exists(F('sendgifts.txt')))) {
 		return'';
 	}
@@ -3028,15 +3047,19 @@ function Parser_SendGift() {
 	$vGift='socialplumbingmysterygift';
 	$vURL='http://apps.facebook.com/onthefarm/';
 	$vHTML=proxy_GET_FB($vURL);
-
-	preg_match_all('/<iframe src="(.*)" name="flashAppIframe"/is', $vHTML, $vIframes);
+	#preg_match_all('/<iframe src="(.*)" name="flashAppIframe"/is', $vHTML, $vIframes);
+	preg_match_all('%<form action="([^"].*?)" method="post" target="flashAppIframe".*?>(.*)</form>%im', $vHTML, $vIframes);
+	if (!empty($vIframes[1][0]) && !empty($vIframes[2][0])) {
+		preg_match_all('%<input type="hidden".*?name="([^"].*?)".*?value="([^"].*?)"%im', $vIframes[2][0], $vIframes2);
+		$vPosts = array_combine($vIframes2[1], $vIframes2[2]);
+	}
 	preg_match_all('/post_form_id:"([^"]*)"/ims', $vHTML, $vPostFormIDs);
 	preg_match_all('/fb_dtsg:"([^"]*)"/ims', $vHTML, $vDTGSs);
 	$vPostFormID=$vPostFormIDs[1][0];
 	$vDTGS=$vDTGSs[1][0];
 
 	$vURL=html_entity_decode($vIframes[1][0]);
-	$vHTML=proxy_GET_FB($vURL);
+	$vHTML=proxy_GET_FB($vURL, 'POST', $vPosts);
 
 	preg_match_all('/class="gifts_tab " href="(.*)" title="Free Gifts"/is', $vHTML, $vZys);
 
@@ -3054,24 +3077,34 @@ function Parser_SendGift() {
 	$vHTML = proxy_GET_FB("http://www.connect.facebook.com/widgets/serverfbml.php", 'POST', $vAppKey.'&'.$vChannelUrl.'&'.$vFBML);
 
 	preg_match_all('/var items=({.*});/im', $vHTML, $vNeighbor1s);
-	preg_match_all('/"([0-9]+)":{/is', $vNeighbor1s[1][0], $vNeighbor2s);
+	preg_match_all('/"([0-9]+)":{"name":"([^"]*)"}/is', $vNeighbor1s[1][0], $vNeighbor2s);
+
+	$vCnt=0;
+	$vSQL='';
+	foreach($vNeighbor2s[1] as $vNUID) {
+		$vSQL .= "INSERT OR REPLACE INTO neighbors(neighborid, fullname) values('".$vNUID."','".str_replace("'","''",$vNeighbor2s[2][$vCnt])."');";
+		$vCnt++;
+	}
+	if(strlen($vSQL)>0) {
+		$vDataDB->queryExec($vSQL);
+		unset($vSQL, $newarray);
+	}
 
 	$vSendNeighborsArray=$vNeighbor2s[1];
 
 	if (file_exists(F('sendgifts.txt'))) {
-		if(file_exists('sendgifts.txt')) {
-			$vGiftsArray=file('sendgifts.txt');
-		} else {
-			$vGiftsArray=file(F('sendgifts.txt'));
-		}
+		if(file_exists('sendgifts.txt')) $vGiftsArray=file('sendgifts.txt');
+		else $vGiftsArray=file(F('sendgifts.txt'));
 		foreach($vGiftsArray as $vRow) {
 			list($vFBID,$vGift)=explode(';',trim($vRow));
+			$vGift=trim($vGift);
+			$vFBID=(trim($vFBID));
 			if(strlen($vFBID)>0&&strlen($vGift)>0 && in_array($vFBID,$vSendNeighborsArray) && count($vSend[$vGift])<25) {
 				$vSend[$vGift][]=$vFBID;
 			}
 		}
 	}
-	foreach($vSend as $vGift => $vFBIDs){
+	if(!empty($vSend)) foreach($vSend as $vGift => $vFBIDs){
 		if(count($vFBIDs)>0) {
 			Parser_SendGift_Do($vFBIDs, $vGift);
 		}
@@ -3093,7 +3126,12 @@ function Parser_SendGift_Do($vFBIDs, $vGift) {
 	$vHTML=proxy_GET_FB($vURL);
 	#file_put_contents('sendgift_1_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n");
 
-	preg_match_all('/<iframe src="(.*)" name="flashAppIframe"/is', $vHTML, $vIframes);
+	#//preg_match_all('/<iframe src="(.*)" name="flashAppIframe"/is', $vHTML, $vIframes);
+	preg_match_all('%<form action="([^"].*?)" method="post" target="flashAppIframe".*?>(.*)</form>%im', $vHTML, $vIframes);
+	if (!empty($vIframes[1][0]) && !empty($vIframes[2][0])) {
+		preg_match_all('%<input type="hidden".*?name="([^"].*?)".*?value="([^"].*?)"%im', $vIframes[2][0], $vIframes2);
+		$vPosts = array_combine($vIframes2[1], $vIframes2[2]);
+	}
 	preg_match_all('/post_form_id:"([^"]*)"/ims', $vHTML, $vPostFormIDs);
 	preg_match_all('/fb_dtsg:"([^"]*)"/ims', $vHTML, $vDTGSs);
 	#file_put_contents('sendgift_2_'.__LINE__.'.html', print_r($vIframes,true).print_r($vPostFormIDs,true).print_r($vDTGSs,true));
@@ -3101,7 +3139,7 @@ function Parser_SendGift_Do($vFBIDs, $vGift) {
 	$vDTGS=$vDTGSs[1][0];
 
 	$vURL=html_entity_decode($vIframes[1][0]);
-	$vHTML=proxy_GET_FB($vURL);
+	$vHTML=proxy_GET_FB($vURL, "POST", $vPosts);
 	#file_put_contents('sendgift_3_'.__LINE__.'.html', $vHTML."\n\n####\n\n".$vURL."\n\n####\n\n");
 
 	preg_match_all('/class="gifts_tab " href="(.*)" title="Free Gifts"/is', $vHTML, $vZys);

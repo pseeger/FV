@@ -9,3 +9,4 @@ config/
 *.csv
 *.exe
 lighty.conf
+raw_rewards*

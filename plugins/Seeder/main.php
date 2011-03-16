@@ -9,9 +9,9 @@ include 'functions/Seeder_functions.php';
 include 'functions/Seeder_form.php';
 include 'functions/Seeder_image.php';
 include 'functions/Seeder_quest.php';
-include 'functions/Seeder_tabs.php';
 include 'functions/Seeder_trees.php';//added 1.1.6
-define('Seeder_version','1.1.6a 8 Feb 2010');//revised v1.1.6
+include 'functions/Seeder_tabs.php';
+define('Seeder_version','1.1.7a');//revised v1.1.7a
 define('Seeder_parser','22120');
 define('Bot_path',str_replace("\\", "/", getcwd()).'/');
 define('Seeder_Path',Bot_path.'plugins/Seeder/');
@@ -88,7 +88,7 @@ if ($Seeder_default['flashRevision'] <> $flashRevision)
 //========================================================================================================================
 //Seeder_MakeUserDefault
 //========================================================================================================================
-function Seeder_MakeUserDefault()//revised v1.1.4
+function Seeder_MakeUserDefault()//revised v1.1.7a
 {
 
  $Seeder_default = array();
@@ -102,6 +102,7 @@ function Seeder_MakeUserDefault()//revised v1.1.4
  $Seeder_default['seeds_order'] = "mastery_time";
  $Seeder_default['seeds_sort'] = "ASC";
  $Seeder_default['mastery_adjustment'] = 1;
+ $Seeder_default['force_planting'] = 0;
  $Seeder_default['auto_coop'] = 0;
  $Seeder_default['coop_mode'] = "host";
  $Seeder_default['coop_plant'] = 1;
@@ -168,6 +169,12 @@ function Seeder_before_planting()//revised v1.1.5
  {
  AddLog2("Seeder_before_planting> mastery greenhouse enabled");
  Seeder_mastery_greenhouse();
+ }
+ 
+ if ($Seeder_settings['default_greenhouse'])
+ {
+ AddLog2("Seeder_before_planting> greenhouse default seed enabled");
+ Seeder_default_greenhouse();
  }
  
  if ($Seeder_settings['keep_planted'] == 1)

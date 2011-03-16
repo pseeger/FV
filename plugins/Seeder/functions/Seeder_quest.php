@@ -254,7 +254,9 @@ $coop_id = $coop_active['id'];
   $coop_seeds = Seeder_ArrayOrder($coop_seeds, 'growTime', $Seeder_settings['coop_growTime']);
   foreach ($coop_seeds as $coop_seed)
   {
-  AddLog2("Seeder_plant_quest> seed ".$coop_seed['realname']." : ".$coop_seed['progress']."/".$coop_seed['many']);
+  AddLog2("Seeder_plant_quest> seed ".$coop_seed['realname']." : ".floor(($coop_seed['progress'] / $coop_seed['many']) * 100)."% (".$coop_seed['progress']."/".$coop_seed['many']).")";
+
+  
   $toplant = ($coop_seed['many'] - $coop_seed['progress']);
    if ($toplant > 0 )
    {
@@ -357,6 +359,7 @@ $quest_id = $quests_array['quest'][$i]['id'];
 $quest_name = $quests_array['quest'][$i]['text']['title'];
 $quests[$quest_id] = $quests_array['quest'][$i];
 $quests[$quest_id]['realname'] = @$locale_array[$quest_name];
+
  if (strlen($quests[$quest_id]['realname']) == 0)//Chinese Fix
  {
  $quests[$quest_id]['realname'] = Seeder_replace($quests[$quest_id]['text']['title']);
@@ -401,7 +404,9 @@ $quests[$quest_id]['realname'] = @$locale_array[$quest_name];
    {
    $seed = $reqs[$n]['type'];
    $many = $reqs[$n]['many'];
-   
+  //tripleberry fix
+  
+  
    $growTime = @$seeds_all[$seed]['growTime'];
    if ($growTime > $score_growTime) {$score_growTime = $growTime;}//max growTime
    $score_coinYield += (@$seeds_all[$seed]['coinYield'] * $many);

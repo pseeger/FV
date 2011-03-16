@@ -26,6 +26,7 @@ if (isset($_GET['save_action']))
  {
  if (@$_GET['auto_mastery']) {$auto_mastery = 1;} else {$auto_mastery = 0;}
  if (@$_GET['mastery_adjustment']) {$mastery_adjustment = 1;} else {$mastery_adjustment = 0;}
+ if (@$_GET['force_planting']) {$force_planting = 1;} else {$force_planting = 0;}
  if (@$_GET['bushel_booster']) {$bushel_booster = 1;} else {$bushel_booster = 0;}
  if (@$_GET['default_settings']) {$default_settings = 1;} else {$default_settings = 0;}
  if (@$_GET['claim_reward']) {$claim_reward = 1;} else {$claim_reward = 0;}
@@ -44,6 +45,7 @@ if (isset($_GET['save_action']))
  $Seeder_settings['seeds_order'] = @$_GET['seeds_order'];
  $Seeder_settings['seeds_sort'] = @$_GET['seeds_sort'];
  $Seeder_settings['mastery_adjustment'] = $mastery_adjustment;
+ $Seeder_settings['force_planting'] = $force_planting;
  $Seeder_settings['bushel_booster'] = $bushel_booster;
  $Seeder_settings['claim_reward'] = $claim_reward;
  $Seeder_settings['fertilize'] = $fertilize;
@@ -57,6 +59,9 @@ if (isset($_GET['save_action']))
  $Seeder_settings['coop_plant'] = $coop_plant;
  $Seeder_settings['mastery_greenhouse'] = $mastery_greenhouse;
  $Seeder_settings['harvest_greenhouse'] = $harvest_greenhouse;
+ $Seeder_settings['harvest_greenhouse'] = $harvest_greenhouse;
+ if (@$_GET['default_greenhouse'] == "NULL") {unset($Seeder_settings['default_greenhouse']);} else {$Seeder_settings['default_greenhouse'] = @$_GET['default_greenhouse'];}
+
  $Seeder_settings['reward_type'] = @$_GET['reward_type'];
  $Seeder_settings['timeformat'] = @$_GET['timeformat'];
 
@@ -151,6 +156,12 @@ if (isset($_GET['save_action']))
 //======================================
 //save keep_list//revised v1.1.5
 //======================================
+if (isset($_GET['clear_planting2']))
+{
+if (file_exists(F('seed.txt'))) {unlink(F('seed.txt'));}
+}
+//======================================
+
 if (isset($_GET['clear_planting']))
 {
 $seedlist = array();
@@ -958,7 +969,7 @@ echo "<input type='submit' name='clear_planting' value='Clear' title='clear seed
 //======================================
 $seedlist = Seeder_Read("seedlist");
 
-  if(!empty($seedlist)) foreach ($seedlist as $key => $seed_value)
+  if(is_array($seedlist)) foreach ($seedlist as $key => $seed_value)
   {
    if ($key == "default")
    {
@@ -977,6 +988,7 @@ unset($seedlist);
 		<td align="left" width="50%" valign="top">
 <font size="1" face="Tahoma"><b>Bot Seed List:</b>
 <?php
+echo "<input type='submit' name='clear_planting2' value='Clear' title='clear boot seed list'>";
 if (($Seeder_settings['auto_coop'] == 0) && ($Seeder_settings['auto_mastery'] == 0) && ($Seeder_settings['keep_planted'] == 0))
 {
 $show_seed_list = 1;
@@ -1412,7 +1424,12 @@ unset($quest_active);
  </td>
  <td><font size="1" face="Tahoma">
  Mastery Adjustment: </font>
- <input type="checkbox" name="mastery_adjustment" <?php echo (($Seeder_settings['mastery_adjustment'] == 1)?'checked':'')?> value="1" title="Ignore full mastery earned before the new Mastery Adjustment by Z*"></td>
+ <input type="checkbox" name="mastery_adjustment" <?php echo (($Seeder_settings['mastery_adjustment'] == 1)?'checked':'')?> value="1" title="Ignore full mastery earned before the new Mastery Adjustment by Z*">
+ </td>
+ <td><font size="1" face="Tahoma">
+ Force Planting:
+ <input type="checkbox" name="force_planting" <?php echo (($Seeder_settings['force_planting'] == 1)?'checked':'')?> value="1" title="Ignore Seeds Filters. Errors can happen."></font>
+ </td>
  </tr>
  </table>
 </td>
@@ -1534,13 +1551,33 @@ Plant:
  <table border="0" width="100%" cellspacing="0" cellpadding="2">
  <tr>
                                                 <td align="left" valign="top">
-<font size="1">Auto Mastery Green House:
+<font size="1">Auto Mastery Greenhouse:
  <input type="checkbox" name="mastery_greenhouse" <?php echo (($Seeder_settings['mastery_greenhouse'] == 1)?'checked':'')?> value="1"></font></td>
                                                 <td align="left" valign="top">
-<font size="1">Harvest Green House:
+<font size="1">Harvest Greenhouse:
  <input type="checkbox" name="harvest_greenhouse" <?php echo (($Seeder_settings['harvest_greenhouse'] == 1)?'checked':'')?> value="1"></font></td>
                                                 <td align="left" valign="top">
-<font size="1">&nbsp;</font></td>
+<font size="1" face="Tahoma">Default:
+  <select size="1" name="default_greenhouse">
+<?php
+if ($Seeder_settings['default_greenhouse'])
+{
+echo "<option selected value='".$Seeder_settings['default_greenhouse']."'>".Units_GetRealnameByName($Seeder_settings['default_greenhouse'])."</option>"."\n";
+echo "<option value='NULL'>Empty</option>"."\n";
+} else {
+echo "<option selected value='NULL'>Empty</option>"."\n";
+}
+
+$greenhouse_seeds = Seeder_Read("seeds");
+$greenhouse_seeds = Seeder_ArrayFilter($greenhouse_seeds, 'isHybrid', '==', '1');
+$greenhouse_seeds = Seeder_ArrayFilter($greenhouse_seeds, 'seedpackage_UnlockState', '<=', $Seeder_info['greenhouse_level'] );
+foreach ($greenhouse_seeds as $greenhouse_seed)
+{
+ echo "<option value='".$greenhouse_seed['name']."'>".$greenhouse_seed['realname']."</option>"."\n";
+}
+?>
+</select>
+</font></td>
                                                 <td align="left" valign="top">
 
  <font size="1">&nbsp;</font></td>

@@ -2,11 +2,13 @@
 include('config/accounts.php');
 echo 'Found '.count($accounts)." accounts\r\n";
 $cmd=array();
+
+$ua = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US) AppleWebKit/525.13 (KHTML, like Gecko) Chrome/0.A.B.C Safari/525.13';
 foreach($accounts as $login_email=>$login_pass) {
 	echo 'Logging in '.$login_email."\r\n";
 	$ch = curl_init();
 	curl_setopt_array($ch,array(CURLOPT_URL=>'http://apps.facebook.com/onthefarm/index.php',
-			CURLOPT_USERAGENT=> 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
+			CURLOPT_USERAGENT=> $ua,
 			CURLOPT_FOLLOWLOCATION=>true,
 			CURLOPT_SSL_VERIFYPEER=>false,
 			CURLOPT_COOKIEJAR=>'/tmp/fblogincookies.txt',
@@ -35,7 +37,7 @@ foreach($accounts as $login_email=>$login_pass) {
 		if(isset($attrs->name) && isset($attrs->value)) $postdata[]=$attrs->name.'='.$attrs->value;
 	}
 	$url = $xml->attributes()->action;
-	curl_setopt_array($c, array(CURLOPT_USERAGENT=> 'Mozilla/5.0 (Windows, U, Windows NT 5.1, en-US, rv:1.8.1.3) Gecko/20070309 Firefox/2.0.0.3',
+	curl_setopt_array($c, array(CURLOPT_USERAGENT=> $ua,
 		CURLOPT_URL=>$url,
 		CURLOPT_FOLLOWLOCATION=> true,
 		CURLOPT_SSL_VERIFYPEER=> false,
@@ -46,7 +48,12 @@ foreach($accounts as $login_email=>$login_pass) {
 		CURLOPT_POSTFIELDS=>implode($postdata,'&')));
 	$res=curl_exec($c);
 	file_put_contents('/tmp/test',$res);
-	preg_match('/var flashVars.+?({.+?})/',$res,$flashVars);
+	if(!preg_match('/var flashVars.+?({.+?})/',$res,$flashVars)){
+		echo "Couldn't login, maybe somethings broken?\n\rServer response was written to login_failure_".$login_email.".txt\n\r";
+		file_put_contents('login_failure_'.$login_email.'.txt',$res);
+		continue;
+	}
+
 	$flashVarsParsed = json_decode($flashVars[1],true);
 	$params=array();
 	foreach(array('master_id','flashRevision','token','whatever','whoknows','exp','somethingelse') as $key) @$params[$key]=$flashVarsParsed[$key];
