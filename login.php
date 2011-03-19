@@ -47,9 +47,8 @@ foreach($accounts as $login_email=>$login_pass) {
 		CURLOPT_REFERER => $refurl,
 		CURLOPT_POSTFIELDS=>implode($postdata,'&')));
 	$res=curl_exec($c);
-	file_put_contents('/tmp/test',$res);
 	if(!preg_match('/var flashVars.+?({.+?})/',$res,$flashVars)){
-		echo "Couldn't login, maybe somethings broken?\n\rServer response was written to login_failure_".$login_email.".txt\n\r";
+		echo "Couldn't fetch the flashVars, maybe somethings broken?\n\rServer response was written to login_failure_".$login_email.".txt\n\r";
 		file_put_contents('login_failure_'.$login_email.'.txt',$res);
 		continue;
 	}
