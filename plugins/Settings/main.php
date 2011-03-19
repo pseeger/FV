@@ -141,7 +141,7 @@ function LoadSavedSettings() {
     }
     if($px_Setopts['version']<>PX_VER_SETTINGS) {
       $px_Setopts['version'] = PX_VER_SETTINGS;
-      unlink('sqlite_check.txt');
+     @unlink('sqlite_check.txt');
     }
   } else {
     $px_Setopts = CreateDefaultSettings();

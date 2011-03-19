@@ -119,7 +119,7 @@ AddLog2("Seeder_loadWorld> ".$n_plots." Plots updated");
 $crafting_array = array();
 $n_bushels = 0;
 
-if(is_array($crafting_items)) foreach ($crafting_items as $bushel)
+foreach ($crafting_items as $bushel)
 {
  $bushel_code = $bushel['itemCode'];
  $crafting_array[$bushel_code]['bushel_code'] = $bushel_code;
@@ -131,7 +131,7 @@ unset($crafting_items);unset($bushel_code);
 $units_bushel = Units_GetByType('bushel',true);
 $bushels_array = array();
 
-if(is_array($units_bushel)) foreach($units_bushel as $unit)
+foreach($units_bushel as $unit)
 {
  $bushel_crop = Units_GetNameByCode($unit['crop']);
  $bushels_array[$bushel_crop]['bushel_crop']  = $bushel_crop;

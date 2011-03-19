@@ -146,6 +146,7 @@ function GiftBox_form() {
     }
     // buildings                     //submitPlaceThis"  value="Set All to max"
     if (isset($_GET['submitPlaceThis'])) {
+	    print_r($_GET);
         $PlaceThisKey = array_keys($_GET['PTval']);
         $PTval = $_GET['PTval'];
         $PTcode = $_GET['PTcode'];

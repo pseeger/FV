@@ -969,7 +969,7 @@ echo "<input type='submit' name='clear_planting' value='Clear' title='clear seed
 //======================================
 $seedlist = Seeder_Read("seedlist");
 
-  if(is_array($seedlist)) foreach ($seedlist as $key => $seed_value)
+  foreach ($seedlist as $key => $seed_value)
   {
    if ($key == "default")
    {
