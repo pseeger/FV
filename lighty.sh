@@ -7,7 +7,7 @@ fi
 if [ -e /usr/bin/php-cgi ]
 	then PHP="/usr/bin/php-cgi"
 elif [ -e /opt/local/bin/php-cgi ]
-	then PHP="/usr/bin/php-cgi"
+	then PHP="/opt/local/bin/php-cgi"
 else
 	echo "Apparently PHP with CGI-support wasn't installed correctly."
 	exit
