@@ -2275,16 +2275,8 @@ function DebugLog($str) {
 //  @return string Full file name (UserID + '_' + Short name)
 // ------------------------------------------------------------------------------
 function F($filename) {
-	global $userId;
-
-	if ($filename == "units.txt") {
-		return "units.txt";
-	} //pre2.10 plugin support
-	$folder = "FBID_" . $userId;
-	if (!is_dir($folder)) {
-		@mkdir($folder);
-	}
-
+	$folder = "FBID_" . $GLOBALS['userId'];
+	if (!is_dir($folder)) @mkdir($folder);
 	return $folder . '/' . $filename;
 }
 // ------------------------------------------------------------------------------
@@ -2292,10 +2284,7 @@ function F($filename) {
 //  @param string $filename Short file name
 //  @return string Full file name (UserID + '_' + Short name)
 // ------------------------------------------------------------------------------
-function PluginF($filename) {
-	global $userId;
-	return $userId . '_' . $filename;
-}
+function PluginF($filename) { return $GLOBALS['userId'] . '_' . $filename;}
 
 function LogF($filename) {
 	global $userId;
@@ -2306,12 +2295,7 @@ function LogF($filename) {
 //  @return array List of neighbors
 // ------------------------------------------------------------------------------
 function GetNeighbors() {
-	DebugLog(" >> GetNeighbors");
-	$neighborsstr = file_get_contents(F('neighbors.txt'));
-	$neighbors = unserialize($neighborsstr);
-
-	DebugLog(" << GetNeighbors");
-	return $neighbors;
+	return unserialize(file_get_contents(F('neighbors.txt')));
 }
 // ------------------------------------------------------------------------------
 // GetObjects gets a list of objects on the farm
@@ -2321,12 +2305,8 @@ function GetNeighbors() {
 function GetObjects($className = '') {
 	// FarmFIX
 	$my_farm_is_fucked_up = 0;
-	if (file_exists('farmfix.txt')) {
-		$my_farm_is_fucked_up = trim(file_get_contents('farmfix.txt'));
-	}
-	if ($my_farm_is_fucked_up == 1) {
-		return GetObjects2($className);
-	}
+	if (file_exists('farmfix.txt')) $my_farm_is_fucked_up = trim(file_get_contents('farmfix.txt'));
+	if ($my_farm_is_fucked_up == 1) return GetObjects2($className);
 	// FarmFIX
 	DebugLog(" >> GetObjects");
 	$objectsstr = file_get_contents(F('objects.txt'));
