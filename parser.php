@@ -684,7 +684,8 @@ function Arbeit() {
 			'hauntedhouse' => 'HalloweenHauntedHouseBuilding',
 			'trough' => 'FeedTroughBuilding',
 			'orchard' => 'OrchardBuilding',
-			'turkeyroost' => 'TurkeyRoostBuilding'
+			'turkeyroost' => 'TurkeyRoostBuilding',
+			'duckpond'=>'DuckpondBuilding'
 			);
 
 			foreach($buildingassoc as $setting=>$objectname) {
@@ -889,20 +890,15 @@ function Arbeit() {
 			foreach($seed_list as $seed_key => $itemName) {
 				$px_itemName = explode(':', $itemName);
 
-				if (empty($px_itemName[0]))
-				break 2; //seedlist is empty
+				if (empty($px_itemName[0])) break 2; //seedlist is empty
 				$plot['itemName'] = $px_itemName[0];
 				$seed_plots[] = $plot;
 
 				if ($px_itemName[1] != "Default") {
 					$px_itemName[1]--;
-					if ($px_itemName[1] == 0) {
-						unset($seed_list[$seed_key]);
-					} else {
-						$seed_list[$seed_key] = "$px_itemName[0]:$px_itemName[1]";
-					}
-					if($keep_seed)
-					$append_seed_array[$px_itemName[0]]++;
+					if ($px_itemName[1] == 0) unset($seed_list[$seed_key]);
+					else $seed_list[$seed_key] = "$px_itemName[0]:$px_itemName[1]";
+					if($keep_seed) $append_seed_array[$px_itemName[0]]++;
 				}
 				break;
 			} //seedlist
@@ -2596,10 +2592,9 @@ function Do_Farm_Work($plots, $action = 'harvest') {
 			$amf->_bodys[0]->_value[1][$i]['sequence'] = $sequence++;
 			$amf->_bodys[0]->_value[1][$i]['params'][1] = $chunk[$i];
 			$amf->_bodys[0]->_value[1][$i]['params'][2] = array();
-
 			$amf->_bodys[0]->_value[1][$i]['params'][2][0]['energyCost'] = 0;
 
-			$OKstring .= "\r\n" . $action . ' ' . $chunk[$i]['itemName'] . ' on plot ' . GetPlotName($chunk[$i]);
+			//$OKstring .= "\r\n" . $action . ' ' . $chunk[$i]['itemName'] . ' on plot ' . GetPlotName($chunk[$i]);
 		}
 		$time = microtime(true);
 		$res = RequestAMF($amf);
