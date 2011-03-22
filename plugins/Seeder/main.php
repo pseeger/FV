@@ -18,7 +18,7 @@ define('Seeder_Path',Bot_path.'plugins/Seeder/');
 define('Section_Path',Bot_path.'plugins/Sections/');//added v1.1.6
 define('GiftBox_Path',Bot_path.'plugins/GiftBox/');//added v1.1.6
 define('Seeder_dbPath',Seeder_Path.'database/');
-define('Seeder_imgPath',Seeder_Path.'images/');
+define('Seeder_imgPath','/plugins/Seeder/images/');
 define('Seeder_URL','/plugins/Seeder/main.php');
 define('Seeder_imgURL','/plugins/Seeder/images/');
 define('Seeder_date',date("Ymd"));

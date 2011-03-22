@@ -20,7 +20,7 @@ $image = 1;
 
   if ($image == 1)
   {
-  return $iconfile;
+  return '/'.$iconurl;
   }
   else
   {
@@ -46,7 +46,7 @@ $image = 1;
 
   if ($image == 1)
   {
-  return $iconfile;
+  return '/'.$iconurl;
   }
   else
   {
@@ -73,7 +73,7 @@ $image = 1;
 
   if ($image == 1)
   {
-  return $iconfile;
+  return '/'.$iconurl;
   }
   else
   {
@@ -101,7 +101,7 @@ $image = 1;
 
   if ($image == 1)
   {
-  return $iconfile;
+  return '/'.$iconurl;
   }
   else
   {
@@ -129,7 +129,7 @@ $image = 1;
 
   if ($image == 1)
   {
-  return $iconfile;
+  return '/'.$iconurl;
   }
   else
   {
