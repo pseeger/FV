@@ -254,7 +254,7 @@ $coop_id = $coop_active['id'];
   $coop_seeds = Seeder_ArrayOrder($coop_seeds, 'growTime', $Seeder_settings['coop_growTime']);
   foreach ($coop_seeds as $coop_seed)
   {
-  AddLog2("Seeder_plant_quest> seed ".$coop_seed['realname']." : ".floor(($coop_seed['progress'] / $coop_seed['many']) * 100)."% (".$coop_seed['progress']."/".$coop_seed['many']).")";
+  AddLog2("Seeder_plant_quest> seed ".$coop_seed['realname']." : ".floor(($coop_seed['progress'] / $coop_seed['many']) * 100)."% (".$coop_seed['progress']."/".$coop_seed['many'].")");
 
   
   $toplant = ($coop_seed['many'] - $coop_seed['progress']);
@@ -300,7 +300,7 @@ $localOffset = date('Z');// fixed 1.1.3b
 $serverOffset = (-5 * 60 * 60);//(GMT -5:00) EST - Eastern Standard Time (U.S. & Canada)
 
 
-if ((file_exists($quests_xml)) && (file_exists($locale_xml)))
+if (file_exists($locale_xml))
 {
 
 //locale
@@ -335,9 +335,11 @@ foreach ($xml_doc->bundle as $bundle)
 unset($xml_doc);
 
 } else {
-if (!file_exists($quests_xml)) {Seeder_error("Seeder_MakeQuests> file ".$quests_xml." file does not exist");return;}
-if (!file_exists($locale_xml)) {Seeder_error("Seeder_MakeQuests> file ".$locale_xml." file does not exist");return;}
-}//if ((file_exists($quests_xml)) && (file_exists($locale_xml)))
+//Seeder_error("Seeder_MakeQuests> file ".$locale_xml." file does not exist");
+}
+
+
+if (file_exists($quests_xml)) {
 
 
 //quests
@@ -421,6 +423,8 @@ $quests[$quest_id]['realname'] = @$locale_array[$quest_name];
   $quests[$quest_id]['score_cost'] = $score_cost;
   $quests[$quest_id]['score_plots'] = $score_plots;
 }
+
+} else {Seeder_error("Seeder_MakeQuests> file ".$quests_xml." file does not exist");return;}
 
 if (count($quests > 0)) {Seeder_WriteDefault($quests,"quests");}//fix 1.1.6
 

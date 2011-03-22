@@ -52,10 +52,13 @@ $seeds_available = array();
       $count = count($seed['requirements']);
       for ($i = 0; $i < $count; $i++)
       {
-      $mastery_req =  @$mastery_counters[Units_GetCodeByName($seed['requirements'][$i])];
-       if ($mastery_req <> 2)
+       if ($seed['requirements'][$i] != "farm")
        {
-       $seed_filter = 1;
+       $mastery_req =  @$mastery_counters[Units_GetCodeByName($seed['requirements'][$i])];
+        if ($mastery_req <> 2)
+        {
+        $seed_filter = 1;
+        }
        }
       }
     }
@@ -120,15 +123,21 @@ if (count($seed) > 0 )
       $count = count($seed[$name]['requirements']);
       for ($i = 0; $i < $count; $i++)
       {
-      $mastery_req =  @$mastery_counters[Units_GetCodeByName($seed[$name]['requirements'][$i])];
-       if ($mastery_req <> 2)
+       if ($seed['requirements'][$i] != "farm")
        {
-       $SeedFilter = 1;
+       $mastery_req =  @$mastery_counters[Units_GetCodeByName($seed['requirements'][$i])];
+        if ($mastery_req <> 2)
+        {
+        $seed_filter = 1;
+        }
        }
       }
     }
 
 } else {$SeedFilter = 1;}// 1st Seeder_ArrayFilter
+
+//force_planting
+   if ($Seeder_settings['force_planting'] == 1) {$SeedFilter = 0;}
 
 
 unset($mastery_counters);unset($seeds);
@@ -502,10 +511,9 @@ $action = "harvest";
             AddLog2($action . " " . $plotsstring);
 
 //======================================
-    $s = Connect();
     $serializer = new AMFSerializer();
     $result = $serializer->serialize($amf); // serialize the data
-    $answer = Request($s, $result);
+    $answer = Request('', $result);
     $amf2 = new AMFObject($answer);
     $deserializer2 = new AMFDeserializer($amf2->rawData); // deserialize the data
     $deserializer2->deserialize($amf2); // run the deserializer
@@ -1055,8 +1063,8 @@ $value = Sedeer_XMLToArray($child, $flattenValues, $flattenAttributes, $flattenC
 
 if(count($children)>0)
 {
- if(!$flattenChildren){$return[$childrenKey] = $children;}
- else{$return = array_merge($return,$children);}
+ if(!$flattenChildren) $return[$childrenKey] = $children;
+ else $return = array_merge($return,$children);
 }
 
 $attributes = array();

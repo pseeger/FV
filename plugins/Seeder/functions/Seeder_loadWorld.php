@@ -37,9 +37,7 @@ SaveAuthParams();
 
 $serializer = new AMFSerializer();
 $result = $serializer->serialize($amf);
-$s = Connect();
 $answer = Request($s, $result);
-@fclose($s);
 
 $amf2 = new AMFObject($answer);
 $deserializer2 = new AMFDeserializer($amf2->rawData);
@@ -81,10 +79,17 @@ Seeder_Write($greenhouse,"greenhouse");//added 1.1.6
 AddLog2("Seeder_loadWorld> Greenhouse updated");
 #Seeder_Write(@$amf2->_bodys[0]->_value['data'][1]['data'],"postInit");
 
-$MarketStallCount = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['currentMarketStallCount'];
-$crafting_items = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['craftingItems'];
-$maxbushels = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['maxCapacity'];
-$pendingRewards = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['pendingRewards'];
+#$MarketStallCount = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['currentMarketStallCount'];
+#$crafting_items = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['craftingItems'];
+#$maxbushels = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['maxCapacity'];
+#$pendingRewards = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['pendingRewards'];
+
+//tks FarmerBob00
+$world = unserialize(file_get_contents(F('world.txt')));
+$MarketStallCount = @$world['data'][0]['data']['craftingState']['currentMarketStallCount'];
+$crafting_items = @$world['data'][0]['data']['craftingState']['craftingItems'];
+$maxbushels = @$world['data'][0]['data']['craftingState']['maxCapacity'];
+$pendingRewards = @$world['data'][0]['data']['craftingState']['pendingRewards'];
 
 //======================================
 //plots
@@ -161,7 +166,7 @@ $pendingRewards = $Rewards;
 //======================================
 //masteries
 //======================================
-$world = unserialize(file_get_contents(F('world.txt')));
+#$world = unserialize(file_get_contents(F('world.txt')));
 $mastery_counters = @$world['data'][0]['data']['userInfo']['player']['masteryCounters'];
 $mastery_levels = @$world['data'][0]['data']['userInfo']['player']['mastery'];
 
@@ -418,12 +423,6 @@ foreach($units_seeds as $seed)
  $seeds_array[$name]['creationDateTimestamp'] = (time() - 100000000);
  $seeds_array[$name]['creationDate'] = 'NULL';
  }
-
-//new fiels
-//marketCardDescriptor
-//masteryYield - candycane
-//donation name
-//expires="false"
 
  //licensed fixed 1.1.6b
  if (@$seed['license'])

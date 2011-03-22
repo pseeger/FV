@@ -278,19 +278,27 @@ echo (($seed['booster_time'] > 0)? "Booster Time: <b>".Seeder_TimeLeft(time(),$s
 
 } else {echo "Bushels: <b>Unavailable</b><br>";}//if ($seed['bushel_name'] != "NULL")
 
-if (($seed['reqs'] > 0) && ($seed['isHybrid'] == 0))//fix 1.1.6
+if ($seed['reqs'] > 0)//fix 1.1.6
+//if (($seed['reqs'] > 0) && ($seed['isHybrid'] == 0))//fix 1.1.6
 {
  $name = $seed['name'];
  $reqs = $seed['requirements'];
  $reqs_count = count($reqs);
  for ($i = 0; $i < $reqs_count; $i++)
  {
-  $mastery_req =  @$mastery_counters[Units_GetCodeByName($reqs[$i])];
-  if ($mastery_req <> 2)
+  if (($seed['requirements'][$i] != "farm") && ($seed['requirements'][$i] != "england"))
   {
-  echo "<font color='red'>Required Mastery : <b>".Units_GetRealnameByName($reqs[$i])."</b></font><br>";
-  } else {
-  echo "Required Mastery : <b>".Units_GetRealnameByName($reqs[$i])."</b><br>";
+   $mastery_req =  @$mastery_counters[Units_GetCodeByName($reqs[$i])];
+   if ($mastery_req <> 2)
+   {
+   echo "<font color='red'>Required Mastery : <b>".Units_GetRealnameByName($reqs[$i])."</b></font><br>";
+   } else {
+   echo "Required Mastery : <b>".Units_GetRealnameByName($reqs[$i])."</b><br>";
+   }
+  }
+  if ($seed['requirements'][$i] == "england")
+  {
+   echo "<font color='red'>Required : <b>English Countryside</b></font><br>";
   }
  }
  unset($reqs);

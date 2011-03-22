@@ -11,7 +11,7 @@ include 'functions/Seeder_image.php';
 include 'functions/Seeder_quest.php';
 include 'functions/Seeder_trees.php';//added 1.1.6
 include 'functions/Seeder_tabs.php';
-define('Seeder_version','1.1.7a');//revised v1.1.7a
+define('Seeder_version','1.1.7b');//revised v1.1.7b
 define('Seeder_parser','22120');
 define('Bot_path',str_replace("\\", "/", getcwd()).'/');
 define('Seeder_Path',Bot_path.'plugins/Seeder/');

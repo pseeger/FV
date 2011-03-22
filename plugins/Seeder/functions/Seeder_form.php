@@ -1197,7 +1197,7 @@ unset($seeds_available);
 
 $quests_available = Seeder_quests_available();
 $quest_active = Seeder_Read("activeMission");
-#print_r($quest_active);
+
 $coop_id = $quest_active['id'];
 
 if ((is_array($quest_active)) && ($coop_id != "active_mission_id_none"))
@@ -1457,6 +1457,7 @@ unset($quest_active);
  Host Job
 
 <?php
+#print_r($quests_available);
 echo "<select size='1' name='coop_host'>"."\n";
 
 $check = @$quests_available[$Seeder_settings['coop_host']];
