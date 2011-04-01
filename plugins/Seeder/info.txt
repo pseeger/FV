@@ -1,0 +1,150 @@
+Seeder
+1.1.7b
+n1n9u3m
+http://farmvillebot.net/forum/viewtopic.php?t=7164
+This plugin manage Co-Op Jobs, organize, booster and fertilize crops in farmville
+
+version 1.1.7b
+-Mar 16 2011
+-fixed English Countryside seeds
+
+version 1.1.7a
+-Mar 14 2011
+-fixed force planting
+
+version 1.1.7
+-Mar 13 2011
+-fixed Greenhouse functions
+-added Greenhouse default seed package
+-added trees tabs
+
+version 1.1.6b
+-Feb 10 2011
+-fixed licenses
+
+version 1.1.6a
+-Feb 8 2011
+-fixed Greenhouse functions
+
+version 1.1.6
+-Feb 8 2011
+-added Greenhouse functions
+
+version 1.1.5
+-Dec 29 2010
+-added keep planted functions
+-fixed seed package
+
+version 1.1.4a
+-Dec 8 2010
+-fixed auto mastery - Thanks to Computoncio
+-fixed Market Stall Count
+
+version 1.1.4
+-Dec 7 2010
+-added co-op functions
+-fixed seed license and requirements
+
+version 1.1.3b
+-Nov 27 2010
+-fixed Time Zone Converter
+
+version 1.1.3a
+-Nov 27 2010 
+-fixed To Mastery Seeds Table - Thanks to nunsag
+
+version 1.1.3
+-Nov 27 2010
+-fixed Double Mastery Weekend
+-added Time Zone Converter
+
+version 1.1.2
+-Nov 26 2010
+-added Double Mastery Weekend
+-pre co-op version
+-fixed seed requirements
+-desing changes
+
+version 1.1.1
+-Nov 19 2010
+-fixed fertilize all
+-fixed amf response's
+
+version 1.1.0
+-Nov 16 2010
+-added fertilize all
+-fixed bushel booster
+-fixed seed package
+-fixed limited start
+-fixed biplane instant grow
+
+version 1.0.11
+-Nov 13 2010
+-fixed amf response's
+
+version 1.0.10
+-Oct 19 2010
+-fixed seed list
+
+version 1.0.9
+-Oct 18 2010
+-fixed save seed list
+
+version 1.0.8a
+-Aug 19 2010
+-fixed parser Limited End
+
+version 1.0.8
+-Aug 19 2010
+-fixed z* images
+-fixed form bushel booster time
+
+version 1.0.7
+-Aug 13 2010
+-fixed z* changes
+
+version 1.0.6b
+-July 7 2010
+-fixed function to Buy Bushels
+
+version 1.0.6a
+-July 7 2010
+-fixed function to Claim Market Rewards
+
+version 1.0.6
+-July 6 2010
+-added function to Claim Market Rewards
+-show images works independent from GiftBox Plugin
+
+version 1.0.5
+-July 2 2010
+-buy or find bushels to booster
+-added required Level mastery order option
+-loadWord more fast
+-fixed Mastery Adjustment option and other small bugs
+
+version 1.0.4
+-June 27 2010
+-added option to use Bushel Booster
+-added option default settings for all users
+-added info about Wither/unwither
+-added info about Airplane 1st Fly
+
+version 1.0.3
+-June 23 2010
+-update FarmInfo after loadWord
+-added option to preverse full mastery earned before the new Mastery Adjustment by Z*
+
+version 1.0.2
+-June 22 2010
+-edited default settings - not start auto ( sorry for potatoes :-) )
+-fixed plots timeline
+
+version 1.0.1
+-June 22 2010
+-added support for regional date/time
+-fixed mastery order preference
+-more space for plots timeline
+
+version 1.0.0
+-June 21 2010

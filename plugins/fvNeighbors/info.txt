@@ -1,0 +1,41 @@
+fvNeighbors V2.14
+2.14 - February, 2011
+
+What does it do:
+Manages your neighbors. Allows you do Fertilize/Harvest/Plow/Unwither/Feed Neighbors Crops/Animals. Delete Neighbors. Cancel Pending Neighbor Requests.
+
+[Changelog]
+
+v2.14 - Misc. code changes.
+
+v2.12 - Some code changes. Added harvest neighbors Leprechaun Cottage
+
+v2.10 - More code optmized and rewards captured.
+
+v2.09 - More features added. Harvest neighbors greenhouse and a few others.
+
+v2.07 - Made more changes, adjusted code and added harvest cupids castle.
+
+v2.06 - Made numerious changes to fix many errors. Also now supports Cuppids Castle. 
+      - NOTE : changes made by Z*. You can help do some work on your FarmVille neighbors' farms only once per day. If you stop by to visit and your neighbor isn't putting you to work, it's probably because you visited them already.
+      - Version change and all problems fixed. Harvist cupid castle and all other features working.
+
+v2.03 - Added neighbor Animal Feed Trough action, to allow you to send feed to neighbors with the new building.
+      - Fixed a cause for some of the Error 29: Server sequance was reset
+
+v2.02 - Added a couple exceptions to the halloween trick actions, if you receive error 28: Object is unactionable, please post the log so I may futher update the exceptions.
+        Changed the way actions are counted to further prevent the error 29: Exceeded action limit
+        Added a stats line to each farm update, exa: Already performed 5/5 Farm Acts, 1/1 Chickens Fed, 1/1 Candy Collected, 5/5 Tricks Played
+        Will now display items rewarded in-line with each action if any were rewarded
+        Minor bug fixes
+        
+v2.01 - Added Halloween Neighbor Tricks, will attept to put cobwebs on your neighbors farm, or make there animals ghosts.
+
+v2.00 - Rewritten/Cleaned up by Lex.
+        Adding some credit to the Steal plugin where some code was copied. (Was present in previous versions to)
+        Added a config option to not gather neighbors Haunted Houses
+        Credit to the Sigma AJAX Data Grid project (http://code.google.com/p/ajaxdatagridview/) for the data grid, and exporting functionality, Rad stole from these guys without giving credit.
+        Added warning about Neighbors Neighbors being diabled on 10/21/10, but left it in in case they reenabled it.
+
+------------------------------------------------------------------------------------------
+

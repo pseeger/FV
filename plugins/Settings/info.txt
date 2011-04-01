@@ -1,0 +1,68 @@
+Settings
+22118 Cupids Castle & Duck Pond added
+MrN updated by px, ralphm2004, strmckr
+http://farmvillebot.net/forum/viewtopic.php?t=7884
+The second bot settings. Use this to tell the bot what to do.
+22118 Cupids Castle & Duck Pond added
+22117 fixed xml-downloading 
+22116 fixed xml-downloading
+22115 fixed xml-downloading
+22115 leave some arborists/farmhands in giftbox
+22115 fixed transforming
+22115 fixed gift-sendback
+22115 accept gifts twice
+22115 set numbers of gifts to accept
+22115 download avatar and dialogs xml
+22114 harvest winter_workshop
+22113 try capture more links
+22113 fix xml download
+22113 wanderinganimals
+22113 download quests/crafting icons
+22112 get default farmserver from flashVars.txt
+22111 try capture more links
+22111 save more quests-infos
+22110 unknown rewards-file gets overwritten
+22110 clear old rewards
+22110 check more rewards in amf-response
+22108 check more rewards in amf-response
+22107 check rewards in amf-response
+22106 turkeyroost
+22105 orchard
+22105 trough
+22104 combine
+22104 keep seeds
+22103 accept gifts & send thankyougift
+22203 harvest hauntedhouse
+21902 bugfix: not harvest, plow, or plant without upgraded vehicles
+21902 bugxix: removed debug-code slowing sections down
+21901 accept neighbor help
+21901 removed help neighbors
+219 fixed proxy_GET()
+219 harvest,plow,seed with upgraded vehicles
+219 max bot-speed 8x
+219 http changes by radicallinux
+218 http changes by radicallinux
+218 gamesettings in sqlite
+218 pigpen by hugo
+218 show plugin-versions
+217 sqlite changes
+217 crafting.xml, quests.xml in sqlite
+216 switch of plugin-hooks per account
+216 pause parser per account
+216 get crafting.xml, quests.xml fixed
+216 gui changes
+215 gui changes
+215 check lonlyanimals
+215 set timezone
+215 get crafting.xml
+215 get quests.xml
+214 get assets
+214 fixed collections-info
+214 fixed achivments-info
+213 fixed z* xml changes
+213 sqlite
+212 switch of plugin-hooks
+210 biplane instantgrow
+210 harvest farmhands
+210 harvest arborists
+210 conbox

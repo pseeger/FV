@@ -1,14 +1,12 @@
 .*
 !.gitignore
-!plugins/GiftBox/*.txt
-!plugins/GiftBox/actions/*.txt
 farmville-*
 assets/
 FBID*
-*.txt
 config/
 *.sqlite
 *.csv
 *.exe
 lighty.conf
 raw_rewards*
+1*.txt
