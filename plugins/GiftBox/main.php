@@ -1,6 +1,6 @@
 <?php
-define ( 'GiftBox_version', '3.4.5' );
-define ( 'GiftBox_date', '24 Feb 2011' );
+define ( 'GiftBox_version', '3.4.6' );
+define ( 'GiftBox_date', '20 Mar 2011' );
 define ( 'GiftBox_URL', '/plugins/GiftBox/main.php');
 define ( 'GiftBox_HelpURL', '/plugins/GiftBox/main.php?url=help#');
 define ( 'GiftBox_TextURL', '/plugins/GiftBox/main.php?url=');

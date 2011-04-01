@@ -146,30 +146,41 @@ function GiftBox_form() {
     }
     // buildings                     //submitPlaceThis"  value="Set All to max"
     if (isset($_GET['submitPlaceThis'])) {
-	    print_r($_GET);
-        $PlaceThisKey = array_keys($_GET['PTval']);
+error_log(print_r($_GET,true));
+        $PlaceThisKey = @array_keys($_GET['PTval']);
         $PTval = $_GET['PTval'];
         $PTcode = $_GET['PTcode'];
         $PTobj = $_GET['PTobj'];
         $PTmax = $_GET['PTmax'];
+        $PTin = $_GET['PTin'];
         //  sqlite_query($GBDBuser, 'BEGIN;');
-        foreach($PlaceThisKey as $value) {
-            if ($_GET['submitPlaceThis'] == "Set_All_999") {
-                $PTval[$value] = "99999";
-            } //old
-            if ($_GET['submitPlaceThis'] == "Set All to max") {
-                $PTval[$value] = $PTmax[$value];
-            }
-            if ($PTmax[$value] == "100") { // this is old stuff
-                $PTmax[$value] = "999";
-                $place_in_special = $PTval[$value];
+        if(!is_array($PlaceThisKey)) {
+            if ($_GET['submitPlaceThis'] == "Set All to max") { $PTval = $PTmax;}
+            if ($_GET['submitPlaceThis'] == "Set All to 1") { $PTval = '1'; }
+            if ($_GET['submitPlaceThis'] == "Set All to 0") { $PTval = '0'; }
+            if ($PTin == "special") { // this is a special building
+                $place_in_special = $PTval;
                 $place_in_build = "0";
             } else {
                 $place_in_special = "0";
-                $place_in_build = $PTval[$value];
+                $place_in_build = $PTval;
             }
-            if ($PTmax[$value] == "999") { // this is a special building
-                //$PTmax[$value] = "999";
+            GB_SQL_updAction("_place_in_special", $PTcode, $place_in_special); //$field, $code, $val
+            GB_SQL_updAction("_place_in_build", $PTcode, $place_in_build); //$field, $code, $val
+            GB_SQL_updAction("_place_in_max", $PTcode, $PTmax); //$field, $code, $val
+            GB_SQL_updAction("_target", $PTcode, $PTobj); //$field, $code, $val
+        }
+	else foreach($PlaceThisKey as $value) {
+            if ($_GET['submitPlaceThis'] == "Set All to max") {
+                $PTval[$value] = $PTmax[$value];
+            }
+            if ($_GET['submitPlaceThis'] == "Set All to 1") {
+                $PTval[$value] = '1';
+            }
+            if ($_GET['submitPlaceThis'] == "Set All to 0") {
+                $PTval[$value] = '0';
+            }
+            if ($PTin[$value] == "special") { // this is a special building
                 $place_in_special = $PTval[$value];
                 $place_in_build = "0";
             } else {
@@ -397,10 +408,10 @@ function GiftBox_form() {
         echo "<br>**** ERROR: GiftBox manager Requires px_parser version v$px_ver_needed or higher ****<br>";
         return;
     }
-    if ((!PX_VER_SETTINGS) || (PX_VER_SETTINGS < $px_ver_needed)) {
- //       echo "<br>**** ERROR: GiftBox manager Requires px_settings version v$px_ver_needed or higher ****<br>";
-//        return;
-    }
+  /*  if ((!PX_VER_SETTINGS) || (PX_VER_SETTINGS < $px_ver_needed)) {
+        echo "<br>**** ERROR: GiftBox manager Requires px_settings version v$px_ver_needed or higher ****<br>";
+        return;
+    }*/
     if (isset($_GET['add_ExclConstr'])) {
         if (array_key_exists('ExclConstr', $GB_Setting)) {
             $ExclConstr = unserialize($GB_Setting['ExclConstr']);
@@ -1308,7 +1319,12 @@ initalizetab("maintab")
                         } // end contents
                         // now check if the item is in totstorage.
                         $featureCreditsName = 'N';
-                        if ($TargetObject['itemName'] == 'valentinesbox') {
+                        if(in_array($TargetObject['itemName'],explode(',',file_get_contents('plugins/GiftBox/specials.txt')))) {
+                            $featureCreditsName = $TargetObject['itemName'];
+                        }
+                        if ($TargetObject['itemName'] == 'holidaytree') {
+                            $featureCreditsName = 'holidayTree';
+                        } elseif ($TargetObject['itemName'] == 'valentinesbox') {
                             $featureCreditsName = 'valentine';
                         } elseif ($TargetObject['itemName'] == 'potofgold') {
                             $featureCreditsName = 'potOfGold';
@@ -1393,11 +1409,14 @@ initalizetab("maintab")
                             // check if there is data for this building
                             if (array_key_exists("_target", $GBaction)) { // data exist Check that it is this building
                                 if ($GBaction['_target'] == $TargetObject['id']) { // Yes, it is this building
-                                    if ($UnitCapacity == "100") { // this is special
+#                                    if ($UnitCapacity == "100" && $TargetObject['itemName']<>'chickencoop5' && $TargetObject['itemName']<>'xukchickencoop5' && $TargetObject['itemName']<>'flowershed' && $TargetObject['itemName']<>'flowershedcache') { // this is special
+                                    if(in_array($TargetObject['itemName'],explode(',',file_get_contents('plugins/GiftBox/specials.txt')))) { // this is special
                                         $ItemInputVal = $GBaction['_place_in_special'];
-                                        $PutMax = 999;
+                                        $PutMax = 9999;
+                                        $PTin='special';
                                     } else { // this is normal
                                         $ItemInputVal = $GBaction['_place_in_build'];
+                                        $PTin='building';
                                     }
                                 }
                             }
@@ -1405,6 +1424,7 @@ initalizetab("maintab")
                             $ItemInput.= '<input name="PTcode" type="hidden" value="' . $ItemP . '" >';
                             $ItemInput.= '<input name="PTobj" type="hidden" value="' . $TargetObject['id'] . '" >';
                             $ItemInput.= '<input name="PTmax" type="hidden" value="' . $PutMax . '" >';
+                            $ItemInput.= '<input name="PTin" type="hidden" value="' . $PTin . '" >';
                             $ObjD = GBSQLGetUnitByCode($ItemP);
                             foreach($TargetObject['contents'] as $contents) {
                                 if ($contents['itemCode'] == $ItemP) {
@@ -1418,11 +1438,13 @@ initalizetab("maintab")
                             } else {
                                 $GB_image = "&nbsp;";
                             }
-                            echo '<tr><td>' . $GB_image . '</td><td>' . $ItemPNum . '</td><td>' . $GB_displ_name . '</td><td>max ' . $PutMax . '</td><td>' . $ItemInput . '</td></tr>';
+                            echo '<tr><td>' . $GB_image . '</td><td>' . $ItemPNum . '</td><td>' . $GB_displ_name . '</td><td>max ' . $PutMax . '</td><td>' . $ItemInput . '</td></tr>'."\n";
                         }
                         echo '<tr><td></td><td></td><td>Currently in this building:</td><td>' . $TotItems . '</td><td>';
                         echo '<input type="submit" name="submitPlaceThis"  value="Save" />';
-                        echo '<input type="submit" name="submitPlaceThis"  value="Set All to max" />';
+                        echo '<input type="submit" name="submitPlaceThis"  value="Set All to max" /><br>';
+                        echo '<input type="submit" name="submitPlaceThis"  value="Set All to 0" />';
+                        echo '<input type="submit" name="submitPlaceThis"  value="Set All to 1" />';
                         echo '</form>';
                         echo '</td></tr>';
                         echo '</table>';
@@ -1578,7 +1600,6 @@ initalizetab("maintab")
                     $place_on_farm = $action['0']['_place_on_farm'];
                     $place_in_build = $action['0']['_place_in_build'];
                     $place_in_amount = $action['0']['_place_in_amount'];
-                    $place_in_special = $action['0']['_place_in_special'];
                     $place_in_special = $action['0']['_place_in_special'];
                     $selling = $action['0']['_selling'];
                     $keep = $action['0']['_keep'];

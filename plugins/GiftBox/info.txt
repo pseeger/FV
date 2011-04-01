@@ -1,0 +1,118 @@
+GiftBox manager. v3.4.6
+3.4.6
+12christiaan
+http://farmvillebot.net/forum/viewtopic.php?t=2698
+Version 3.4.6 of the Giftbox manager
+
+What does it do:
+It will look in the giftbox when items are found, it proccess them.
+
+GiftBox 3.4.6 by ralphm2004
+- fixed specials
+- fixed placeinbuildings
+- fixed animalfeedthrough
+
+GiftBox 3.4.5 by ralphm2004
+- fixed constructions
+- replaced locale with parser-functions
+
+GiftBox 3.4.1 by ralphm2004
+- some fixes i dont remember
+
+GiftBox 3.4.0 by ralphm2004
+- Code Cleanups
+- Parser AMF-Request tu capture rewards
+- detect and build mysteryseedling (in constructions)
+- fixed turkeyroost expansions
+- detect orchard
+- detect turkeyroost
+
+GiftBox 3.3.3fix
+- To fix the wateringcan error
+
+GiftBox 3.3.3
+- fix for those who have more that 10 items in a collection.
+- fix for socialplumbingmysterygift to be added in the cellar.
+- fix for images with 0 byte
+
+GiftBox 3.3.1 fix for realname
+GiftBox 3.3
+- Added FAQ & help file
+- Added storeing items from the GiftBox. Allowing to store 1 of each item into the cellar.
+- Added opening of mystery Gifts and Eggs now can be configured via the menu.
+- Added link to jump directly to the correct tab from the settings page.
+- Update. Giftbox does not longer download the xml files, but use the local xml files.
+
+- Removed downloading of images. this is now done via the parser.
+
+
+Version 3.2: NEW: Downloading of new images is move to the new parser.php, so i removed it from the Giftbox.
+Version 3.2: NEW: Schovels can be added to the cellar.
+Version 3.2: NEW: Mystery gifts & eggs can directly be open fron the giftbox.
+
+Version 3.1 Final: NEW: Added the importing of default_actions.txt. This file in the actions folder, will be imported on every account the giftbox is started. The Giftbox automaticly detaect if the file is updated, and it will be imported again.
+Version 3.1 Final: NEW: multi sell & consume. it uses the BOT speed (currently max is 5, but it will follow the bot speed up to 20)
+Version 3.1 Final: NEW: Adding vehicle parts to vehicles in the garage.
+Version 3.1 Final: Known isseu: images are not downloaded any more. Working on this.
+
+Version 3.0 Final: Improved logging & shows on log 1 again.
+Version 3.0 Final: Feeding dog / puppy corrected (to be tested).
+Version 3.0 Final: Added today & yesteday in statistics
+Version 3.0 Final: Added in DEBUG tab an overview of the database files (incl. check if table exists)
+Version 3.0 Final: Added in DEBUG tab a button to re-create missing tables.
+
+Version 3.010 fixes: Will handle multiple parts into construction in 1 cycle (all)
+Version 3.010 fixes: Will fill building with animals in 1 cycle (max in giftbox)
+Version 3.010 fixes: Tab building with items, now shows building as gray if full.
+Version 3.010 fixes: Shows the correct amount in a building.
+
+Version 3.09 fixes: Total new way to detect building parts for constructions
+Version 3.09 fixes: Can now disable building from adding building parts to them
+Version 3.09 fixes: Add building parts to all building that need them
+Version 3.09 fixes: Excluded holidaytree from special detection.
+Version 3.09 fixes: Detecting the building capacity correctly (can add to building again)
+Version 3.09 fixes: able to stell construction parts again.
+
+
+Version 3.08 fixes: construction selection. & checking again before putting it into building.
+Version 3.08 fixes: import function
+Version 3.08 fixes: other fixes.
+
+Version 3.07 fixes: tab trees: All tree placeble & only showing trees
+Version 3.07 fixes: tab animals removed farmhands etc.
+Version 3.07 fixes: Reset XML is now working.
+Version 3.07 fixes: Images improvments
+Version 3.07 fixes: Boot time improvments
+Version 3.07 feature: Specials automaticly detected and set to 999
+Version 3.07 fixes: Max in building detected and saved
+Version 3.07 feature: Info mesages on screen, like: actions saved.
+Version 3.07 feature: Actions can be exported to file.
+Version 3.07 feature: Actions can be imported from file.
+Version 3.07 fixes: version information corrected.
+
+Version 3.06 fixes: Loading of images
+Version 3.06 fixes: Give error when DB is not created (just let it run, it will create it in next cycle)
+Version 3.06 feature: Provide extra screen to see content of the actions.txt before loading it.
+Version 3.06 feature: New layout
+Version 3.06 fixes: Save image data in text file, not database. Speed
+Version 3.06 fixes: loading of screens < 1 sec.
+Version 3.06 fixes: Image setting now working (able to disable)
+Version 3.06 fixes: Specials are automaticly detected again (first run of DB cleanup = 10 min.)
+Version 3.06 fixes: place can now be up to 106 (not 99)
+
+Version 3.05 fixes: Loading of DB changed to prevent freeses of screens.
+Version 3.05 feature: loading of "general_settings.txt" on first run (check inside)
+Version 3.05 feature: in general setting you can load the "action.txt" (for now you can manualy change the content of this file)
+Version 3.05 feature: Specials are detected automaticly again.
+
+Version 3.04 fixes: Map image (show items) & show the latest settings
+Version 3.04 fixes: BG -> GB text change.
+Version 3.04 fixes: Indexes on DB --> Speedup from 40 back to 2 Sec.
+Version 3.04 fixes: Constructions stay selling
+
+Version 3.03 fixes: Tree mapping & consume & DB stuff & DB error handling
+Version 3.03 fixes: Sell All & Place all buttons.
+Version 3.03 fixes: Message pole correction
+
+Version 3.02 fixes
+Version 3.01 Total new engine.

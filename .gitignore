@@ -1,5 +1,7 @@
 .*
 !.gitignore
+!plugins/GiftBox/*.txt
+!plugins/GiftBox/actions/*.txt
 farmville-*
 assets/
 FBID*

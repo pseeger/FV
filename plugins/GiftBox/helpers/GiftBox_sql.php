@@ -890,12 +890,14 @@ function GB_SQL_updLang($DB, $table, $set, $val) {
 function GB_SQL_updAction($field, $code, $val) {
     global $GBDBuser;
     $GBSQL = "SELECT _code FROM action WHERE _code = '$code' ";
+error_log($GBSQL);
     $result = sqlite_query($GBDBuser, $GBSQL) or GBSQLError($GBDBuser, $GBSQL);
     if (sqlite_num_rows($result) > 0) {
         $GBSQL = "UPDATE action set $field=" . Qs($val) . " WHERE _code=" . Qs($code) . " ";
     } else {
         $GBSQL = "INSERT INTO action(_code," . $field . ") VALUES(" . Qs($code) . "," . Qs($val) . ")";
     }
+error_log($GBSQL);
     sqlite_query($GBDBuser, $GBSQL) or GBSQLError($GBDBuser, $GBSQL);
     return "OK";
 }
@@ -1154,14 +1156,16 @@ function GB_DetectBuildingParts4() {
 function GB_DetectSpecials2() {
     global $GBDBmain;
     global $GBDBuser;
-    $SQL = '';
+    #$SQL = '';
     $output = '<table class="sofT" cellspacing="0"><tr><td class="helpHed">Name Special</td>
                      <td class="helpHed">On farm?</td>
                      <td class="helpHed">Object ID</td>
                      <td class="helpHed">This can go into this Special</td></tr>';
     //SELECT * FROM units WHERE _capacity = '100'
     // select the special buildings
-    $GBSQL = "SELECT * FROM units WHERE (_capacity = '100' AND _name != 'holidaytree') or _name in ('thanksgivingbasket') ";
+
+#    $GBSQL = "SELECT * FROM units WHERE (_capacity = '100' AND _name != 'holidaytree' AND _name != 'chickencoop5' AND _name != 'xukchickencoop5' AND _name != 'flowershed' AND _name != 'flowershedcache') or _name in ('thanksgivingbasket') ";
+    $GBSQL = "SELECT * FROM units WHERE _name in ('".str_replace(',','\',\'',file_get_contents('plugins/GiftBox/specials.txt'))."') ";
     $result = sqlite_query($GBDBmain, $GBSQL) or GBSQLError($GBDBmain, $GBSQL);
     $GB_specials = sqlite_fetch_all($result);
     foreach($GB_specials as $GB_special) {
@@ -1171,7 +1175,7 @@ function GB_DetectSpecials2() {
         $Objectbuildings = sqlite_fetch_all($result);
         //print_r($Objectbuildings);
         if (empty($Objectbuildings)) { // building does not exist.
-            $output.= '<tr><td>' . $GB_special['_name'] . '</td><td>Is not on the farm</td>';
+            $output.= '<tr><td>' . Units_GetRealnameByName($GB_special['_name']) . ' (' . $GB_special['_name'] . ')</td><td>Is not on the farm</td>';
             $output.= '<td> - </td><td> - </td></tr>';
         } else { // we have the special building on the farm
             $GBSQL = "SELECT _val from objects WHERE _obj = '" . $Objectbuildings['0']['_obj'] . "' AND _set = 'id'";
@@ -1186,12 +1190,12 @@ function GB_DetectSpecials2() {
                 $Items = array();
             }
             foreach($Items as $Item) {
-                $content.= " [" . $Item['_itemCode'] . "]<br>";
-                GB_SQL_updAction("_place_in_special", $Item['_itemCode'], "999"); //$field, $code, $val
-                GB_SQL_updAction("_target", $Item['_itemCode'], $ObjectID['0']['_val']); //$field, $code, $val
-                $SQL.= $GBSQL . "<br>";
+                $content.= Units_GetRealnameByCode($Item['_itemCode'])." [" . $Item['_itemCode'] . "]<br>";
+                #GB_SQL_updAction("_place_in_special", $Item['_itemCode'], "999"); //$field, $code, $val
+                #GB_SQL_updAction("_target", $Item['_itemCode'], $ObjectID['0']['_val']); //$field, $code, $val
+                #$SQL.= $GBSQL . "<br>";
             }
-            $output.= '<tr><td>' . $GB_special['_name'] . '</td><td>Is on the farm</td>';
+            $output.= '<tr><td>' . Units_GetRealnameByName($GB_special['_name']) . ' (' . $GB_special['_name'] . ')</td><td>Is on the farm</td>';
             $output.= '<td>' . $Objectbuildings['0']['_obj'] . '<br>' . $ObjectID['0']['_val'] . '</td><td>' . $content . '</td></tr>';
         }
     } // for each special

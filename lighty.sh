@@ -26,7 +26,7 @@ fastcgi.server = ( \".php\" => ((\"bin-path\" => \"$PHP -c $f/localphp.ini \",
 
 
 LIGHTTPD_PID=$(pidof lighttpd) 
-if [ $LIGHTTPD_PID > 0 ]; then 
+if [ $LIGHTTPD_PID ]; then 
 	echo 'stopping lighttp...'
 	kill -INT $LIGHTTPD_PID 
 	sleep 1 

@@ -99,7 +99,7 @@ function GB_renew_giftbox_SQL() {
         AddLog2("GB SQL ERROR update =can not find storage =" . __LINE__);
     }
     // get the featureCredits (like valetine & pot of gold)
-    $GB_featureCredits_temp = @$vWorld['data'][0]['data']['userInfo']['player']['featureCredits'];
+    $GB_featureCredits_temp = @$vWorld['data'][0]['data']['userInfo']['player']['featureCredits']['farm'];
     if (is_array($GB_featureCredits_temp)) {
         sqlite_query($GBDBuser, 'BEGIN;');
         foreach($GB_featureCredits_temp as $key => $value) {

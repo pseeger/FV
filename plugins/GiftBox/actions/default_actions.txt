@@ -1,0 +1,62 @@
+##################################################################
+#  deafault action file
+##################################################################
+#  Format of the lines:
+#Code
+#| Place on farm? Y/0
+#| | Sell? Y/0
+#| | | Keep
+#| | | | Consume? Y/0
+#| | | | | reserved
+#| | | | | | reserved
+#| | | | | | | reserved
+#| | | | | | | | reserved
+#| | | | | | | | | reserved
+#| | | | | | | | | | reserved
+#| | | | | | | | | | | reserved
+#0 1 2 3 4 5 6 7 8 9 0 | reserved
+#| | | | | | | | | | | | |
+A9:0:Y:30:0:0:0:0:0:0:0:0:0:item name consume_arborists:
+A1:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_1:
+DD:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_10:
+Dy:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_15:
+Dz:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_20:
+Dj:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_25:
+Aa:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_3:
+Di:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_5:
+Hk:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_7eleven_200:
+73:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_greengiant_5:
+75:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_cash_greengiant_cs_5:
+A0:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_coins_1000:
+nA:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_coins_300:
+9a:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_coins_50:
+De:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_coins_5000:
+A7:0:Y:0:0:0:0:0:0:0:0:0:0:item name consume_double_avatar_size:
+A6:0:Y:0:0:0:0:0:0:0:0:0:0:item name consume_double_speed:
+AA:0:Y:30:0:0:0:0:0:0:0:0:0:item name consume_farm_hands:
+9b:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_fuel3Fifth:
+A8:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_fuelFifth:
+Go:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_fuelTen:
+Br:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_fuelWhole:
+0O:0:Y:10:0:0:0:0:0:0:0:0:0:item name consume_kibble:
+Zh:0:Y:20:0:0:0:0:0:0:0:0:0:item name consume_pigslop:
+TC:0:Y:0:0:0:0:0:0:0:0:0:0:item name consume_toiletpaper:
+0z:0:Y:10:0:0:0:0:0:0:0:0:0:item name consume_treat:
+Zj:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_truffle_black:
+Zi:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_truffle_brown:
+Zl:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_truffle_gold:
+Zk:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_truffle_white:
+AB:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_xp_100:
+A2:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_xp_20:
+Df:0:0:0:Y:0:0:0:0:0:0:0:0:item name consume_xp_50:
+dS:0:0:0:Y:0:0:0:0:0:0:0:0:item name vehiclepart:
+#
+BR:0:Y:0:0:0:0:0:0:0:0:0:0:item name barn:
+Gl:0:Y:0:0:0:0:0:0:0:0:0:0:item name gnomechicken:
+eR:0:Y:0:0:0:0:0:0:0:0:0:0:item name gnomecaveman:
+Y7:0:Y:0:0:0:0:0:0:0:0:0:0:item name gnomegold:
+WM:0:Y:0:0:0:0:0:0:0:0:0:0:item name windmill:
+D0:0:Y:0:0:0:0:0:0:0:0:0:0:item name postoffice:
+eQ:0:Y:0:0:0:0:0:0:0:0:0:0:item name mole:
+UX:0:Y:0:0:0:0:0:0:0:0:0:0:item name schoolhouse:
+eS:0:Y:0:0:0:0:0:0:0:0:0:0:item name crystalrock:

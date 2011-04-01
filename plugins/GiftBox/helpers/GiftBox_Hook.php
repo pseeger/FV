@@ -206,6 +206,43 @@ function Giftbox() {
                     }
                 } // end contents
                 // now check if the item is in totstorage.
+
+
+                $featureCreditsName = 'N';
+                if(in_array($TargetObject['itemName'],explode(',',file_get_contents('plugins/GiftBox/specials.txt')))) {
+                    $featureCreditsName = $TargetObject['itemName'];
+                    $vNoLimit='on';
+                }
+                if ($TargetObject['itemName'] == 'holidaytree') {
+                    $featureCreditsName = 'holidayTree';
+                    $vNoLimit='on';
+                } elseif ($TargetObject['itemName'] == 'valentinesbox') {
+                    $featureCreditsName = 'valentine';
+                    $vNoLimit='on';
+                } elseif ($TargetObject['itemName'] == 'potofgold') {
+                    $featureCreditsName = 'potOfGold';
+                    $vNoLimit='on';
+                } elseif ($TargetObject['itemName'] == 'easterbasket') {
+                    $featureCreditsName = 'easterBasket';
+                    $vNoLimit='on';
+                } elseif ($TargetObject['itemName'] == 'wedding') {
+                    $featureCreditsName = 'tuscanWedding';
+                    $vNoLimit='on';
+                } elseif ($TargetObject['itemName'] == 'beehive_finished') {
+                    $featureCreditsName = 'beehive';
+                } elseif ($TargetObject['itemName'] == 'hatchstorage') {
+                    $featureCreditsName = 'InventoryCellar';
+                    $vNoLimit='on';
+                } elseif ($TargetObject['itemName'] == 'animalfeedtrough') {
+                    $featureCreditsName = 'animalFeedTrough';//added by computoncio
+                } elseif ($TargetObject['itemName'] == 'haitibackpack') {
+                    $featureCreditsName = 'haitiBackpack'; //added by computoncio
+                    $vNoLimit='on';
+                } elseif ($TargetObject['itemName'] == 'halloweenbasket') {
+                    $featureCreditsName = 'halloweenBasket'; //added by computoncio
+                    $vNoLimit='on';
+                }
+/*
                 $featureCreditsName = 'N';
                 if ($Target['itemName'] == 'valentinesbox') {
                     $featureCreditsName = 'valentine';
@@ -237,15 +274,12 @@ function Giftbox() {
                     $featureCreditsName = 'halloweenBasket';
                     $vNoLimit='on';
                 }
+*/
                 if ($featureCreditsName != 'N') {
                     $GBSQL = "SELECT _amount FROM totstorage WHERE _storagecode = '" . $featureCreditsName . "' AND _itemcode = 'current'";
 
                     $query = sqlite_query($GBDBuser, $GBSQL) or GBSQLError($GBDBuser, $GBSQL);
                     $TotItems = sqlite_fetch_single($query);
-#                    if (sqlite_num_rows($query) > 0) {
-#                        $totstorage = sqlite_fetch_all($query);
-#                        $TotItems = $totstorages['0']['_amount'];
-#                    }
                 }
                 // Get target unit details.
                 $GBSQL = "SELECT * FROM units WHERE _name = '" . $Target['itemName'] . "' ";
