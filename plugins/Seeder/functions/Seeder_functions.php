@@ -511,9 +511,10 @@ $action = "harvest";
             AddLog2($action . " " . $plotsstring);
 
 //======================================
+    $s = Connect();
     $serializer = new AMFSerializer();
     $result = $serializer->serialize($amf); // serialize the data
-    $answer = Request('', $result);
+    $answer = Request($s, $result);
     $amf2 = new AMFObject($answer);
     $deserializer2 = new AMFDeserializer($amf2->rawData); // deserialize the data
     $deserializer2->deserialize($amf2); // run the deserializer
@@ -583,6 +584,7 @@ $res = 'OK';
             $res = $amf2->_bodys[0]->_value['data'][0]['errorType'] . " " . $amf2->_bodys[0]->_value['data'][0]['errorData'];
         }
     }
+    fclose($s);
 //======================================
             AddLog2("result $res");
             $count -= $i;
@@ -1063,8 +1065,8 @@ $value = Sedeer_XMLToArray($child, $flattenValues, $flattenAttributes, $flattenC
 
 if(count($children)>0)
 {
- if(!$flattenChildren) $return[$childrenKey] = $children;
- else $return = array_merge($return,$children);
+ if(!$flattenChildren){$return[$childrenKey] = $children;}
+ else{$return = array_merge($return,$children);}
 }
 
 $attributes = array();
@@ -1393,6 +1395,21 @@ return 1;
 
 return 0;
 unset($objectsArray);
+}
+//======================================
+function Seeder_worldtype()//added v1.1.8
+{
+$worldtype = @file_get_contents(F('worldtype.txt'));
+if(strlen($worldtype) == 0) {$worldtype = 'farm';}
+return $worldtype;
+}
+//======================================
+function Seeder_worldname()//added v1.1.8
+{
+$worldtype = Seeder_worldtype();
+if($worldtype == 'england') {$worldname = 'English Countryside';} else {$worldname = 'Farmville';}
+return $worldname;
+
 }
 //======================================
 function Seeder_error($msg)//revised v1.0.6

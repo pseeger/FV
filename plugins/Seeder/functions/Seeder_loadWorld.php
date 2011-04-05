@@ -8,7 +8,9 @@
 function Seeder_loadWorld()//fixed v1.1.2
 {
 $T = time(true);
-AddLog2("Seeder_loadWorld> start");
+$worldtype = Seeder_worldtype();
+$worldname = Seeder_worldname();
+AddLog2("Seeder_loadWorld> Active World: ".$worldname);
 
 //======================================
 global $userId;
@@ -37,7 +39,9 @@ SaveAuthParams();
 
 $serializer = new AMFSerializer();
 $result = $serializer->serialize($amf);
+$s = Connect();
 $answer = Request($s, $result);
+@fclose($s);
 
 $amf2 = new AMFObject($answer);
 $deserializer2 = new AMFDeserializer($amf2->rawData);
@@ -74,11 +78,13 @@ Seeder_Write(@$amf2->_bodys[0]->_value['data'][1]['data']['marketView'],"market"
 AddLog2("Seeder_loadWorld> Market updated");
 #Seeder_Write(@$amf2->_bodys[0]->_value['data'][1]['data']['craftingState'],"crafting");
 #AddLog2("Seeder_loadWorld> crafting updated");
+if ($worldtype == 'farm')
+{
 $greenhouse = @$amf2->_bodys[0]->_value['data'][1]['data']['breedingState'][0];
 Seeder_Write($greenhouse,"greenhouse");//added 1.1.6
 AddLog2("Seeder_loadWorld> Greenhouse updated");
 #Seeder_Write(@$amf2->_bodys[0]->_value['data'][1]['data'],"postInit");
-
+}
 #$MarketStallCount = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['currentMarketStallCount'];
 #$crafting_items = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['craftingItems'];
 #$maxbushels = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['maxCapacity'];
@@ -232,18 +238,12 @@ $xml_doc = simplexml_load_file($items_xml);
    {
     if ($seed_param == "requirements")
     {
-    $reqs_array[$xml_item_name] = array();
     $n_reqs = 0;
      foreach($seed_value->children() as $seed_req_param => $seed_req_value)
      {
-      foreach($seed_req_value->attributes() as $req_classname => $req_value)
-      {
-       if ($req_classname == "name")
-       {
-       $reqs_array[$xml_item_name][$n_reqs] = (string)$req_value;
-       $n_reqs += 1;
-       }
-      }
+      $req = $seed_req_value->attributes();
+      if ($req['className'] == "World") {$world_array[$xml_item_name] = (string)$req['name'];}
+      if ($req['className'] == "Mastery") {$reqs_array[$xml_item_name][$n_reqs] = (string)$req['name'];$n_reqs += 1;}
      }
     }
    }
@@ -333,14 +333,6 @@ foreach($units_seeds as $seed)
  $seeds_array[$name]['booster_time'] = 0;
  }
 
- //isHybrid added 1.1.6
- if (@$seed['isHybrid'])
- {
- $seeds_array[$name]['isHybrid'] = 1;
- } else {
- $seeds_array[$name]['isHybrid'] = 0;
- }
- 
  //seedpackage
  if (@$seed['seedpackage'])
  {
@@ -388,6 +380,20 @@ foreach($units_seeds as $seed)
  $seeds_array[$name]['seedpackage_tray'] = 0;
  $seeds_array[$name]['seedpackages_to_mastery'] = 0;
  $seeds_array[$name]['seedpackage_UnlockState'] = 0;
+ }
+
+ //isHybrid added 1.1.6
+ if (@$seed['isHybrid'])
+ {
+ $seeds_array[$name]['isHybrid'] = 1;
+
+ if ($mastery_level == 3)
+ {
+ $seeds_array[$name]['seedpackage_count'] = 99999;
+ }
+
+ } else {
+ $seeds_array[$name]['isHybrid'] = 0;
  }
 
  //limited timestamp added 1.1.3
@@ -452,12 +458,19 @@ foreach($units_seeds as $seed)
  $seeds_array[$name]['reqs'] = 0;
  }
 
+ //World
+ $seed_world = @$world_array[$name]; if (!$seed_world) {$seed_world = "farm";}
+ $seeds_array[$name]['world'] = $seed_world;
+ 
 }//foreach($units_seeds as $seed)
+
+//filter world
+$seeds_array = Seeder_ArrayFilter($seeds_array, 'world', '==', $worldtype);
 
 $n_seeds = count($seeds_array);
 Seeder_Write($seeds_array,"seeds");
 unset($units_seeds);unset($seeds_array);unset($plots_planted);unset($bushels_array);unset($mastery_counters);unset($mastery_levels);
-unset($inconbox);unset($reqs_array);unset($tray_array);unset($greenhouse);
+unset($reqs_array);unset($tray_array);unset($greenhouse);
 AddLog2("Seeder_loadWorld> ".$n_seeds." Seeds updated");
 
 //======================================
@@ -543,7 +556,10 @@ if (!$booster_crop){$booster_crop = "NULL";} $Seeder_info['booster_crop'] = $boo
 if (!$booster_time) {$booster_time = 0;}
 $Seeder_info['booster_time'] = $booster_time;
 
-unset($booster_crop);unset($booster_time);
+$instagrow_count = @$inconbox['A4']; if (!$instagrow_count) {$instagrow_count = 0;}
+$Seeder_info['instagrow_count'] = $instagrow_count;
+
+unset($inconbox);unset($booster_crop);unset($booster_time);
 unset($objects);unset($world);
 Seeder_Write($Seeder_info,"info");
 
