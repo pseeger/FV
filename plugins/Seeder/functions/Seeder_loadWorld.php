@@ -39,9 +39,7 @@ SaveAuthParams();
 
 $serializer = new AMFSerializer();
 $result = $serializer->serialize($amf);
-$s = Connect();
-$answer = Request($s, $result);
-@fclose($s);
+$answer = Request('', $result);
 
 $amf2 = new AMFObject($answer);
 $deserializer2 = new AMFDeserializer($amf2->rawData);

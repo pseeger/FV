@@ -511,10 +511,9 @@ $action = "harvest";
             AddLog2($action . " " . $plotsstring);
 
 //======================================
-    $s = Connect();
     $serializer = new AMFSerializer();
     $result = $serializer->serialize($amf); // serialize the data
-    $answer = Request($s, $result);
+    $answer = Request('', $result);
     $amf2 = new AMFObject($answer);
     $deserializer2 = new AMFDeserializer($amf2->rawData); // deserialize the data
     $deserializer2->deserialize($amf2); // run the deserializer
@@ -584,7 +583,6 @@ $res = 'OK';
             $res = $amf2->_bodys[0]->_value['data'][0]['errorType'] . " " . $amf2->_bodys[0]->_value['data'][0]['errorData'];
         }
     }
-    fclose($s);
 //======================================
             AddLog2("result $res");
             $count -= $i;

@@ -22,6 +22,7 @@ $image = 1;
   {
 
   $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
@@ -48,6 +49,8 @@ $image = 1;
 
   if ($image == 1)
   {
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
@@ -75,6 +78,8 @@ $image = 1;
 
   if ($image == 1)
   {
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
@@ -103,6 +108,8 @@ $image = 1;
 
   if ($image == 1)
   {
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
@@ -131,6 +138,8 @@ $image = 1;
 
   if ($image == 1)
   {
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
