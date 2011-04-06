@@ -10,3 +10,4 @@ config/
 lighty.conf
 raw_rewards*
 1*.txt
+./*.txt
