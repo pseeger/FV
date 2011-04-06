@@ -818,7 +818,7 @@ if ($Seeder_info['plots'] > 0 )
   foreach ($plots as $plot)
   {
   $name = $plot['itemName'];
-  $growTime = $seeds_all[$name]['growTime']; if (!$growTime) {$growTime = 0;}
+  $growTime = $seeds_all[$name]['growTime']; if (!$growTime) {$growTime = 1;}
   $iconurl = $seeds_all[$name]['iconurl'];
   $plantTime = $plot['plantTime'];
   $booster = "<img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'>";
