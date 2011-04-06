@@ -11,14 +11,14 @@ include 'functions/Seeder_image.php';
 include 'functions/Seeder_quest.php';
 include 'functions/Seeder_trees.php';//added 1.1.6
 include 'functions/Seeder_tabs.php';
-define('Seeder_version','1.1.7b');//revised v1.1.7b
+define('Seeder_version','1.1.8');//revised v1.1.8
 define('Seeder_parser','22120');
 define('Bot_path',str_replace("\\", "/", getcwd()).'/');
 define('Seeder_Path',Bot_path.'plugins/Seeder/');
 define('Section_Path',Bot_path.'plugins/Sections/');//added v1.1.6
 define('GiftBox_Path',Bot_path.'plugins/GiftBox/');//added v1.1.6
 define('Seeder_dbPath',Seeder_Path.'database/');
-define('Seeder_imgPath','/plugins/Seeder/images/');
+define('Seeder_imgPath',Seeder_Path.'images/');
 define('Seeder_URL','/plugins/Seeder/main.php');
 define('Seeder_imgURL','/plugins/Seeder/images/');
 define('Seeder_date',date("Ymd"));
@@ -103,6 +103,7 @@ function Seeder_MakeUserDefault()//revised v1.1.7a
  $Seeder_default['seeds_sort'] = "ASC";
  $Seeder_default['mastery_adjustment'] = 1;
  $Seeder_default['force_planting'] = 0;
+ $Seeder_default['consume_instagrow'] = 0;
  $Seeder_default['auto_coop'] = 0;
  $Seeder_default['coop_mode'] = "host";
  $Seeder_default['coop_plant'] = 1;
@@ -155,23 +156,24 @@ function Seeder_before_planting()//revised v1.1.5
 {
  AddLog2("Seeder_before_planting> start");
  global $Seeder_settings;
+ $worldtype = Seeder_worldtype();
 
  DoInit();
  Seeder_loadWorld();
 
- if ($Seeder_settings['harvest_greenhouse'] == 1)
+ if (($Seeder_settings['harvest_greenhouse'] == 1) && ($worldtype == 'farm'))
  {
  AddLog2("Seeder_before_planting> harvest greenhouse enabled");
  Seeder_harvest_greenhouse();
  }
 
- if ($Seeder_settings['mastery_greenhouse'] == 1)
+ if (($Seeder_settings['mastery_greenhouse'] == 1) && ($worldtype == 'farm'))
  {
  AddLog2("Seeder_before_planting> mastery greenhouse enabled");
  Seeder_mastery_greenhouse();
  }
  
- if ($Seeder_settings['default_greenhouse'])
+ if (($Seeder_settings['default_greenhouse']) && ($worldtype == 'farm'))
  {
  AddLog2("Seeder_before_planting> greenhouse default seed enabled");
  Seeder_default_greenhouse();
@@ -189,13 +191,13 @@ function Seeder_before_planting()//revised v1.1.5
  Seeder_mastery();
  }
 
- if ($Seeder_settings['end_job'] == 1)
+ if (($Seeder_settings['end_job'] == 1) && ($worldtype == 'farm'))
  {
  AddLog2("Seeder_before_planting> end job enabled");
  Seeder_end_quest();
  }
 
- if ($Seeder_settings['auto_coop'] == 1)
+ if (($Seeder_settings['auto_coop'] == 1) && ($worldtype == 'farm'))
  {
  AddLog2("Seeder_before_planting> Coop Jobs enabled");
  Seeder_CoopJobs();
@@ -203,8 +205,9 @@ function Seeder_before_planting()//revised v1.1.5
 
  AddLog2("Seeder_before_planting> end");
 }
+
 //========================================================================================================================
-//Seeder_before_planting
+//Seeder_after_missions
 //========================================================================================================================
 function Seeder_after_missions()//revised v1.1.2
 {

@@ -1063,8 +1063,8 @@ $value = Sedeer_XMLToArray($child, $flattenValues, $flattenAttributes, $flattenC
 
 if(count($children)>0)
 {
- if(!$flattenChildren) $return[$childrenKey] = $children;
- else $return = array_merge($return,$children);
+ if(!$flattenChildren){$return[$childrenKey] = $children;}
+ else{$return = array_merge($return,$children);}
 }
 
 $attributes = array();
@@ -1393,6 +1393,21 @@ return 1;
 
 return 0;
 unset($objectsArray);
+}
+//======================================
+function Seeder_worldtype()//added v1.1.8
+{
+$worldtype = @file_get_contents(F('worldtype.txt'));
+if(strlen($worldtype) == 0) {$worldtype = 'farm';}
+return $worldtype;
+}
+//======================================
+function Seeder_worldname()//added v1.1.8
+{
+$worldtype = Seeder_worldtype();
+if($worldtype == 'england') {$worldname = 'English Countryside';} else {$worldname = 'Farmville';}
+return $worldname;
+
 }
 //======================================
 function Seeder_error($msg)//revised v1.0.6

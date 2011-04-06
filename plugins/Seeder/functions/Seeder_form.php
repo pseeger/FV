@@ -27,6 +27,7 @@ if (isset($_GET['save_action']))
  if (@$_GET['auto_mastery']) {$auto_mastery = 1;} else {$auto_mastery = 0;}
  if (@$_GET['mastery_adjustment']) {$mastery_adjustment = 1;} else {$mastery_adjustment = 0;}
  if (@$_GET['force_planting']) {$force_planting = 1;} else {$force_planting = 0;}
+ if (@$_GET['consume_instagrow']) {$consume_instagrow = 1;} else {$consume_instagrow = 0;}
  if (@$_GET['bushel_booster']) {$bushel_booster = 1;} else {$bushel_booster = 0;}
  if (@$_GET['default_settings']) {$default_settings = 1;} else {$default_settings = 0;}
  if (@$_GET['claim_reward']) {$claim_reward = 1;} else {$claim_reward = 0;}
@@ -46,6 +47,7 @@ if (isset($_GET['save_action']))
  $Seeder_settings['seeds_sort'] = @$_GET['seeds_sort'];
  $Seeder_settings['mastery_adjustment'] = $mastery_adjustment;
  $Seeder_settings['force_planting'] = $force_planting;
+ $Seeder_settings['consume_instagrow'] = $consume_instagrow;
  $Seeder_settings['bushel_booster'] = $bushel_booster;
  $Seeder_settings['claim_reward'] = $claim_reward;
  $Seeder_settings['fertilize'] = $fertilize;
@@ -299,6 +301,17 @@ Seeder_box("Seeder", "<b>Seed list successfully saved</b>", "info");
 
 
 }//if (isset($_GET['save_action']))
+
+############Debug Area############
+
+
+
+
+
+
+
+
+############Debug Area############
 
 //======================================
 //html
@@ -563,6 +576,9 @@ text-decoration: none
 //======================================
 //load player info and settings
 //======================================
+$worldtype = Seeder_worldtype();
+$worldname = Seeder_worldname();
+
 if ((!PX_VER_PARSER) || (PX_VER_PARSER < Seeder_parser))
 {
 Seeder_box("Seeder Error", "<b>Incorrect Parser Version</b><br><br>Seeder needs parser v".Seeder_parser."<br>Bot running parser v".PX_VER_PARSER."<br>Seeder disabled.", "critical");
@@ -570,11 +586,12 @@ Seeder_box("Seeder Error", "<b>Incorrect Parser Version</b><br><br>Seeder needs 
 
 if (!file_exists(Seeder_dbPath.PluginF('info.txt')))
 {
-Seeder_box("Seeder Warning", "<b>User unknown, First time?</b><br><br>Please wait <b>Seeder load farm</b> and refresh plugin<br>or Restart FarmvilleBot", "warning");
+Seeder_box("Seeder Warning", "<b>User unknown, First time?</b><br><br>Please wait <b>Seeder load ".$worldname."</b> and refresh plugin<br>or Restart FarmvilleBot", "warning");
 } else {
 //======================================
 //Seeder load all array
 //======================================
+
 $crafting = Seeder_Read("crafting");
 $pendingRewards =  $crafting['pendingRewards'];
 if (count($pendingRewards) > 0)
@@ -594,12 +611,13 @@ unset($pendingRewards);unset($crafting);
 <!-- info bar -->
 <table border='0' cellspacing='0' cellpadding='2'>
 <tr>
+<td align='left'><font face="Tahoma" size="1">World: <b><font color="red"><?php echo $worldname;?>&nbsp;<br></b></font></font></td>
 <td align='left'><img border="0" width='18' src="http://www.wtzclock.com/images/flags/<?php echo strtolower($Seeder_info['geoip']);?>.gif"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['name'];?></b> (<?php echo $Seeder_info['userId'];?>)</font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_xp_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['level'];?></b> (<?php echo $Seeder_info['xp'];?>)</font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_coins_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['gold'];?></b></font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_cash_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['cash'];?></b></font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/equipment/equip_gas_can_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['energy'];?></b></font></td>
-<td align='left' width='18'><input type="image" src="<?php echo Seeder_imgPath.'arrow.png';?>" border="0" name="show_stats" value="+" onclick="ShowStats();return false;" title="Show Player Stats"></font></td>
+<td align='left' width='18'><input type="image" src="<?php echo Seeder_imgURL.'arrow.png';?>" border="0" name="show_stats" value="+" onclick="ShowStats();return false;" title="Show Player Stats"></font></td>
 </tr>
 </table>
 <!--------------------------------------------------------------------------------------------------------------------------------------------------------->
@@ -803,7 +821,7 @@ if ($Seeder_info['plots'] > 0 )
   $growTime = $seeds_all[$name]['growTime']; if (!$growTime) {$growTime = 0;}
   $iconurl = $seeds_all[$name]['iconurl'];
   $plantTime = $plot['plantTime'];
-  $booster = "<img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'>";
+  $booster = "<img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'>";
   $spercent = "";
   $state = "";
 
@@ -852,7 +870,7 @@ if ($Seeder_info['plots'] > 0 )
   if ($bushel_name != "NULL")
   {
    if ($Btime_diff > 0 ) {
-   $booster = "<img border='0' title='Bushel Boosted!' src='".Seeder_imgPath."bushelbooster.png' width='16' height='16'>";
+   $booster = "<img border='0' title='Bushel Boosted!' src='".Seeder_imgURL."bushelbooster.png' width='16' height='16'>";
    }
    else
    {
@@ -891,9 +909,9 @@ if (sizeof($plots) > 0 )
  {
  echo "<tr>"."\n";
  echo "<td align='right' width='25'><font size='1' face='Tahoma'>".$plot['count']."</font></td>"."\n";
- echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'></td>"."\n";
+ echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'></td>"."\n";
  echo "<td align='left'><font size='1' face='Tahoma'>".$plot['state']."</font></td>"."\n";
- echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'></td>"."\n";
+ echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'></td>"."\n";
  echo "<td align='center' width='40'><font size='1' face='Tahoma'>&nbsp;</font></td>"."\n";
  echo "<td align='left'><font size='1' face='Tahoma'>&nbsp;</font></td>"."\n";
  echo "</tr>";
@@ -1186,6 +1204,10 @@ unset($seeds_available);
         </tr>
 <!--------------------------------------------------------------------------------------------------------------------------------------------------------->
 <!-- co-op start -->
+<?php
+if ($worldtype == 'farm')
+{
+?>
         <tr>
                 <td align="left">
 <fieldset>
@@ -1359,12 +1381,16 @@ unset($quest_active);
 </fieldset>
         </td>
         </tr>
+<?php
+//if ($worldtype == 'farm')
+}
+?>
 <!--------------------------------------------------------------------------------------------------------------------------------------------------------->
 <!-- Seeder Settings start -->
         <tr>
                 <td align="left">
 <fieldset>
-<legend align="left">Seeder Settings</legend>
+<legend align="left">Seeder <?php echo $worldname ?> Settings</legend>
 <table border="0" width="100%" cellspacing="0" cellpadding="0">
 <tr>
 <td>
@@ -1395,6 +1421,8 @@ unset($quest_active);
  <option <?php echo (($Seeder_settings['timeformat'] == "m/d/y h:i a")?'selected':'')?> value="m/d/y h:i a">m/d/y 12-hour</option>
  </select>
  </td>
+ <td align="right" valign="top"><font size="1" face="Tahoma">
+<input style="width:75px; font-family:Tahoma,Arial,Helvetica,sans-serif; font-size:8pt; color:Black" type="submit" value="Save" name="save_settings" title="Save Seeder Settings"></font></td>
  </tr>
  </table>
 </td>
@@ -1404,7 +1432,7 @@ unset($quest_active);
  <table border="0" width="100%" cellspacing="0" cellpadding="2">
  <tr>
  <td><font size="1" face="Tahoma">
- Auto mastery: </font>
+ Auto Mastery: </font>
  <input type="checkbox" name="auto_mastery" <?php echo (($Seeder_settings['auto_mastery'] == 1)?'checked':'')?> value="1"></td>
  <td><font size="1" face="Tahoma">
  Mastery Order: </font>
@@ -1430,10 +1458,20 @@ unset($quest_active);
  Force Planting:
  <input type="checkbox" name="force_planting" <?php echo (($Seeder_settings['force_planting'] == 1)?'checked':'')?> value="1" title="Ignore Seeds Filters. Errors can happen."></font>
  </td>
+<!---
+ <td><font size="1" face="Tahoma">
+ Use Instagrow (<?php echo $Seeder_info['instagrow_count']?>):
+ <input type="checkbox" name="consume_instagrow" <?php echo (($Seeder_settings['consume_instagrow'] == 1)?'checked':'')?> value="1" title="Use consume instagrow from giftbox."></font>
+ </td>
+--->
  </tr>
  </table>
 </td>
 </tr>
+<?php
+if ($worldtype == 'farm')
+{
+?>
 <tr>
 <td>
 
@@ -1582,14 +1620,15 @@ foreach ($greenhouse_seeds as $greenhouse_seed)
                                                 <td align="left" valign="top">
 
  <font size="1">&nbsp;</font></td>
-                                                <td align="right" valign="top">
-<font size="1" face="Tahoma">
-<input style="width:75px; font-family:Tahoma,Arial,Helvetica,sans-serif; font-size:8pt; color:Black" type="submit" value="Save" name="save_settings" title="Save Seeder Settings"></font></td>
+</tr>
                 </table>
 
 </td>
 </tr>
-
+<?php
+//if ($worldtype == 'farm')
+}
+?>
 
 </table>
 </font>
@@ -1664,7 +1703,7 @@ function Seeder_box($title, $msg, $icon)
                 <td align="center">
                 <table border="0" width="100%" cellspacing="0" cellpadding="2">
                         <tr>
-                                <td align="left" width="32" valign="top"><img border="0" src="<?php echo Seeder_imgPath.'msgbox_'.$icon.'.png';?>" width="32" height="32"></td>
+                                <td align="left" width="32" valign="top"><img border="0" src="<?php echo Seeder_imgURL.'msgbox_'.$icon.'.png';?>" width="32" height="32"></td>
                                 <td align="left" valign="top"><font face="Tahoma" size="2"><?php echo $msg;?></font></td>
                         </tr>
                 </table>

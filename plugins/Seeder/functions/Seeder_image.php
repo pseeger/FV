@@ -9,7 +9,7 @@ function Seeder_ShowImage($iconurl)//revised v1.1.2
 {
 
 $iconfile = Bot_path.$iconurl;
-$loaderfile = Seeder_imgPath."loader.gif";
+$loaderfile = Seeder_imgURL."loader.gif";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -20,7 +20,10 @@ $image = 1;
 
   if ($image == 1)
   {
-  return '/'.$iconurl;
+
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
+  return $iconfile;
   }
   else
   {
@@ -35,7 +38,7 @@ function Seeder_BushelImage($bushel)//added v1.1.2
 {
 
 $iconurl = Bot_path.$iconurl;
-$spacefile = Seeder_imgPath."space.png";
+$spacefile = Seeder_imgURL."space.png";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -46,7 +49,9 @@ $image = 1;
 
   if ($image == 1)
   {
-  return '/'.$iconurl;
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
+  return $iconfile;
   }
   else
   {
@@ -62,7 +67,7 @@ function Seeder_JobImage($quest)//added v1.1.2
 {
 
 $iconurl = Bot_path.$iconurl;
-$spacefile = Seeder_imgPath."space.png";
+$spacefile = Seeder_imgURL."space.png";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -73,7 +78,9 @@ $image = 1;
 
   if ($image == 1)
   {
-  return '/'.$iconurl;
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
+  return $iconfile;
   }
   else
   {
@@ -90,7 +97,7 @@ function Seeder_ShowImagebyName($name)//added v1.1.4
 $unit = Units_GetUnitByName($name);
 $iconurl = $unit['iconurl'];
 $iconfile = Bot_path.$iconurl;
-$loaderfile = Seeder_imgPath."loader.gif";
+$loaderfile = Seeder_imgURL."loader.gif";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -101,7 +108,9 @@ $image = 1;
 
   if ($image == 1)
   {
-  return '/'.$iconurl;
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
+  return $iconfile;
   }
   else
   {
@@ -118,7 +127,7 @@ function Seeder_ShowImagebyCode($code)//added v1.1.4
 $unit = Units_GetUnitByName(Units_GetNameByCode($code));
 $iconurl = $unit['iconurl'];
 $iconfile = Bot_path.$iconurl;
-$loaderfile = Seeder_imgPath."loader.gif";
+$loaderfile = Seeder_imgURL."loader.gif";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -129,7 +138,9 @@ $image = 1;
 
   if ($image == 1)
   {
-  return '/'.$iconurl;
+  $iconfile = str_replace(Bot_path,"/",$iconfile);
+  $iconfile = str_replace("//","/","/".$iconurl);
+  return $iconfile;
   }
   else
   {
