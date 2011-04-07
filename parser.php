@@ -238,20 +238,10 @@ function SetSequense($new_sequence)
 	SaveAuthParams();
 }
 
-// *********************************************************************
-// we save lots of things now so created this to cleaning up the code *
-// *********************************************************************
-function save_botarray($array, $filename)
-{
-	file_put_contents($filename, serialize($array));
-}
-
+function save_botarray($array, $filename) { file_put_contents($filename, serialize($array)); }
 function load_botarray($filename) { return unserialize(file_get_contents($filename));}
 
-function Connect($server = '')
-{
-	return -1;
-}
+function Connect($server = '') { return -1; }
 
 // ------------------------------------------------------------------------------
 // EchoData returns data in the main application
@@ -266,10 +256,7 @@ function EchoData($data)
 // ------------------------------------------------------------------------------
 // proxy_GET can use a proxy to get the gameSettings/description xml files
 // ------------------------------------------------------------------------------
-function proxy_GET($url)
-{
-	return $GLOBALS['curlfetcher']->get($url);
-}
+function proxy_GET($url) { return $GLOBALS['curlfetcher']->get($url); }
 
 // ------------------------------------------------------------------------------
 // proxy_GET_FB can use a proxy to get FB-Sites
@@ -287,10 +274,7 @@ function proxy_GET_FB($url, $vPostGet = 'GET', $vPostData = '')
 //  @param string $result AMF-serialized request
 //  @return string http answer
 // ------------------------------------------------------------------------------
-function Request($s, $data)
-{
-	return $GLOBALS['curlfetcher']->post(farmer_url, $data, 'application/x-amf');
-}
+function Request($s, $data) { return $GLOBALS['curlfetcher']->post(farmer_url, $data, 'application/x-amf'); }
 
 // ------------------------------------------------------------------------------
 // GetFarmserver returns farmville server name
@@ -328,7 +312,7 @@ function GetFarmUrl()
 //  @return string If the function succeeds, the return value is 'OK'. If the
 // function fails, the return value is error string
 // ------------------------------------------------------------------------------
-function DoInit($vDoCheck)
+function DoInit($vDoCheck='')
 {
 	global $vWorldtype;
 	AddLog2("Init user. Load Farm");
@@ -506,25 +490,12 @@ function DoInit($vDoCheck)
 // ------------------------------------------------------------------------------
 function Arbeit()
 {
-	global $settings;
-	global $need_reload;
+	global $settings, $need_reload, $px_Setopts;
+	global $userId, $flashRevision, $botlitever, $vWorldtype, $res_str, $plugin_developer;
 
-	global $px_Setopts;
-
-	global $userId, $flashRevision, $botlitever, $vWorldtype;
-
-	global $res_str;
-	global $plugin_developer;
-
-	if (isset($botlitever)) {
-		$argv = @$GLOBALS['argv'];
-		if (strlen($userId) == 0 && strlen(@$argv[2]) > 0) $userId = @$argv[2];
-		$flashRevision = @$argv[3];
-	} else {
-		$datasize = hexdec(fread(STDIN, 8));
-		$data = fread(STDIN, $datasize);
-		list($userId, $flashRevision) = explode(';', $data);
-	}
+	$argv = @$GLOBALS['argv'];
+	if (strlen($userId) == 0 && strlen(@$argv[2]) > 0) $userId = @$argv[2];
+	$flashRevision = @$argv[3];
 
 	define ('farmer', GetFarmserver());
 	define ('farmer_url', GetFarmUrl());
@@ -548,8 +519,7 @@ function Arbeit()
 	}
 
 	#// clear advanced log
-	$f = fopen(LogF('log2.txt'), "w+");
-	fclose($f);
+	fclose(fopen(LogF('log2.txt'), "w+"));
 
 	while (file_exists('notrun_parser.txt') || file_exists('notrun_parser_' . $userId . '.txt')) {
 		AddLog2("Bot Paused. Next check in 30 seconds.");
@@ -562,8 +532,7 @@ function Arbeit()
 	Hook('before_work');
 
 	// Init
-	$res = DoInit('check_farm');
-	if ($res != 'OK') RaiseError(2);
+	if (DoInit('check_farm') != 'OK') RaiseError(2);
 	else $res_str = ''; //for main logs
 	Hook('before_load_settings');
 
@@ -582,57 +551,53 @@ function Arbeit()
 		$vGiftReqs = Parser_ReadReq();
 		save_botarray($vGiftReqs, F('gift_reqs.txt'));
 		AddLog2('Parser_gift_reqs: ' . count($vGiftReqs) . ' to accept');
-		if (is_array($vGiftReqs)) {
-			if (count($vGiftReqs) > 0) {
-				if ((@$px_Setopts['acceptgifts_twice'])) $vGiftReqs = array_merge($vGiftReqs, $vGiftReqs);
-				$vGCount = 0;
-				foreach ($vGiftReqs as $vI => $vData) {
-					if ($vGCount >= $enable_acceptgifts_num) break;
-					$vGCount++;
-					$vWhat = explode('&', str_replace(array('?', '='), array('&', '&'), $vData['action_url']));
-					AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept ' . Units_GetRealnameByName($vWhat[4]) . ' (' . $vWhat[4] . ') from ' . GetNeighborRealName($vWhat[2]) . ' (' . $vWhat[2] . ')');
-					error_log('"' . GetNeighborRealName($vWhat[2]) . '";"' . $vWhat[2] . '";"' . $vWhat[4] . '";"' . date('Y.m.d H:i:s') . '"' . "\n", 3, LogF('gifts_accepted.csv'));
+		if (is_array($vGiftReqs) && count($vGiftReqs) > 0) {
+			if ((@$px_Setopts['acceptgifts_twice'])) $vGiftReqs = array_merge($vGiftReqs, $vGiftReqs);
+			$vGCount = 0;
+			foreach ($vGiftReqs as $vI => $vData) {
+				if ($vGCount >= $enable_acceptgifts_num) break;
+				$vGCount++;
+				$vWhat = explode('&', str_replace(array('?', '='), array('&', '&'), $vData['action_url']));
+				AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept ' . Units_GetRealnameByName($vWhat[4]) . ' (' . $vWhat[4] . ') from ' . GetNeighborRealName($vWhat[2]) . ' (' . $vWhat[2] . ')');
+				error_log('"' . GetNeighborRealName($vWhat[2]) . '";"' . $vWhat[2] . '";"' . $vWhat[4] . '";"' . date('Y.m.d H:i:s') . '"' . "\n", 3, LogF('gifts_accepted.csv'));
 
-					$vResponse = proxy_GET_FB("http://www.facebook.com/ajax/reqs.php?__a=1", 'POST', $vData['post_data']);
+				$vResponse = proxy_GET_FB("http://www.facebook.com/ajax/reqs.php?__a=1", 'POST', $vData['post_data']);
 
-					$vResponse = proxy_GET_FB($vData['action_url']);
-					if (!empty($vResponse)) AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept - Success');
-					else AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept - Failed');
+				$vResponse = proxy_GET_FB($vData['action_url']);
+				if (!empty($vResponse)) AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept - Success');
+				else AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept - Failed');
 
-					if ((@$px_Setopts['acceptgifts_sendback'])) {
-						preg_match_all('/<form.*?action="(.*?)".*?<\/form>/ims', $vResponse, $vTYForms);
+				if ((@$px_Setopts['acceptgifts_sendback'])) {
+					preg_match_all('/<form.*?action="(.*?)".*?<\/form>/ims', $vResponse, $vTYForms);
 
-						foreach ($vTYForms[0] as $vJ => $vTYForm) {
-							if (stripos($vTYForm, 'thank you') !== false || stripos($vTYForm, 'send to') !== false) {
-								AddLog2('Parser_gift_reqs: send thankyou-gift ' . Units_GetRealnameByName($vWhat[4]) . ' (' . $vWhat[4] . ') to ' . GetNeighborRealName($vWhat[2]) . ' (' . $vWhat[2] . ')');
-								error_log('"' . GetNeighborRealName($vWhat[2]) . '";"' . $vWhat[2] . '";"' . $vWhat[4] . '";"' . date('Y.m.d H:i:s') . '"' . "\n", 3, LogF('gifts_send_thankyou.csv'));
+					foreach ($vTYForms[0] as $vJ => $vTYForm) {
+						if (stripos($vTYForm, 'thank you') !== false || stripos($vTYForm, 'send to') !== false) {
+							AddLog2('Parser_gift_reqs: send thankyou-gift ' . Units_GetRealnameByName($vWhat[4]) . ' (' . $vWhat[4] . ') to ' . GetNeighborRealName($vWhat[2]) . ' (' . $vWhat[2] . ')');
+							error_log('"' . GetNeighborRealName($vWhat[2]) . '";"' . $vWhat[2] . '";"' . $vWhat[4] . '";"' . date('Y.m.d H:i:s') . '"' . "\n", 3, LogF('gifts_send_thankyou.csv'));
 
-								preg_match_all('/.*action="([^"]*)".*/ims', $vTYForm, $vAction);
-								preg_match_all('/.*giftRecipient=([^&]*).*type="([^"]*)".*content="([^"]*)".*id="([^"]*)".*post_form_id=([^&]*).*/ims', $vTYForm, $vTYFields);
+							preg_match_all('/.*action="([^"]*)".*/ims', $vTYForm, $vAction);
+							preg_match_all('/.*giftRecipient=([^&]*).*type="([^"]*)".*content="([^"]*)".*id="([^"]*)".*post_form_id=([^&]*).*/ims', $vTYForm, $vTYFields);
 
-								$vPostData = 'app_id=102452128776&to_ids[0]=' . $vTYFields[1][0] . '&request_type=' . urlencode($vTYFields[2][0]) . '&invite=false&content=' . urlencode(html_entity_decode($vTYFields[3][0])) . '&preview=true&is_multi=false&is_in_canvas=true&form_id=' . $vTYFields[4][0] . '&prefill=true&message=&donot_send=false&include_ci=false&__d=1&post_form_id=' . $vTYFields[5][0] . '&fb_dtsg=' . $vData['fb_dtsg'] . '&lsd&post_form_id_source=AsyncRequest';
+							$vPostData = 'app_id=102452128776&to_ids[0]=' . $vTYFields[1][0] . '&request_type=' . urlencode($vTYFields[2][0]) . '&invite=false&content=' . urlencode(html_entity_decode($vTYFields[3][0])) . '&preview=true&is_multi=false&is_in_canvas=true&form_id=' . $vTYFields[4][0] . '&prefill=true&message=&donot_send=false&include_ci=false&__d=1&post_form_id=' . $vTYFields[5][0] . '&fb_dtsg=' . $vData['fb_dtsg'] . '&lsd&post_form_id_source=AsyncRequest';
 
-								$vResponse2 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
+							$vResponse2 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
 
-								$vPostData = str_replace('&preview=true&', '&preview=false&', $vPostData);
-								$vResponse3 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
-								if (stripos(strip_tags($vResponse3), '"errorSummary"')) AddLog2('Parser_gift_reqs: send thankyou-gift - Failed');
-								else AddLog2('Parser_gift_reqs: send thankyou-gift - Success');
+							$vPostData = str_replace('&preview=true&', '&preview=false&', $vPostData);
+							$vResponse3 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
+							if (stripos(strip_tags($vResponse3), '"errorSummary"')) AddLog2('Parser_gift_reqs: send thankyou-gift - Failed');
+							else AddLog2('Parser_gift_reqs: send thankyou-gift - Success');
 
-								$vResponse4 = proxy_GET_FB(html_entity_decode($vAction[1][0]), 'POST', '');
-								unset($vResponse2, $vResponse3, $vResponse4);
-							}
+							$vResponse4 = proxy_GET_FB(html_entity_decode($vAction[1][0]), 'POST', '');
+							unset($vResponse2, $vResponse3, $vResponse4);
 						}
 					}
-					$need_reload = true;
-					unset($vResponse);
 				}
+				$need_reload = true;
+				unset($vResponse);
 			}
 		}
 	}
-	if ($need_reload) {
-		$res = DoInit(); //reload farm
-	}
+	if ($need_reload) DoInit();
 	$need_reload = false;
 
 	if ((@$px_Setopts['lonlyanimals'])) {
@@ -655,8 +620,7 @@ function Arbeit()
 		$plot_list = GetObjects('Plot'); //get plots
 		$cntplots = 0;
 		foreach ($plot_list as $plot) {
-			if (($plot['state'] == 'planted'))
-				$cntplots++;
+			if (($plot['state'] == 'planted')) $cntplots++;
 		}
 		unset($plot_list);
 

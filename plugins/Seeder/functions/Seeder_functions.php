@@ -415,7 +415,7 @@ function Seeder_Booster()//revised v1.1.4
        if ($res == 'OK')
        {
        AddLog2("Seeder_Booster> Restarting farm to Rapid Harvest");
-       DoInit();
+       DoInit('');
        Seeder_Booster();
        break;//foreach ($plot_count as $plot)
        }
