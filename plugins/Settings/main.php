@@ -1,6 +1,6 @@
 <?php
- define("PX_VER_SETTINGS", 22126);
- define("PX_DATE_SETTINGS", '2011-03-16');
+ define("PX_VER_SETTINGS", '22130');
+ define("PX_DATE_SETTINGS", '2011-03-29');
 
  define('settings_URL', '/plugins/Settings/main.php');
 
@@ -80,6 +80,8 @@ function CreateDefaultSettings() {
   $dset['spec_crop_quantity'] = 0;
   $dset['acceptneighborhelp'] = 1;
   SaveSettings($dset);
+  file_put_contents(F('worldtype.txt'),'farm');
+  file_put_contents(F('worldswitch.txt'),'');
 
  return $dset;
 }
@@ -141,8 +143,16 @@ function LoadSavedSettings() {
     }
     if($px_Setopts['version']<>PX_VER_SETTINGS) {
       $px_Setopts['version'] = PX_VER_SETTINGS;
-     @unlink('sqlite_check.txt');
+      unlink('sqlite_check.txt');
     }
+    $px_Setopts['current_farm']=file_get_contents(F('worldtype.txt'));
+    if($px_Setopts['current_farm']=='') $px_Setopts['current_farm']='farm';
+
+    $px_Setopts['freez_farm']=file_get_contents(F('worldfreez.txt'));
+    if($px_Setopts['freez_farm']=='') $px_Setopts['freez_farm']='freez';
+
+    $px_Setopts['switch_farm']=file_get_contents(F('worldswitch.txt'));
+    if($px_Setopts['switch_farm']<>'on') $px_Setopts['switch_farm']='';
   } else {
     $px_Setopts = CreateDefaultSettings();
   }
@@ -179,7 +189,22 @@ function FV_Server($set)
   {
   global $this_plugin;
   global $userId;
+  global $vWorldtype;
   //print_r($_GET);
+
+  if (isset($_GET['change_farm'])) {
+   $px_Setopts['current_farm'] = @$_GET['current_farm'];
+   if($px_Setopts['current_farm']=='') $px_Setopts['current_farm']='farm';
+   file_put_contents(F('worldtype.txt'),$px_Setopts['current_farm']);
+   $px_Setopts['freez_farm'] = @$_GET['freez_farm'];
+   if($px_Setopts['freez_farm']=='') $px_Setopts['freez_farm']='freez';
+   file_put_contents(F('worldfreez.txt'),$px_Setopts['freez_farm']);
+   $px_Setopts['switch_farm'] = @$_GET['switch_farm'];
+   if($px_Setopts['switch_farm']<>'on') $px_Setopts['switch_farm']='';
+   file_put_contents(F('worldswitch.txt'),$px_Setopts['switch_farm']);
+  }
+  $vWorldtype=file_get_contents(F('worldtype.txt'));
+  if(strlen($vWorldtype)==0) $vWorldtype='farm';
 
   if (isset($_GET['save_action']))
    {
@@ -188,8 +213,6 @@ function FV_Server($set)
    if ((count($seed_list) == 1) && empty($seed_list[0]))
      $seed_list = array();
    $changed_seed_list = false;
-
-
 
    //FarmFIX
 
@@ -472,6 +495,8 @@ function FV_Server($set)
    <body>
 
   <?php
+   $px_Setopts = LoadSavedSettings();
+
    $seed_list = @explode(';', trim(file_get_contents(F('seed.txt'))));
 
         foreach($seed_list as $one_seed_string) {
@@ -495,8 +520,6 @@ function FV_Server($set)
 
    $mastercount = @unserialize(file_get_contents(F('cropmastery.txt')));
 
-   $px_Setopts = LoadSavedSettings();
-
 
    //FarmFIX
    if (file_exists('farmfix.txt')) { $my_farm_is_fucked_up = 1; }
@@ -506,13 +529,33 @@ function FV_Server($set)
    if (file_exists('auto_kill_parser.txt')) { $auto_kill_parser = 1; }
    else { $auto_kill_parser = 0; }
 
+   echo '<form action="'.settings_URL.'" id="main_form2">';
+   echo '<input type="hidden" name="change_farm" value="1" />';
+   echo '<table border=0><tr>';
+   echo '<td>';
+   echo '<table border="0" cellspacing="0" cellpadding="2" bgcolor="#dddddd">';
+   echo '<tr>';
+   echo '<td colspan=2>Current Farm:  <select name="current_farm"><option ',$px_Setopts['current_farm']=='farm'?'selected':'',' value="farm">farm</option><option ',$px_Setopts['current_farm']=='england'?'selected':'',' value="england">england</option></select></td>';
+   echo '<td rowspan=3>&nbsp;&nbsp;<input type="submit" name="save2" style="width:100px;" value="Change Farm"/></td>';
+   echo '</tr>';
+   echo '<tr>';
+   echo '<td colspan=2><select name="freez_farm"><option ',$px_Setopts['freez_farm']=='freez'?'selected':'',' value="freez">freez</option><option ',$px_Setopts['freez_farm']=='continue'?'selected':'',' value="continue">continue</option></select> other Farm</td>';
+   echo '</tr>';
+   echo '<td><input type="checkbox" name="switch_farm" value="on" '.($px_Setopts['switch_farm']=='on'?'checked':'').'></td>';
+   echo '<td>Switch Farm-Settings after each Bot-Cycle</td>';
+   echo '</table>';
+
+   echo '</td>';
+   echo '<td></td>';
+   echo '</form>';
    echo '<form action="'.settings_URL.'" id="main_form">';
    echo '<input type="hidden" name="save_action" value="1" />';
-   echo '<tr><td colspan=3><center><input type="button" onclick="Submit()" name="save" style="width:200px;" value="Save Changes"/></center></td></tr>';
-   echo '<table><tr>';
+   echo '<td><center><a style="text-decoration:none; color:white; background-color:blue;" href="'.settings_URL.'">You are using settings v'.PX_VER_SETTINGS.' and parser v'.PX_VER_PARSER.'</a><a target="_blank" style="text-decoration:none; color:white; background-color:blue;" href="'.settings_URL.'">.</a><br><br><input type="button" onclick="Submit()" name="save" style="width:200px;" value="Save Changes"/></center></td>';
+
+   echo '</tr>';
+   echo '<tr>';
    echo '<td valign="top">';
-   echo '<span style="color:white; background-color:blue;">You are using settings v'.PX_VER_SETTINGS.' and parser v'.PX_VER_PARSER.' </span><br/><br/>';
-   echo '<div><nobr>Server:  ';
+   echo '<br/><div><nobr>Server:  ';
    echo '(<input type="radio" name="farm_server" value="0" '.($px_Setopts['farm_server']?'':'checked').' title="facebook.com or custom url in file"/>Facebook.com)  ';
    echo '(<input type="radio" name="farm_server" value="1" '.($px_Setopts['farm_server']?'checked':'').' title="farmville.com" />Farmville.com)</div><br/>';
    echo '</nobr><div>Timezone: <select name="timezone" title="your time zone">';
@@ -619,10 +662,21 @@ function FV_Server($set)
    echo '<div style="display: none; background-color:white; text-align: center; border: solid 1 blue; position: absolute; margin: 0 0 0 0; padding: 8px;" id="add_plant_div">';
    echo '  <select name="plant_list" style="font-family: Courier" onchange="ChangeMasteryInfo()">';
 
-  #$units = @unserialize(file_get_contents(('units.txt')));
-  $vSeeds=Units_GetByType('seed');
+  $vSeeds=Units_GetByType('seed',true);
+  $inconbox = @unserialize(file_get_contents(F('inconbox.txt')));
 
   foreach($vSeeds as $unit) {
+      $vReqWorld='';
+      foreach($unit as $vVal=>$vVar) {
+        if(strpos($vVal,'requirement_')!==false && strpos($vVal,'_className')!==false && $vVar=='World' ) {
+          $vReqWorld=$unit[str_replace('_className','_name',$vVal)];
+        }
+      }
+      $vSeedPackages='';
+      if(strlen($unit['seedpackage'])>0) {
+        $vSeedPackages=$inconbox[Units_GetCodeByName($unit['seedpackage'])];
+        if(strlen(trim($vSeedPackages))==0) $vSeedPackages='0';
+      }
 
       $px_mastchk_code = $unit['code'];
 
@@ -675,9 +729,9 @@ function FV_Server($set)
 
       $vRealName=isset($unit['realname'])?($unit['name']=='blueberryorganic'?'Organic Blueberries':($unit['realname'].' ('.$unit['name'].')')):$unit['name'];
 
-      $vSelectName=str_replace(' ','&nbsp;',$vGrowTime.$vCntPlanted.$vCntMatery.$vCntSeed.$vRealName);
-
-      $vOptionArray[$vList][$vRealName]='<option value="'.htmlentities($unit['name']).'" mastery="'.$vMasteryInfo.'" amount="'.$vAmount.'">'.$vSelectName.'</option>';
+      $vSelectName=str_replace(' ','&nbsp;',$vGrowTime.$vCntPlanted.$vCntMatery.$vCntSeed.$vRealName.($vReqWorld<>''?('['.$vReqWorld.']'):'').($vSeedPackages<>''?('{'.$vSeedPackages.' SP}'):''));
+      if($vReqWorld=='' || $vReqWorld==$vWorldtype)
+          $vOptionArray[$vList][$vRealName]='<option value="'.htmlentities($unit['name']).'" mastery="'.$vMasteryInfo.($vSeedPackages<>''?(' {'.$vSeedPackages.' SP}'):'').'" amount="'.($vSeedPackages<>''&&$vAmount>$vSeedPackages||$vAmount==0?$vSeedPackages:$vAmount).'">'.$vSelectName.'</option>';
   }
   echo '<option value="" mastery="" amount="">',str_replace(' ','&nbsp;','GrT Seed. Mast. Plant Name'),'</option>';
   asort($vOptionArray[1]);

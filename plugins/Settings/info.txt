@@ -1,10 +1,24 @@
 Settings
-22118 Cupids Castle & Duck Pond added
+22130
 MrN updated by px, ralphm2004, strmckr
 http://farmvillebot.net/forum/viewtopic.php?t=7884
 The second bot settings. Use this to tell the bot what to do.
+
+22130 pause/freeze unused farm
+22130 fixed thankyougift-message (FarmerBob00)
+22129 more england-releated fixes
+22129 update seedlist for england and seedpackages
+22128 fixed missing userId
+22127 england
+22126 fixed images & flashLocaleXml
+22125 some fixes
+22124 leprechaun cottage
+22124 send gifts
+22124 fixed flashvars
+22124 donate-button
+22122 sync with 2.19
 22118 Cupids Castle & Duck Pond added
-22117 fixed xml-downloading 
+22117 fixed xml-downloading
 22116 fixed xml-downloading
 22115 fixed xml-downloading
 22115 leave some arborists/farmhands in giftbox
