@@ -360,11 +360,8 @@ function DoInit($vDoCheck='')
 				$amf->_bodys[0]->_value[1][0]['params'][2] = $vSettingsWorldfreez == 'freez' ? true : false; # false continue farm / true freez farm
 				$amf2 = RequestAMFIntern($amf);
 				$res = CheckAMF2Response($amf2);
-				if ($res == 'OK') {
-					AddLog2("DoInit: SwitchFarm successful switched to $vSettingsWorldtype");
-				} else {
-					AddLog2("DoInit: SwitchFarm error $res switching to $vSettingsWorldtype");
-				}
+				if ($res == 'OK') AddLog2("DoInit: SwitchFarm successful switched to $vSettingsWorldtype");
+				else AddLog2("DoInit: SwitchFarm error $res switching to $vSettingsWorldtype");
 				DoInit('check_farm');
 				return '';
 			}
@@ -566,27 +563,20 @@ function Arbeit()
 				$vResponse = proxy_GET_FB($vData['action_url']);
 				if (!empty($vResponse)) AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept - Success');
 				else AddLog2('Parser_gift_reqs: ' . $vGCount . ' accept - Failed');
-
 				if ((@$px_Setopts['acceptgifts_sendback'])) {
 					preg_match_all('/<form.*?action="(.*?)".*?<\/form>/ims', $vResponse, $vTYForms);
-
 					foreach ($vTYForms[0] as $vJ => $vTYForm) {
 						if (stripos($vTYForm, 'thank you') !== false || stripos($vTYForm, 'send to') !== false) {
 							AddLog2('Parser_gift_reqs: send thankyou-gift ' . Units_GetRealnameByName($vWhat[4]) . ' (' . $vWhat[4] . ') to ' . GetNeighborRealName($vWhat[2]) . ' (' . $vWhat[2] . ')');
 							error_log('"' . GetNeighborRealName($vWhat[2]) . '";"' . $vWhat[2] . '";"' . $vWhat[4] . '";"' . date('Y.m.d H:i:s') . '"' . "\n", 3, LogF('gifts_send_thankyou.csv'));
-
 							preg_match_all('/.*action="([^"]*)".*/ims', $vTYForm, $vAction);
 							preg_match_all('/.*giftRecipient=([^&]*).*type="([^"]*)".*content="([^"]*)".*id="([^"]*)".*post_form_id=([^&]*).*/ims', $vTYForm, $vTYFields);
-
 							$vPostData = 'app_id=102452128776&to_ids[0]=' . $vTYFields[1][0] . '&request_type=' . urlencode($vTYFields[2][0]) . '&invite=false&content=' . urlencode(html_entity_decode($vTYFields[3][0])) . '&preview=true&is_multi=false&is_in_canvas=true&form_id=' . $vTYFields[4][0] . '&prefill=true&message=&donot_send=false&include_ci=false&__d=1&post_form_id=' . $vTYFields[5][0] . '&fb_dtsg=' . $vData['fb_dtsg'] . '&lsd&post_form_id_source=AsyncRequest';
-
 							$vResponse2 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
-
 							$vPostData = str_replace('&preview=true&', '&preview=false&', $vPostData);
 							$vResponse3 = proxy_GET_FB("http://www.facebook.com/fbml/ajax/prompt_send.php?__a=1", 'POST', $vPostData);
 							if (stripos(strip_tags($vResponse3), '"errorSummary"')) AddLog2('Parser_gift_reqs: send thankyou-gift - Failed');
 							else AddLog2('Parser_gift_reqs: send thankyou-gift - Success');
-
 							$vResponse4 = proxy_GET_FB(html_entity_decode($vAction[1][0]), 'POST', '');
 							unset($vResponse2, $vResponse3, $vResponse4);
 						}
@@ -645,15 +635,10 @@ function Arbeit()
 				AddLog2('n0m mod: Harvest only ' . $px_Setopts['spec_crop_quantity'] . ' of ' . $px_Setopts['spec_crop'] . ' crops!');
 				$iPlotCount = 0;
 				foreach ($plot_list as $plot) {
-					//   if the crop is ready
-					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe')) {
-						//   if that's a specified crop
-						if ($plot['itemName'] == $px_Setopts['spec_crop']) {
-							//   if limit not assigned OR not yet reached
-							if (($px_Setopts['spec_crop_quantity'] == 0) || ($iPlotCount < $px_Setopts['spec_crop_quantity'])) {
-								$plots[] = $plot;
-								$iPlotCount++;
-							}
+					if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') && $plot['itemName'] == $px_Setopts['spec_crop']) {
+						if (($px_Setopts['spec_crop_quantity'] == 0) || ($iPlotCount < $px_Setopts['spec_crop_quantity'])) {
+							$plots[] = $plot;
+							$iPlotCount++;
 						}
 					}
 				}
@@ -707,9 +692,7 @@ function Arbeit()
 		}
 		if (count($building_list) > 0) {
 			$buildings = array();
-			foreach ($building_list as $plot) {
-				if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || (@$plot['m_hasAnimal'] == 1)) $buildings[] = $plot;
-			}
+			foreach ($building_list as $plot) if (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || (@$plot['m_hasAnimal'] == 1)) $buildings[] = $plot;
 			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
 			$buildings = array();
 			foreach ($building_list as $plot) {
@@ -858,18 +841,13 @@ function Arbeit()
 		foreach ($seed_list as $one_seed_string) {
 			$one_seed_array = @explode(':', $one_seed_string);
 
-			if ($one_seed_array[0] == '') {
-				;
-			} elseif ($one_seed_array[1] == 'Default') {
-				$seed_default = $one_seed_array[0];
-			} else {
+			if ($one_seed_array[1] == 'Default') $seed_default = $one_seed_array[0];
+			else {
 				if ($last_seed == $one_seed_array[0]) {
 					$last_seed_string = array_pop($seed_list_new);
 					$last_seed_array = @explode(':', $last_seed_string);
 					$seed_list_new[] = $one_seed_array[0] . ':' . ($one_seed_array[1] + $last_seed_array[1]);
-				} else {
-					$seed_list_new[] = $one_seed_string;
-				}
+				} else $seed_list_new[] = $one_seed_string;
 				$last_seed = $one_seed_array[0];
 			}
 		}
@@ -881,8 +859,7 @@ function Arbeit()
 		// Find empty plots
 		$plowed_plots = array();
 		foreach ($plots as $plot) {
-			if ($plot['state'] == 'plowed')
-				$plowed_plots[] = $plot;
+			if ($plot['state'] == 'plowed') $plowed_plots[] = $plot;
 			if (@$px_Setopts['e_combine'] && (($plot['state'] == 'grown') || ($plot['state'] == 'ripe') || ($plot['state'] == 'withered') || ($plot['state'] == 'fallow')))
 				$plowed_plots[] = $plot;
 
