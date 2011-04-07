@@ -935,7 +935,6 @@ function Units_GetSQL($vSQL) {
 	return ($vReturn);
 }
 
-
 function Units_GetUnitByName($vName, $vAllInfo = false) {
 	global $vDataDB;
 	if ($vAllInfo) $vSQL = 'select * from units where name="' . $vName . '"';
@@ -948,11 +947,9 @@ function Units_GetUnitByName($vName, $vAllInfo = false) {
 	return ($vReturn);
 }
 
-
 function Units_GetUnitByCode($vCode, $vAllInfo = false) {
 	return (Units_GetUnitByName(Units_GetNameByCode($vCode), $vAllInfo));
 }
-
 
 function Units_GetRealnameByName($vName) {
 	global $vDataDB;
@@ -962,7 +959,6 @@ function Units_GetRealnameByName($vName) {
 	return ($vReturn == '' ? $vName : $vReturn);
 }
 
-
 function GetNeighborRealName($uid) {
 	global $vDataDB;
 	$vSQL = 'SELECT fullname FROM neighbors WHERE neighborid=\'' . $uid . '\' LIMIT 1';
@@ -970,7 +966,6 @@ function GetNeighborRealName($uid) {
 	$vReturn = $vResult->fetchSingle();
 	return ($vReturn == '' ? $uid : $vReturn);
 }
-
 
 function Units_GetNameByRealname($vName) {
 	global $vDataDB;
@@ -980,7 +975,6 @@ function Units_GetNameByRealname($vName) {
 	return ($vReturn == '' ? $vName : $vReturn);
 }
 
-
 function Units_GetCodeByName($vName) {
 	global $vDataDB;
 	$vSQL = 'select content from units where name="' . $vName . '" and field="code"';
@@ -989,7 +983,6 @@ function Units_GetCodeByName($vName) {
 	return ($vReturn == '' ? $vName : $vReturn);
 }
 
-
 function Units_GetNameByCode($vCode) {
 	global $vDataDB;
 	$vSQL = 'select name from units where content="' . $vCode . '" and field="code"';
@@ -997,7 +990,6 @@ function Units_GetNameByCode($vCode) {
 	$vReturn = $vResult->fetchSingle();
 	return ($vReturn == '' ? $vCode : $vReturn);
 }
-
 
 function Units_GetRealnameByCode($vCode) {
 	global $vDataDB;
@@ -1291,20 +1283,19 @@ function GetUnitList() {
 				$vCntRequirements = 0;
 				foreach ($vItem->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
 				foreach ($vItem->children() as $vSubName => $vSubElement)
-					switch($vSubName) {
+					switch ($vSubName) {
 						case 'image':
-							if($vSubElement['name'] == 'icon') $vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","iconurl","' . $vSubElement['url'] . '");');
-						break;
+							if ($vSubElement['name'] == 'icon') $vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","iconurl","' . $vSubElement['url'] . '");');
+							break;
 						case 'requirements':
-							foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement)
-								if ($vSubSubName == 'requirement') {
-									$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_number","' . ($vCntRequirements + 1) . '");');
-									$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_className","' . $vSubSubElement['className'] . '");');
-									$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_name","' . $vSubSubElement['name'] . '");');
-									$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_level","' . $vSubSubElement['level'] . '");');
-									$vCntRequirements++;
-								}
-						break;
+							foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) if ($vSubSubName == 'requirement') {
+								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_number","' . ($vCntRequirements + 1) . '");');
+								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_className","' . $vSubSubElement['className'] . '");');
+								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_name","' . $vSubSubElement['name'] . '");');
+								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","requirement_' . $vCntRequirements . '_level","' . $vSubSubElement['level'] . '");');
+								$vCntRequirements++;
+							}
+							break;
 						case 'masteryLevel':
 							$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","masteryLevel_' . $vCntMastery . '_level","' . ($vCntMastery + 1) . '");');
 							$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","masteryLevel_' . $vCntMastery . '_count","' . $vSubElement['count'] . '");');
@@ -1315,10 +1306,10 @@ function GetUnitList() {
 								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","masterymax","' . $vSubElement['count'] . '");');
 							}
 							$vCntMastery++;
-						break;
+							break;
 						case 'storageType';
-						 	if(strlen($vSubElement['itemClass']) > 0) $vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","storageType","' . $vSubElement['itemClass'] . '");');
-						break;
+							if (strlen($vSubElement['itemClass']) > 0) $vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","storageType","' . $vSubElement['itemClass'] . '");');
+							break;
 						case 'upgrade':
 							$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_level","' . $vSubElement['level'] . '");');
 							$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubElement['level'] . '_capacity","' . $vSubElement['capacity'] . '");');
@@ -1329,37 +1320,33 @@ function GetUnitList() {
 									$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubElement['level'] . '_' . $vSubSubElement['name'] . '_need","' . $vSubSubElement['need'] . '");');
 								}
 							}
-						break;
+							break;
 						case 'features':
-							foreach ($vSubElement->children() as $vSubTmpName => $vSubTmpElement)
-								foreach ($vSubTmpElement->children() as $vSubSubName => $vSubSubElement)
-									if ($vSubSubName == 'upgrade') {
-										$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_level","' . $vSubSubElement['level'] . '");');
-										$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_capacity","' . $vSubSubElement['capacity'] . '");');
-										$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_matsNeeded","' . $vSubSubElement['matsNeeded'] . '");');
-										foreach ($vSubSubElement->children() as $vSubSubSubName => $vSubSubSubElement)
-											if ($vSubSubSubName == 'part') {
-												$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_part","' . $vSubSubSubElement['name'] . '");');
-												$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_' . $vSubSubSubElement['name'] . '_need","' . $vSubSubSubElement['need'] . '");');
-											}
-									}
-						break;
+							foreach ($vSubElement->children() as $vSubTmpName => $vSubTmpElement) foreach ($vSubTmpElement->children() as $vSubSubName => $vSubSubElement) if ($vSubSubName == 'upgrade') {
+								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_level","' . $vSubSubElement['level'] . '");');
+								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_capacity","' . $vSubSubElement['capacity'] . '");');
+								$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_matsNeeded","' . $vSubSubElement['matsNeeded'] . '");');
+								foreach ($vSubSubElement->children() as $vSubSubSubName => $vSubSubSubElement) if ($vSubSubSubName == 'part') {
+									$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_part","' . $vSubSubSubElement['name'] . '");');
+									$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","upgrade_' . $vSubSubElement['level'] . '_' . $vSubSubSubElement['name'] . '_need","' . $vSubSubSubElement['need'] . '");');
+								}
+							}
+							break;
 						case 'defaultItem':
 							$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","defaultItem_name","' . $vSubElement['name'] . '");');
 							$vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","defaultItem_amount","' . $vSubElement['amount'] . '");');
-						break;
-						default: if($vSubName <> 'sounds') $vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
+							break;
+						default:
+							if ($vSubName <> 'sounds') $vDataDB->queryExec('insert into units(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
 					}
 			}
 		}
 		$xmlDoc = simplexml_load_file('./farmville-xml/' . $flashRevision . '_gameSettings.xml');
-		foreach ($xmlDoc->farming as $vItem) foreach ($vItem->attributes() as $vField => $vContent)
-				$vDataDB->queryExec('insert into units(name,field,content) values("_farming","' . $vField . '","' . $vContent . '");');
+		foreach ($xmlDoc->farming as $vItem) foreach ($vItem->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into units(name,field,content) values("_farming","' . $vField . '","' . $vContent . '");');
 		foreach ($xmlDoc->collections->collection as $vItem) {
 			$vItemName = (string)$vItem['name'];
 			if (strlen($vItemName) > 0) {
-				foreach ($vItem->attributes() as $vField => $vContent)
-					$vDataDB->queryExec('insert into collectables(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
+				foreach ($vItem->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into collectables(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
 				foreach ($vItem->children() as $vSubName => $vSubElement) {
 					if ($vSubName == 'collectable') {
 						$vDataDB->queryExec('insert into collectables(name,field,content) values("' . $vItemName . '","collectable","' . $vSubElement['code'] . '");');
@@ -1405,23 +1392,18 @@ function GetUnitList() {
 			if (strlen($vItemName) > 0) {
 				$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","type","StorageEntity");');
 				foreach ($vItem->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
-				foreach ($vItem->children() as $vSubName => $vSubElement)
-					if ($vSubName == 'allowedClass') $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . $vSubElement['type'] . '");');
-					elseif ($vSubName == 'nonStorableClass' || $vSubName == 'denyKeyword' || $vSubName == 'allowKeyword')
-						$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
+				foreach ($vItem->children() as $vSubName => $vSubElement) if ($vSubName == 'allowedClass') $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . $vSubElement['type'] . '");');
+				elseif ($vSubName == 'nonStorableClass' || $vSubName == 'denyKeyword' || $vSubName == 'allowKeyword') $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
 			}
 		}
 		foreach ($xmlDoc->StorageBuilding as $vItem) {
 			$vItemName = (string)$vItem['name'];
 			if (strlen($vItemName) > 0) {
 				$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","type","StorageBuilding");');
-				foreach ($vItem->attributes() as $vField => $vContent)
-					$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
+				foreach ($vItem->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
 				foreach ($vItem->children() as $vSubName => $vSubElement) {
-					if ($vSubName == 'allowedClass')
-						$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . $vSubElement['type'] . '");');
-					elseif ($vSubName == 'nonStorableClass' || $vSubName == 'denyKeyword' || $vSubName == 'allowKeyword')
-						$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
+					if ($vSubName == 'allowedClass') $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . $vSubElement['type'] . '");');
+					elseif ($vSubName == 'nonStorableClass' || $vSubName == 'denyKeyword' || $vSubName == 'allowKeyword') $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
 					elseif ($vSubName == 'itemName') {
 						if ($vSubElement['part'] == 'true') {
 							$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","part","' . (string)$vSubElement . '");');
@@ -1429,8 +1411,7 @@ function GetUnitList() {
 						}
 						else {
 							$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
-							if ($vSubElement['limit'])
-								$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . (string)$vSubElement . '_limit","' . $vSubElement['limit'] . '");');
+							if ($vSubElement['limit']) $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . (string)$vSubElement . '_limit","' . $vSubElement['limit'] . '");');
 						}
 					}
 				}
@@ -1440,10 +1421,8 @@ function GetUnitList() {
 			$vItemName = (string)$vItem['name'];
 			if (strlen($vItemName) > 0) {
 				$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","type","FeatureCreditStorage");');
-				foreach ($vItem->attributes() as $vField => $vContent)
-					$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
-				foreach ($vItem->children() as $vSubName => $vSubElement)
-					$vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
+				foreach ($vItem->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vField . '","' . $vContent . '");');
+				foreach ($vItem->children() as $vSubName => $vSubElement) $vDataDB->queryExec('insert into storage(name,field,content) values("' . $vItemName . '","' . $vSubName . '","' . (string)$vSubElement . '");');
 			}
 		}
 		unset($xmlDoc);
@@ -1452,8 +1431,7 @@ function GetUnitList() {
 			$vRecipeID = (string)$vRecipe['id'];
 			if (strlen($vRecipeID) > 0) {
 				$vRecipeName = '';
-				foreach ($vRecipe->attributes() as $vField => $vContent)
-					$vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","' . $vField . '","' . $vContent . '");');
+				foreach ($vRecipe->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","' . $vField . '","' . $vContent . '");');
 				foreach ($vRecipe->children() as $vSubName => $vSubElement) {
 					if ($vSubName == 'name') $vRecipeName = (string)$vSubElement;
 					if ($vSubName == 'image') {
@@ -1462,15 +1440,11 @@ function GetUnitList() {
 							$vDataDB->queryExec('insert into units(name,field,content) values("' . $vRecipeID . '","iconurl","' . $vSubElement['url'] . '");');
 						}
 					}
-					elseif ($vSubName == 'Reward')
-						foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement)
-							foreach ($vSubSubElement->attributes() as $vField => $vContent)
-								$vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","reward_' . $vSubSubName . '_' . $vField . '","' . (string)$vContent . '");');
-					elseif ($vSubName == 'Ingredients')
-						foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) {
-							$vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","Ingredient_itemCode","' . $vSubSubElement['itemCode'] . '");');
-							$vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","Ingredient_quantityRequired_' . $vSubSubElement['itemCode'] . '","' . $vSubSubElement['quantityRequired'] . '");');
-						}
+					elseif ($vSubName == 'Reward') foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) foreach ($vSubSubElement->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","reward_' . $vSubSubName . '_' . $vField . '","' . (string)$vContent . '");');
+					elseif ($vSubName == 'Ingredients') foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) {
+						$vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","Ingredient_itemCode","' . $vSubSubElement['itemCode'] . '");');
+						$vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","Ingredient_quantityRequired_' . $vSubSubElement['itemCode'] . '","' . $vSubSubElement['quantityRequired'] . '");');
+					}
 					else $vDataDB->queryExec('insert into crafting(name,field,content) values("' . $vRecipeID . '","' . $vSubName . '","' . (string)$vSubElement . '");');
 				}
 				if (strlen($vRecipeName) > 0) $vDataDB->queryExec('update crafting set name="' . $vRecipeName . '" where name="' . $vRecipeID . '"');
@@ -1482,10 +1456,7 @@ function GetUnitList() {
 			if (strlen($vQuestID) > 0) {
 				foreach ($vQuest->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into quests(name,field,content) values("' . $vQuestID . '","' . $vField . '","' . $vContent . '");');
 				foreach ($vQuest->children() as $vSubName => $vSubElement) {
-					if ($vSubName == 'text')
-						foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement)
-							foreach ($vSubSubElement->attributes() as $vField => $vContent)
-								$vDataDB->queryExec('insert into quests(name,field,content) values("' . $vQuestID . '","' . $vField . '","' . (string)$vContent . '");');
+					if ($vSubName == 'text') foreach ($vSubElement->children() as $vSubSubName => $vSubSubElement) foreach ($vSubSubElement->attributes() as $vField => $vContent) $vDataDB->queryExec('insert into quests(name,field,content) values("' . $vQuestID . '","' . $vField . '","' . (string)$vContent . '");');
 					elseif ($vSubName == 'icon') {
 						$vDataDB->queryExec('insert into quests(name,field,content) values("' . $vQuestID . '","iconurl","' . $vSubElement['url'] . '");');
 						$vDataDB->queryExec('insert into units(name,field,content) values("' . $vQuestID . '","iconurl","' . $vSubElement['url'] . '");');
@@ -1566,8 +1537,8 @@ function Hook($hook) {
 	global $plugins;
 	global $this_plugin;
 	foreach ($plugins as $plugin) if (isset($plugin['hooks'][$hook])) if (function_exists($plugin['hooks'][$hook])) {
-				$this_plugin = $plugin;
-				call_user_func($plugin['hooks'][$hook]);
+		$this_plugin = $plugin;
+		call_user_func($plugin['hooks'][$hook]);
 	}
 }
 
@@ -1589,7 +1560,7 @@ function save_array($array, $filename) { file_put_contents($GLOBALS['this_plugin
 //  @params string $str Text
 // ------------------------------------------------------------------------------
 function AddLog($str) {
-	$GLOBALS['res_str'].= $str . "\r\n";
+	$GLOBALS['res_str'] .= $str . "\r\n";
 	if ($GLOBALS['is_debug']) echo $str;
 }
 
@@ -1619,8 +1590,7 @@ function F($filename) {
 	if ($filename == 'units.txt') return 'units.txt';
 	$vOverrideWorldtype = '';
 	//TODO: Array
-	if(in_array($filename, array('cookies.txt','flashVars.txt','gitft_reqs.txt','params.txt','rewards.txt',
-				'sendgifts.txt','worldtype.txt','worldcontinue.txt','worldswitch.txt'))) $vOverrideWorldtype = 'farm';
+	if (in_array($filename, array('cookies.txt', 'flashVars.txt', 'gitft_reqs.txt', 'params.txt', 'rewards.txt', 'sendgifts.txt', 'worldtype.txt', 'worldcontinue.txt', 'worldswitch.txt'))) $vOverrideWorldtype = 'farm';
 	if (strlen($vOverrideWorldtype) > 0) $folder = 'FBID_' . ($vOverrideWorldtype == 'england' ? 'xuk' : '') . $userId;
 	else $folder = 'FBID_' . ($vWorldtype == 'england' ? 'xuk' : '') . $userId;
 	if (!is_dir($folder)) @mkdir($folder);
@@ -2305,7 +2275,7 @@ function Parser_SendGift_Do($vFBIDs, $vGift) {
 	$vStop = strpos($vHTML, '</script></fb:serverfbml>', $vStart);
 	$vFBML = 'fbml=' . urlencode(substr($vHTML, $vStart, $vStop - $vStart));
 	$vHTML = proxy_GET_FB("http://www.connect.facebook.com/widgets/serverfbml.php", 'POST', $vAppKey . '&' . $vChannelUrl . '&' . $vFBML);
-	$vPostData = 'prefill=true&message=&preview=false&donot_send=false&__d=1&post_form_id=' . $vPostFormID. '&fb_dtsg=' . $vDTGS;
+	$vPostData = 'prefill=true&message=&preview=false&donot_send=false&__d=1&post_form_id=' . $vPostFormID . '&fb_dtsg=' . $vDTGS;
 	$vPostData .= '&post_form_id_source=AsyncRequest&lsd=';
 	preg_match_all('/PlatformInvite.sendInvitation.*(\&#123.*.?125;)[(\(;)]/im', $vHTML, $vDatas);
 	preg_match_all('/<form[^>].*content=\s*["]([^"]+)[^>]*>/im', $vHTML, $vForms);
@@ -2336,9 +2306,7 @@ function pluginload() {
 	if (strlen((@file_get_contents(F('worldtype.txt')))) == 0) $vWorldtype = 'farm';
 	$dir = 'plugins/';
 	$dh = opendir($dir);
-	while (false !== ($file = readdir($dh)))
-		if (is_dir($dir . $file) && $file != '.' && $file != '..')
-			$plugins[] = array('name' => $file, 'folder' => $dir . $file, 'main' => file_exists($dir . $file . '/main.php') ? $dir . $file . '/main.php' : '', 'hooks' => array());
+	while (false !== ($file = readdir($dh))) if (is_dir($dir . $file) && $file != '.' && $file != '..') $plugins[] = array('name' => $file, 'folder' => $dir . $file, 'main' => file_exists($dir . $file . '/main.php') ? $dir . $file . '/main.php' : '', 'hooks' => array());
 	closedir($dh);
 	global $hooks, $this_plugin;
 	// initialize plugins
