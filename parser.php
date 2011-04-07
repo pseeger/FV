@@ -2098,7 +2098,7 @@ function CheckAMF2Rewards($amf2) {
 		CheckAMF2RewardsSub($vReward, $vFound, $vRewardsArray);
 		foreach (array('harvest', 'plow', 'place', 0) as $rewardsubtype) if (isset($vReward['data'][$rewardsubtype]) && is_array($vReward['data']['harvest']['data'])) foreach ($vReward['data']['harvest']['data'] as $vSubReward) if (stripos(print_r($vSubReward, true), 'reward.php') !== false) CheckAMF2RewardsSub($vSubReward, $vFound, $vRewardsArray);
 		if (!$vFound) {
-			file_put_contents('rew_data_raw_' . date('z') . '.txt', print_r($vReward, true));
+//file_put_contents('rew_data_raw_' . date('z') . '.txt', print_r($vReward, true));
 			preg_match_all('/reward.php\?frHost=([^&]*)&frId=([^&]*)&frType=([^& ]*)/si', str_replace(array("\r", "\n"), array(' ', ' '), print_r($vReward, true)), $vRewards);
 			for ($vI = 0; $vI < count($vRewards[1]); $vI++) {
 				$vUserID = $vRewards[1][$vI];
