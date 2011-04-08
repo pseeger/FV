@@ -1277,14 +1277,18 @@ function Seeder_GetPlotsTime()//revised v1.1.2
  $plots = Seeder_ArrayFilter($plots, 'state', '!=', 'plowed');
  $plots = Seeder_ArrayFilter($plots, 'state', '!=', 'fallow');
 
+ $world = unserialize(file_get_contents(F('world.txt')));
+ $worldTimeOffset = @$world['data'][0]['worldTime'] - time(); 
+
  $array = array();
  foreach ($plots as $plot)
   {
-   $plantTimeID = $plot['itemName']."-".($plot['plantTime']/1000);
+   $plantTimeMod = ($plot['plantTime']/1000) - $worldTimeOffset;
+   $plantTimeID = $plot['itemName']."-".$plantTimeMod;
    if (!isset($array[$plantTimeID]['plantTimeID']))
    {
    $array[$plantTimeID]['plantTimeID'] = $plantTimeID;
-   $array[$plantTimeID]['plantTime'] = ($plot['plantTime']/1000);
+   $array[$plantTimeID]['plantTime'] = $plantTimeMod;
    $array[$plantTimeID]['itemName'] = $plot['itemName'];
    $array[$plantTimeID]['realname'] = Units_GetRealnameByName($plot['itemName']);
    $array[$plantTimeID]['state'] = $plot['state'];
