@@ -10,4 +10,16 @@ config/
 lighty.conf
 raw_rewards*
 1*.txt
-./*.txt
+_log2.txt
+achievement_info.txt
+collectable_info.txt
+lightylog.txt
+notrun_plugin_*
+out.txt
+timezone.txt
+transforms.txt
+units.txt
+xuk*.txt
+plugins/Seeder/database/default_settings.txt
+plugins/Seeder/database/quests.txt
+
