@@ -8,6 +8,8 @@
 		<ul>
 			<?php foreach(scandir('plugins') as $plugin) if($plugin[0]!='.') echo '<li><a target="plugin" href="/plugins/'.$plugin.'/main.php">'.$plugin.'</a></li>';?>
 			<li><a href="phptest.php" target="plugin">PHP-Test</a></li>
+			<li><a href="run.php?cmd=gitupdate"target="plugin">Update</a></li>
+			<li><a href="run.php?cmd=runparser"target="plugin">Run a cycle</a></li>
 		</ul>
 	</body>
 </html>

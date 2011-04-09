@@ -262,7 +262,7 @@ function DoInit($vDoCheck = '') {
 			if (strlen($vSettingsWorldfreez) == 0) $vSettingsWorldfreez = 'freez';
 			if ($vSettingsWorldtype <> $vWorldtype) {
 				$amf = CreateRequestAMF('', 'UserService.saveOptions');
-				$amf->_bodys[0]->_value[1][0]['params'][0]['shouldFreezeFarm'] = $vSettingsWorldfreez == 'freez' ? true : false; # false continue farm / true freez farm
+				$amf->_bodys[0]->_value[1][0]['params'][0]['shouldFreezeFarm'] = $vSettingsWorldfreez == 'freez'; # false continue farm / true freez farm
 				$amf->_bodys[0]->_value[1][0]['params'][0]['sfxDisabled'] = true;
 				$amf->_bodys[0]->_value[1][0]['params'][0]['musicDisabled'] = true;
 				$amf->_bodys[0]->_value[1][0]['params'][0]['graphicsLowQuality'] = true;
@@ -273,7 +273,7 @@ function DoInit($vDoCheck = '') {
 				$amf = CreateRequestAMF('', 'WorldService.loadOwnWorld');
 				$amf->_bodys[0]->_value[1][0]['params'][0] = $vSettingsWorldtype;
 				$amf->_bodys[0]->_value[1][0]['params'][1] = true;
-				$amf->_bodys[0]->_value[1][0]['params'][2] = $vSettingsWorldfreez == 'freez' ? true : false; # false continue farm / true freez farm
+				$amf->_bodys[0]->_value[1][0]['params'][2] = $vSettingsWorldfreez == 'freez'; # false continue farm / true freez farm
 				$amf2 = RequestAMFIntern($amf);
 				$res = CheckAMF2Response($amf2);
 				if ($res == 'OK') AddLog2("DoInit: SwitchFarm successful switched to $vSettingsWorldtype");
@@ -2114,7 +2114,7 @@ function CheckAMF2Rewards($amf2) {
 		}
 		else {
 			AddLog2('Parser_CheckAMF2Rewards: rewards found: ' . implode('|', $vFound));
-			file_put_contents('raw_rewards' . time(), serialize($amf2->_bodys[0]->_value['data']));
+			//file_put_contents('raw_rewards' . time(), serialize($amf2->_bodys[0]->_value['data']));
 		}
 	}
 	if (count($vRewardsArray) > 0 && is_array($vRewardsArray)) {
