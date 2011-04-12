@@ -25,10 +25,8 @@ fastcgi.server = ( \".php\" => ((\"bin-path\" => \"$PHP -c $f/localphp.ini \",
 	\"max-procs\" => 1)))" > $f/lighty.conf
 
 
-LIGHTTPD_PID=$(pidof lighttpd) 
-if [ $LIGHTTPD_PID ]; then 
-	echo 'stopping lighttp...'
-	kill -INT $LIGHTTPD_PID 
-	sleep 1 
-fi
+echo 'trying to stop all running lighttpds...'
+killall -INT -w -u `whoami` lighttpd 
+echo 'Starting lighttpd'
 lighttpd -f $f/lighty.conf
+echo 'Started lighttpd, you can close this window now'
