@@ -7,28 +7,7 @@
 //========================================================================================================================
 function Seeder_ShowImage($iconurl)//revised v1.1.2
 {
-
-$iconfile = Bot_path.$iconurl;
-$loaderfile = Seeder_imgURL."loader.gif";
-$dir = Bot_path.dirname($iconurl);
-$image = 1;
-
-   if ((!file_exists($iconfile)) || (filesize($iconfile) == 0))
-   {
-    $image = 0;
-   }
-
-  if ($image == 1)
-  {
-
-  $iconfile = str_replace(Bot_path,"/",$iconfile);
-  $iconfile = str_replace("//","/","/".$iconurl);
-  return $iconfile;
-  }
-  else
-  {
-  return $loaderfile;
-  }
+return $iconurl;
 
 }
 //========================================================================================================================
@@ -37,27 +16,8 @@ $image = 1;
 function Seeder_BushelImage($bushel)//added v1.1.2
 {
 
-$iconurl = Bot_path.$iconurl;
-$spacefile = Seeder_imgURL."space.png";
-$dir = Bot_path.dirname($iconurl);
-$image = 1;
-
-   if ((!file_exists($iconfile)) || (filesize($iconfile) == 0))
-   {
-    $image = 0;//
-   }
-
-  if ($image == 1)
-  {
-  $iconfile = str_replace(Bot_path,"/",$iconfile);
-  $iconfile = str_replace("//","/","/".$iconurl);
-  return $iconfile;
-  }
-  else
-  {
-  return $spacefile;
-  }
-
+	return $bushel;
+//$spacefile = Seeder_imgPath."space.png";
 }
 
 //========================================================================================================================
@@ -65,9 +25,11 @@ $image = 1;
 //========================================================================================================================
 function Seeder_JobImage($quest)//added v1.1.2
 {
+return $quest;
+
 
 $iconurl = Bot_path.$iconurl;
-$spacefile = Seeder_imgURL."space.png";
+$spacefile = Seeder_imgPath."space.png";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -78,8 +40,6 @@ $image = 1;
 
   if ($image == 1)
   {
-  $iconfile = str_replace(Bot_path,"/",$iconfile);
-  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
@@ -93,30 +53,9 @@ $image = 1;
 //========================================================================================================================
 function Seeder_ShowImagebyName($name)//added v1.1.4
 {
-
 $unit = Units_GetUnitByName($name);
 $iconurl = $unit['iconurl'];
-$iconfile = Bot_path.$iconurl;
-$loaderfile = Seeder_imgURL."loader.gif";
-$dir = Bot_path.dirname($iconurl);
-$image = 1;
-
-   if ((!file_exists($iconfile)) || (filesize($iconfile) == 0))
-   {
-    $image = 0;
-   }
-
-  if ($image == 1)
-  {
-  $iconfile = str_replace(Bot_path,"/",$iconfile);
-  $iconfile = str_replace("//","/","/".$iconurl);
-  return $iconfile;
-  }
-  else
-  {
-  return $loaderfile;
-  }
-
+return $iconurl;
 }
 //========================================================================================================================
 //Seeder_ShowImagebyCode
@@ -126,8 +65,9 @@ function Seeder_ShowImagebyCode($code)//added v1.1.4
 
 $unit = Units_GetUnitByName(Units_GetNameByCode($code));
 $iconurl = $unit['iconurl'];
+return $iconurl;
 $iconfile = Bot_path.$iconurl;
-$loaderfile = Seeder_imgURL."loader.gif";
+$loaderfile = Seeder_imgPath."loader.gif";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -138,8 +78,6 @@ $image = 1;
 
   if ($image == 1)
   {
-  $iconfile = str_replace(Bot_path,"/",$iconfile);
-  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else

@@ -12,6 +12,8 @@ global $Seeder_settings, $Seeder_info;
 $Seeder_settings = Seeder_Read("settings");
 $Seeder_info = Seeder_Read("info");
 $Seeder_msg = "&nbsp;";
+$worldtype = Seeder_worldtype();
+$worldname = Seeder_worldname();
 
 //======================================
 //submit form
@@ -26,7 +28,7 @@ if (isset($_GET['save_action']))
  {
  if (@$_GET['auto_mastery']) {$auto_mastery = 1;} else {$auto_mastery = 0;}
  if (@$_GET['mastery_adjustment']) {$mastery_adjustment = 1;} else {$mastery_adjustment = 0;}
- if (@$_GET['force_planting']) {$force_planting = 1;} else {$force_planting = 0;}
+# if (@$_GET['force_planting']) {$force_planting = 1;} else {$force_planting = 0;}
  if (@$_GET['consume_instagrow']) {$consume_instagrow = 1;} else {$consume_instagrow = 0;}
  if (@$_GET['bushel_booster']) {$bushel_booster = 1;} else {$bushel_booster = 0;}
  if (@$_GET['default_settings']) {$default_settings = 1;} else {$default_settings = 0;}
@@ -565,7 +567,10 @@ text-decoration: none
 
 <table border="0" width="100%" cellspacing="0" cellpadding="2">
         <tr>
-                <td align="center" height="30" bgcolor="#0A246A">
+                <td align="center" height="24" width="70" bgcolor="#0A246A">
+                <img border="0" src="<?php echo Seeder_imgPath.'world_'.$worldtype.'.png' ?>" width="58" height="24" alt="<?php echo $worldname ?> Settings">
+                </td>
+                <td align="center" height="24" width="100%" bgcolor="#0A246A">
                 <font size="2" face="Tahoma" color="#FFFFFF"><b>
                 <a target="_blank" href="http://farmvillebot.net/forum/viewtopic.php?t=7164" style="text-decoration: none; color:white">
                 Seeder Plugin v<?php echo Seeder_version;?></b>  by n1n9u3m
@@ -576,8 +581,6 @@ text-decoration: none
 //======================================
 //load player info and settings
 //======================================
-$worldtype = Seeder_worldtype();
-$worldname = Seeder_worldname();
 
 if ((!PX_VER_PARSER) || (PX_VER_PARSER < Seeder_parser))
 {
@@ -611,13 +614,12 @@ unset($pendingRewards);unset($crafting);
 <!-- info bar -->
 <table border='0' cellspacing='0' cellpadding='2'>
 <tr>
-<td align='left'><font face="Tahoma" size="1">World: <b><font color="red"><?php echo $worldname;?>&nbsp;<br></b></font></font></td>
 <td align='left'><img border="0" width='18' src="http://www.wtzclock.com/images/flags/<?php echo strtolower($Seeder_info['geoip']);?>.gif"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['name'];?></b> (<?php echo $Seeder_info['userId'];?>)</font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_xp_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['level'];?></b> (<?php echo $Seeder_info['xp'];?>)</font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_coins_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['gold'];?></b></font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_cash_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['cash'];?></b></font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/equipment/equip_gas_can_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['energy'];?></b></font></td>
-<td align='left' width='18'><input type="image" src="<?php echo Seeder_imgURL.'arrow.png';?>" border="0" name="show_stats" value="+" onclick="ShowStats();return false;" title="Show Player Stats"></font></td>
+<td align='left' width='18'><input type="image" src="<?php echo Seeder_imgPath.'arrow.png';?>" border="0" name="show_stats" value="+" onclick="ShowStats();return false;" title="Show Player Stats"></font></td>
 </tr>
 </table>
 <!--------------------------------------------------------------------------------------------------------------------------------------------------------->
@@ -800,7 +802,6 @@ unset($stats);unset($userProfile);
 <?php
 if ($Seeder_info['plots'] > 0 )
 {
- $plots = Seeder_GetPlotsTime();
 ?>
 <table border='1' width='100%' cellspacing='0' cellpadding='2' bordercolor='#D4D0C8' style='border-collapse: collapse'>
 
@@ -818,10 +819,13 @@ if ($Seeder_info['plots'] > 0 )
   foreach ($plots as $plot)
   {
   $name = $plot['itemName'];
-  $growTime = $seeds_all[$name]['growTime']; if (!$growTime) {$growTime = 1;}
+  $growTime = $seeds_all[$name]['growTime']; if (!$growTime) {$growTime = 0;}
   $iconurl = $seeds_all[$name]['iconurl'];
-  $plantTime = $plot['plantTime'];
-  $booster = "<img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'>";
+
+# fix 1.1.9 thanks to AJMSmith
+#  $plantTime = $plot['plantTime'];
+  $plantTime = ($plot['plantTime'] - $Seeder_info['worldTimeOffset']);
+  $booster = "<img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'>";
   $spercent = "";
   $state = "";
 
@@ -861,6 +865,8 @@ if ($Seeder_info['plots'] > 0 )
   else {$state = $plot['state'];}
   }
 
+
+
  //Booster!
  $bushel_name = @$seeds_all[$name]['bushel_name'];
  $bushel_count = @$seeds_all[$name]['bushel_count'];
@@ -870,7 +876,7 @@ if ($Seeder_info['plots'] > 0 )
   if ($bushel_name != "NULL")
   {
    if ($Btime_diff > 0 ) {
-   $booster = "<img border='0' title='Bushel Boosted!' src='".Seeder_imgURL."bushelbooster.png' width='16' height='16'>";
+   $booster = "<img border='0' title='Bushel Boosted!' src='".Seeder_imgPath."bushelbooster.png' width='16' height='16'>";
    }
    else
    {
@@ -884,6 +890,7 @@ if ($Seeder_info['plots'] > 0 )
 
  echo "<tr>"."\n";
  echo "<td align='right' width='25'><font size='1' face='Tahoma'>".$plot['count']."</font></td>"."\n";
+ echo '<!-- test -->';
  echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_ShowImage($iconurl)."' width='16' height='16'></td>"."\n";
  echo "<td align='left'><font size='1' face='Tahoma'><b>".$plot['realname']."</b></font></td>"."\n";
  echo "<td align='center' valign='center' width='16'>".$booster."</td>"."\n";
@@ -909,9 +916,9 @@ if (sizeof($plots) > 0 )
  {
  echo "<tr>"."\n";
  echo "<td align='right' width='25'><font size='1' face='Tahoma'>".$plot['count']."</font></td>"."\n";
- echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'></td>"."\n";
+ echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'></td>"."\n";
  echo "<td align='left'><font size='1' face='Tahoma'>".$plot['state']."</font></td>"."\n";
- echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'></td>"."\n";
+ echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'></td>"."\n";
  echo "<td align='center' width='40'><font size='1' face='Tahoma'>&nbsp;</font></td>"."\n";
  echo "<td align='left'><font size='1' face='Tahoma'>&nbsp;</font></td>"."\n";
  echo "</tr>";
@@ -1454,16 +1461,16 @@ unset($quest_active);
  Mastery Adjustment: </font>
  <input type="checkbox" name="mastery_adjustment" <?php echo (($Seeder_settings['mastery_adjustment'] == 1)?'checked':'')?> value="1" title="Ignore full mastery earned before the new Mastery Adjustment by Z*">
  </td>
+<!---
  <td><font size="1" face="Tahoma">
  Force Planting:
  <input type="checkbox" name="force_planting" <?php echo (($Seeder_settings['force_planting'] == 1)?'checked':'')?> value="1" title="Ignore Seeds Filters. Errors can happen."></font>
  </td>
-<!---
+--->
  <td><font size="1" face="Tahoma">
  Use Instagrow (<?php echo $Seeder_info['instagrow_count']?>):
  <input type="checkbox" name="consume_instagrow" <?php echo (($Seeder_settings['consume_instagrow'] == 1)?'checked':'')?> value="1" title="Use consume instagrow from giftbox."></font>
  </td>
---->
  </tr>
  </table>
 </td>
@@ -1703,7 +1710,7 @@ function Seeder_box($title, $msg, $icon)
                 <td align="center">
                 <table border="0" width="100%" cellspacing="0" cellpadding="2">
                         <tr>
-                                <td align="left" width="32" valign="top"><img border="0" src="<?php echo Seeder_imgURL.'msgbox_'.$icon.'.png';?>" width="32" height="32"></td>
+                                <td align="left" width="32" valign="top"><img border="0" src="<?php echo Seeder_imgPath.'msgbox_'.$icon.'.png';?>" width="32" height="32"></td>
                                 <td align="left" valign="top"><font face="Tahoma" size="2"><?php echo $msg;?></font></td>
                         </tr>
                 </table>

@@ -29,17 +29,17 @@ Seeder_Write($Seeder_settings,"settings");
 
 <table border="0" cellpadding="0" cellspacing="2">
  <tr height="20">
-  <td <?php echo (($show_tab == "seeds")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=available'" align="center">
+  <td <?php echo (($show_tab == "seeds")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=available')" align="center">
   <font face="Tahoma" size="1"><b>Seeds</b></font></td>
-  <td <?php echo (($show_tab == "trees")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=available'" align="center">
+  <td <?php echo (($show_tab == "trees")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=available')" align="center">
   <font face="Tahoma" size="1"><b>Trees</b></font></td>
 <?php
 if ($worldtype == 'farm')
 {
 ?>
-  <td <?php echo (($show_tab == "jobs")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="window.location.href='main.php?show_tab=jobs&show_subtab=basic'" align="center">
+  <td <?php echo (($show_tab == "jobs")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=basic')" align="center">
   <font face="Tahoma" size="1"><b>Co-Op Jobs</b></font></td>
-  <td <?php echo (($show_tab == "greenhouse")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="window.location.href='main.php?show_tab=greenhouse&show_subtab=trays'" align="center">
+  <td <?php echo (($show_tab == "greenhouse")? "class='menu-sel'":"class='menu'".$menu_onmouse)?> onClick="location.href('main.php?show_tab=greenhouse&show_subtab=trays')" align="center">
   <font face="Tahoma" size="1"><b>Greenhouse</b></font></td>
 <?php
 //if ($worldtype == 'farm')
@@ -126,29 +126,29 @@ if ($show_tab == "seeds") {
 
 <table border="0" cellpadding="0" cellspacing="2">
  <tr height="20">
-  <td <?php echo (($show_subtab == "available")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=available'" align="center">
+  <td <?php echo (($show_subtab == "available")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=available')" align="center">
   <font face="Tahoma" size="1">Available</font></td>
-  <td <?php echo (($show_subtab == "to_mastery")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=to_mastery'" align="center">
+  <td <?php echo (($show_subtab == "to_mastery")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=to_mastery')" align="center">
   <font face="Tahoma" size="1">To Mastery</font></td>
-  <td <?php echo (($show_subtab == "mastered")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=mastered'" align="center">
+  <td <?php echo (($show_subtab == "mastered")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=mastered')" align="center">
   <font face="Tahoma" size="1">Mastered</font></td>
-  <td <?php echo (($show_subtab == "buyable")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=buyable'" align="center">
+  <td <?php echo (($show_subtab == "buyable")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=buyable')" align="center">
   <font face="Tahoma" size="1">Not buyable</font></td>
-  <td <?php echo (($show_subtab == "limited")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=limited'" align="center">
+  <td <?php echo (($show_subtab == "limited")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=limited')" align="center">
   <font face="Tahoma" size="1">Limited</font></td>
-  <td <?php echo (($show_subtab == "limitedLocale")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=limitedLocale'" align="center">
+  <td <?php echo (($show_subtab == "limitedLocale")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=limitedLocale')" align="center">
   <font face="Tahoma" size="1">Limited Locale</font></td>
-  <td <?php echo (($show_subtab == "requiredLevel")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=requiredLevel'" align="center">
+  <td <?php echo (($show_subtab == "requiredLevel")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=requiredLevel')" align="center">
   <font face="Tahoma" size="1">Required Level</font></td>
-  <td <?php echo (($show_subtab == "license")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=license'" align="center">
+  <td <?php echo (($show_subtab == "license")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=license')" align="center">
   <font face="Tahoma" size="1">Required License</font></td>
-  <td <?php echo (($show_subtab == "requirements")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=requirements'" align="center">
+  <td <?php echo (($show_subtab == "requirements")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=requirements')" align="center">
   <font face="Tahoma" size="1">Required Mastery</font></td>
-  <td <?php echo (($show_subtab == "seedpackage")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=seedpackage'" align="center">
+  <td <?php echo (($show_subtab == "seedpackage")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=seedpackage')" align="center">
   <font face="Tahoma" size="1">Seed Package</font></td>
-  <td <?php echo (($show_subtab == "isHybrid")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=isHybrid'" align="center">
+  <td <?php echo (($show_subtab == "isHybrid")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=isHybrid')" align="center">
   <font face="Tahoma" size="1">Hybrid</font></td>
-  <td <?php echo (($show_subtab == "bushels")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=seeds&show_subtab=bushels'" align="center">
+  <td <?php echo (($show_subtab == "bushels")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=seeds&show_subtab=bushels')" align="center">
   <font face="Tahoma" size="1">Bushels</font></td>
  </tr>
 </table>
@@ -227,12 +227,12 @@ if (sizeof($seeds) > 0 )
 <td align="center"  valign="top" width="48">
  <table border="0" width="100%" cellspacing="0" cellpadding="0">
  <tr><td align="center"><img border="0" src="<?php echo (($show_subtab == "bushels")? Seeder_ShowImage($seed['bushel_iconurl']):Seeder_ShowImage($seed['iconurl']))?>" width="48"></td></tr>
- <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($seed['masterymax'] > 0)? Seeder_imgURL.$seed['mastery_level']."_star.png":Seeder_imgURL."space.png")?>" width="48" height="16"></td></tr>
+ <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($seed['masterymax'] > 0)? Seeder_imgPath.$seed['mastery_level']."_star.png":Seeder_imgPath."space.png")?>" width="48" height="16"></td></tr>
  </table>
 </td>
 
 <td align="left" valign="top"><font size="2" face="Tahoma">
-<b><?php echo $seed['realname']. (($seed['booster_time'] > 0)? " <img border='0' title='Bushel Boosted!' src='".Seeder_imgURL."bushelbooster.png' width='16' height='16'>":"");?></b></font>
+<b><?php echo $seed['realname']. (($seed['booster_time'] > 0)? " <img border='0' title='Bushel Boosted!' src='".Seeder_imgPath."bushelbooster.png' width='16' height='16'>":"");?></b></font>
 <font size="1" face="Tahoma"><br>
 Name: <b><?php echo $seed['name'];?></b> Code: <b><?php echo $seed['code'];?></b><br>
 <?php echo (($seed['creationDate'] != "NULL")? "Creation Date: <b>".$seed['creationDate']."</b><br>":"")?>
@@ -282,7 +282,7 @@ if ($seed['bushel_name'] != "NULL")
 
 echo "Bushels: <b>".$seed['bushel_count']."</b><br>";
 echo ((($seed['masterymax'] > 0) && ($tobooster > 0))? "To Mastery Boosted: <b>".$tobooster."</b><br>":"");
-echo (($seed['booster_time'] > 0)? "Booster Time: <b>".Seeder_TimeLeft(time(),$seed['booster_time'])."</b> (".date($Seeder_settings['timeformat'],$seed['booster_time']).")<br>":"");
+echo (($seed['booster_time'] > 0)? "Booster Time: <b>".Seeder_TimeLeft(time(),$seed['booster_time'])."</b><br>":"");
 
 } else {echo "Bushels: <b>Unavailable</b><br>";}//if ($seed['bushel_name'] != "NULL")
 
@@ -319,7 +319,7 @@ if ($seed['isHybrid'] == 1)//added 1.1.6
  foreach ($seed['genealogy'] as $gen)
  {
  echo "<tr>"."\n";
- echo "<td align='center' width='16' valign='top'><img border='0' src='".Seeder_ShowImage($gen['iconurl'])."' width='16' height='16'></td>";
+ echo "<td align='center' width='16' valign='top'><img border='0' src='".$gen['iconurl']."' width='16' height='16'></td>";
  echo "<td align='left' width='16' valign='top'><font size='1' face='Tahoma'>".$gen['quantity']."</font></td>";
  echo "<td align='left' valign='top'><font size='1' face='Tahoma'><b>".$gen['realname']."</b></font></td>";
  echo "</tr>"."\n";
@@ -352,17 +352,17 @@ if ($show_tab == "jobs") {
 
 <table border="0" cellpadding="0" cellspacing="2">
  <tr height="20">
-  <td <?php echo (($show_subtab == "basic")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=jobs&show_subtab=basic'" align="center">
+  <td <?php echo (($show_subtab == "basic")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=basic')" align="center">
   <font face="Tahoma" size="1">Basic Jobs</font></td>
-  <td <?php echo (($show_subtab == "crafting")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=jobs&show_subtab=crafting'" align="center">
+  <td <?php echo (($show_subtab == "crafting")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=crafting')" align="center">
   <font face="Tahoma" size="1">Crafting Jobs</font></td>
-  <td <?php echo (($show_subtab == "limited")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=jobs&show_subtab=limited'" align="center">
+  <td <?php echo (($show_subtab == "limited")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=limited')" align="center">
   <font face="Tahoma" size="1">Limited</font></td>
-  <td <?php echo (($show_subtab == "requiredLevel")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=jobs&show_subtab=requiredLevel'" align="center">
+  <td <?php echo (($show_subtab == "requiredLevel")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=requiredLevel')" align="center">
   <font face="Tahoma" size="1">Required Level</font></td>
-  <td <?php echo (($show_subtab == "license")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=jobs&show_subtab=license')" align="center">
+  <td <?php echo (($show_subtab == "license")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=license')" align="center">
   <font face="Tahoma" size="1">Required License</font></td>
-  <td <?php echo (($show_subtab == "requiredHostItemName")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=jobs&show_subtab=requiredHostItemName'" align="center">
+  <td <?php echo (($show_subtab == "requiredHostItemName")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=jobs&show_subtab=requiredHostItemName')" align="center">
   <font face="Tahoma" size="1">Required Host Buiding</font></td>
  </tr>
 </table>
@@ -439,7 +439,7 @@ echo (($quest_active_id == 0)?"":"<input class='on' type='button' name='".$quest
  </td>
 
  <td align="left" valign="top"><font size="2" face="Tahoma">
- <b><?php echo $quest['realname']. (($quest['id'] == $quest_active_id)? " <img border='0' title='Co-Op Active!' src='".Seeder_imgURL."bushelbooster.png' width='16' height='16'>":"");?></b></font>
+ <b><?php echo $quest['realname']. (($quest['id'] == $quest_active_id)? " <img border='0' title='Co-Op Active!' src='".Seeder_imgPath."bushelbooster.png' width='16' height='16'>":"");?></b></font>
  <font size="1" face="Tahoma"><br>
  Type: <b><?php echo $quest['type'];?></b><br>
  <?php echo "Required Level: <font color='".(($quest['requiredLevel'] <= $Seeder_info['level'])?"black":"red")."'><b>".$quest['requiredLevel']."</b></font><br>";?>
@@ -475,7 +475,7 @@ echo (($quest_active_id == 0)?"":"<input class='on' type='button' name='".$quest
  }
 
   echo "<tr>"."\n";
-  echo "<td align='left' valign='top' width='16'>".(($reward == "NULL")?"<img border='0' src='".Seeder_imgURL."space.png' width='16'><br>":"<img border='0' src='". Seeder_ShowImagebyName($reward) ."' width='16'><br>")."</td>"."\n";
+  echo "<td align='left' valign='top' width='16'>".(($reward == "NULL")?"<img border='0' src='".Seeder_imgPath."space.png' width='16'><br>":"<img border='0' src='". Seeder_ShowImagebyName($reward) ."' width='16'><br>")."</td>"."\n";
   echo "<td align='left' valign='top' width='25%'><font size='1' face='Tahoma'><b>".$req[$i]['name']."</b></font></td>"."\n";
   echo "<td align='left' valign='top' width='25%'><font size='1' face='Tahoma'><b>".$timeLimit."</b></font></td>"."\n";
   echo "<td align='left' valign='top' width='25%'><font size='1' face='Tahoma'>Xp: <b>".$req[$i]['reward']['experience']."</b></font></td>"."\n";
@@ -531,9 +531,9 @@ if ($show_tab == "greenhouse") {
 
 <table border="0" cellpadding="0" cellspacing="2">
  <tr height="20">
-  <td <?php echo (($show_subtab == "trays")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=greenhouse&show_subtab=trays'" align="center">
+  <td <?php echo (($show_subtab == "trays")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=greenhouse&show_subtab=trays')" align="center">
   <font face="Tahoma" size="1">Trays</font></td>
-  <td <?php echo (($show_subtab == "genealogy")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=greenhouse&show_subtab=genealogy'" align="center">
+  <td <?php echo (($show_subtab == "genealogy")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=greenhouse&show_subtab=genealogy')" align="center">
   <font face="Tahoma" size="1">Genealogy</font></td>
  </tr>
 </table>
@@ -600,7 +600,7 @@ if ($empty == 0)
 ?>
  <table border="0" width="100%" cellspacing="0" cellpadding="0">
  <tr><td align="center"><img border="0" src="<?php echo Seeder_ShowImage($seeds[$seedpackage]['iconurl'])?>" width="48"></td></tr>
- <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($seeds[$seedpackage]['masterymax'] > 0)? Seeder_imgURL.$seeds[$seedpackage]['mastery_level']."_star.png":Seeder_imgURL."space.png")?>" width="48" height="16"></td></tr>
+ <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($seeds[$seedpackage]['masterymax'] > 0)? Seeder_imgPath.$seeds[$seedpackage]['mastery_level']."_star.png":Seeder_imgPath."space.png")?>" width="48" height="16"></td></tr>
  </table>
 <?php
 } else {echo "&nbsp;";}
@@ -682,7 +682,7 @@ if ($empty == 0)
 }//for ($i = $Seeder_info['greenhouse_trays']; $i >= 0; $i++)
 
 } else { //if ($Seeder_info['greenhouse'] == 1)
-echo "<tr bgcolor='#FFFFFF'><td align='left' valign='top'><font size='2' face='Tahoma'><b>No Green House found.</b></font><br></td></tr>"."\n";
+echo "<tr bgcolor='#FFFFFF'><td align='left' valign='top'><font size='2' face='Tahoma'><b>No Greenhouse found.</b></font><br></td></tr>"."\n";
 }
 ?>
  </table>
@@ -711,7 +711,7 @@ $seedpackage = $gen['itemCode'];
 
  <table border="0" width="100%" cellspacing="0" cellpadding="0">
  <tr><td align="center"><img border="0" src="<?php echo Seeder_ShowImage($seeds[$seedpackage]['iconurl'])?>" width="48"></td></tr>
- <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($seeds[$seedpackage]['masterymax'] > 0)? Seeder_imgURL.$seeds[$seedpackage]['mastery_level']."_star.png":Seeder_imgURL."space.png")?>" width="48" height="16"></td></tr>
+ <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($seeds[$seedpackage]['masterymax'] > 0)? Seeder_imgPath.$seeds[$seedpackage]['mastery_level']."_star.png":Seeder_imgPath."space.png")?>" width="48" height="16"></td></tr>
  </table>
 
  </td>
@@ -767,23 +767,23 @@ if ($show_tab == "trees") {
 
 <table border="0" cellpadding="0" cellspacing="2">
  <tr height="20">
-  <td <?php echo (($show_subtab == "available")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=available'" align="center">
+  <td <?php echo (($show_subtab == "available")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=available')" align="center">
   <font face="Tahoma" size="1">Available</font></td>
-  <td <?php echo (($show_subtab == "to_mastery")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=to_mastery'" align="center">
+  <td <?php echo (($show_subtab == "to_mastery")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=to_mastery')" align="center">
   <font face="Tahoma" size="1">To Mastery</font></td>
-  <td <?php echo (($show_subtab == "mastered")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=mastered'" align="center">
+  <td <?php echo (($show_subtab == "mastered")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=mastered')" align="center">
   <font face="Tahoma" size="1">Mastered</font></td>
-  <td <?php echo (($show_subtab == "coins")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=coins'" align="center">
+  <td <?php echo (($show_subtab == "coins")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=coins')" align="center">
   <font face="Tahoma" size="1">Buyable Coins</font></td>
-  <td <?php echo (($show_subtab == "cash")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=cash'" align="center">
+  <td <?php echo (($show_subtab == "cash")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=cash')" align="center">
   <font face="Tahoma" size="1">Buyable Cash</font></td>
-  <td <?php echo (($show_subtab == "giftable")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=giftable'" align="center">
+  <td <?php echo (($show_subtab == "giftable")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=giftable')" align="center">
   <font face="Tahoma" size="1">Giftable</font></td>
-  <td <?php echo (($show_subtab == "reserved")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=reserved'" align="center">
+  <td <?php echo (($show_subtab == "reserved")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=reserved')" align="center">
   <font face="Tahoma" size="1">Reserved</font></td>
-  <td <?php echo (($show_subtab == "limited")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=limited'" align="center">
+  <td <?php echo (($show_subtab == "limited")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=limited')" align="center">
   <font face="Tahoma" size="1">Limited</font></td>
-  <td <?php echo (($show_subtab == "locked")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="window.location.href='main.php?show_tab=trees&show_subtab=locked'" align="center">
+  <td <?php echo (($show_subtab == "locked")? "class='submenu-sel'":"class='submenu'".$submenu_onmouse)?> onClick="location.href('main.php?show_tab=trees&show_subtab=locked')" align="center">
   <font face="Tahoma" size="1">Locked</font></td>
  </tr>
 </table>
@@ -853,7 +853,7 @@ if (sizeof($trees) > 0 )
 <td align="center"  valign="top" width="48">
  <table border="0" width="100%" cellspacing="0" cellpadding="0">
  <tr><td align="center"><img border="0" src="<?php echo Seeder_ShowImage($tree['iconurl'])?>" width="48"></td></tr>
- <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($tree['mastery'] == true)? Seeder_imgURL.$tree['mastery_level']."_star.png":Seeder_imgURL."space.png")?>" width="48" height="16"></td></tr>
+ <tr><td align="center" bgcolor="#8E6F4A"><img border="0" src="<?php echo (($tree['mastery'] == true)? Seeder_imgPath.$tree['mastery_level']."_star.png":Seeder_imgPath."space.png")?>" width="48" height="16"></td></tr>
  </table>
 </td>
 

@@ -1,8 +1,18 @@
 Seeder
-1.1.7b
+1.1.9
 n1n9u3m
 http://farmvillebot.net/forum/viewtopic.php?t=7164
 This plugin manage Co-Op Jobs, organize, booster and fertilize crops in farmville
+
+version 1.1.9
+-Apr 11 2011
+-fixed worldTimeOffset
+-disabled force planting
+-added consume instagrow functions
+
+version 1.1.8
+-Apr 3 2011
+-English Countryside
 
 version 1.1.7b
 -Mar 16 2011
