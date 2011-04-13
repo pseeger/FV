@@ -24,12 +24,17 @@ foreach($accounts as $login_email=>$login_pass) {
 	$res=curl_exec($ch);
 	$refurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
 
+	// Make regular expression work again
+	$res = str_replace("\\u003c","<",$res);
+	$res = str_replace("\\/","/",$res);
+
 	$c = curl_init();
 	if(!preg_match('/<form [^>]*?flash.*?<\/form>/i',$res,$matches)) {
 		echo "Couldn't login, maybe somethings broken?\n\rServer response was written to login_failure_".$login_email.".txt\n\r";
 		file_put_contents('login_failure_'.$login_email.'.txt',$res);
 		continue;
 	}
+	$matches[0] = str_replace("\\","",$matches[0]);
 	$xml = simplexml_load_string($matches[0]);
 	$postdata = array();
 	foreach($xml->input as $obj) {
@@ -37,6 +42,7 @@ foreach($accounts as $login_email=>$login_pass) {
 		if(isset($attrs->name) && isset($attrs->value)) $postdata[]=$attrs->name.'='.$attrs->value;
 	}
 	$url = $xml->attributes()->action;
+
 	curl_setopt_array($c, array(CURLOPT_USERAGENT=> $ua,
 		CURLOPT_URL=>$url,
 		CURLOPT_FOLLOWLOCATION=> true,
