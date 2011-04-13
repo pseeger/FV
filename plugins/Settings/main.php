@@ -1,6 +1,6 @@
 <?php
- define("PX_VER_SETTINGS", '22130');
- define("PX_DATE_SETTINGS", '2011-03-29');
+ define("PX_VER_SETTINGS", '22131');
+ define("PX_DATE_SETTINGS", '2011-04-11');
 
  define('settings_URL', '/plugins/Settings/main.php');
 
@@ -65,6 +65,7 @@ function CreateDefaultSettings() {
   $dset['e_h_building_duckpond'] = 0;
   $dset['e_h_building_ccastle'] = 0;
   $dset['e_h_building_lcottage'] = 0;
+  $dset['e_h_building_sgarden'] = 0;
   $dset['e_gzip'] = 1;
   $dset['farm_server'] = 0;
   $dset['bot_speed'] = 8;
@@ -282,6 +283,7 @@ function FV_Server($set)
    $px_Setopts['e_h_building_duckpond'] = @$_GET['harvest_building_duckpond'];
    $px_Setopts['e_h_building_ccastle'] = @$_GET['harvest_building_ccastle'];
    $px_Setopts['e_h_building_lcottage'] = @$_GET['harvest_building_lcottage'];
+   $px_Setopts['e_h_building_sgarden'] = @$_GET['harvest_building_sgarden'];
    $px_Setopts['e_gzip'] = @$_GET['gzip'];
    $px_Setopts['bot_speed'] = @$_GET['bot_speed'];
    $px_Setopts['fuel_plow'] = @$_GET['fuel_plow'];
@@ -324,6 +326,7 @@ function FV_Server($set)
      $px_Setopts['e_h_building_duckpond'] = '';
      $px_Setopts['e_h_building_ccastle'] = '';
      $px_Setopts['e_h_building_lcottage'] = '';
+     $px_Setopts['e_h_building_sgarden'] = '';
    }
    if($px_Setopts['e_combine']=='1') {
      $px_Setopts['e_seed'] = '';
@@ -417,6 +420,15 @@ function FV_Server($set)
     else { $seed_list[] = "$item:$plant_count"; }
     $changed_seed_list = true;
 
+    }
+    if (isset($_GET['add_sp'])) {
+      $val = @$_GET['add_sp_val'];
+
+      if(strlen($val)>0) {
+        foreach(explode('|',$val) as $seed)
+          $seed_list[]=$seed;
+        $changed_seed_list = true;
+      }
     }
 
    if (isset($_GET['del_plant']))
@@ -597,7 +609,8 @@ function FV_Server($set)
                     echo '(';
                     echo '<input type="checkbox" name="nr_p_',$file,'" value="1" '.(file_exists('notrun_plugin_'.$file.'.txt')?'checked':'').'>/';
                     echo '<input type="checkbox" name="nr_p_',$file,'_a" value="1" '.(file_exists('notrun_plugin_'.$file.'_'.$userId.'.txt')?'checked':'').'>';
-                    echo '&nbsp;',$file,' v',$vContent[1],'<!-- by ',$vContent[2],'-->)<br/>';
+                    #echo '&nbsp;',$file,' v',$vContent[1],' by ',$vContent[2],')<br/>';
+                    echo '&nbsp;<a target="_blank" style="text-decoration:none; color:black;" href="/plugins/',$file,'/main.php">',$file,' v',ltrim($vContent[1],'v'),')</a><br/>';
                 }
             }
         }
@@ -637,8 +650,9 @@ function FV_Server($set)
    echo '</div>';
    echo '<div>Seed list:';
    echo '<input type="button" name="add_plant" value="+" style="width:32px; height:22px; margin-left:15px;" onclick="ShowAddForm()" title="add plants"/>';
-   echo '<input type="submit" name="del_plant" value="-" style="width:32px; height:22px; margin-left:25px;" title="delete selected"/>';
-   echo '<input type="submit" name="clear_planting" value="Clear" style="width:45px; height:22px; margin-left:35px;" /><br/>';
+   echo '<input type="submit" name="del_plant" value="-" style="width:32px; height:22px; margin-left:15px;" title="delete selected"/>';
+   echo '<input type="submit" name="clear_planting" value="Clear" style="width:45px; height:22px; margin-left:15px;" />';
+   echo '<input type="submit" name="add_sp" value="+ all Seedpackages" style="width:140px; height:22px; margin-left:15px;" /><br/>';
 
 
    echo '<select class="seed_list" name="seed_list" multiple style="width:250px; height: 150px;" />';
@@ -676,6 +690,7 @@ function FV_Server($set)
       if(strlen($unit['seedpackage'])>0) {
         $vSeedPackages=$inconbox[Units_GetCodeByName($unit['seedpackage'])];
         if(strlen(trim($vSeedPackages))==0) $vSeedPackages='0';
+        if($vSeedPackages>0) $vAddSP[]=$unit['name'].':'.$vSeedPackages;
       }
 
       $px_mastchk_code = $unit['code'];
@@ -741,6 +756,7 @@ function FV_Server($set)
   foreach($vOptionArray[2] as $vOption) echo $vOption;
   foreach($vOptionArray[3] as $vOption) echo $vOption;
    echo '  </select>';
+   echo '<input type="hidden" name="add_sp_val" value="'.implode('|',$vAddSP).'">';
    echo '<br/>';
    echo '<div style="color:#FF0000" id="mastery_info"/></div><br/>';
    echo 'Plant: <input type="text" name="plant_count" size="3" value=""/><br/><br/>';
@@ -766,7 +782,7 @@ function FV_Server($set)
 
    echo '[<nobr><input type="checkbox" name="harvest_trees" value="1" '.($px_Setopts['e_h_tree']?'checked':'').' title="if the checkbox is selected, the bot will harvest from trees" /> Harvest Trees</nobr><br/>';
    echo '<nobr>(<input type="checkbox" name="harvest_arborist" value="1" '.($px_Setopts['e_h_arborist']?'checked':'').' title="if the checkbox is selected, the bot will harvest from trees with arborist" /> with Arborist, ';
-   echo 'if more then <select name="harvest_arborist_at"><option value="'.$px_Setopts['e_h_arborist_at'].'" selected="selected">'.$px_Setopts['e_h_arborist_at'].'%</option><option value="1">1%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="95%">95%</option><option value="100%">100%</option></select> ready)</nobr>&nbsp; ';
+   echo 'if more then <select name="harvest_arborist_at"><option value="'.$px_Setopts['e_h_arborist_at'].'" selected="selected">'.$px_Setopts['e_h_arborist_at'].'%</option><option value="1">1%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="95">95%</option><option value="100%">100%</option></select> ready)</nobr>&nbsp; ';
    echo '<nobr>(but leave <input type="text" name="harvest_arborist_min" size="3" value="'.$px_Setopts['e_h_arborist_min'].'"> arborist in giftbox)]</nobr><br/>';
 
    echo '<br/>';
@@ -784,16 +800,17 @@ function FV_Server($set)
    echo '<nobr>(<input type="checkbox" name="harvest_building_wworkshop" value="1" '.($px_Setopts['e_h_building_wworkshop']?'checked':'').' title="if the checkbox is selected, the bot will get items from the Winter Workshop" /> Winter Workshop)</nobr> ';
    echo '<nobr>(<input type="checkbox" name="harvest_building_snowman" value="1" '.($px_Setopts['e_h_building_snowman']?'checked':'').' title="if the checkbox is selected, the bot will get items from the Snowman" /> Snowman)</nobr> ';
    echo '<nobr>(<input type="checkbox" name="harvest_building_duckpond" value="1" '.($px_Setopts['e_h_building_duckpond']?'checked':'').' title="if the checkbox is selected, the bot will get items from the DuckPond" /> Duck Pond)</nobr> ';
-   echo '<nobr>(<input type="checkbox" name="harvest_building_ccastle" value="1" '.($px_Setopts['e_h_building_ccastle']?'checked':'').' title="if the checkbox is selected, the bot will get items from the Cupids Castle" /> Cupids Castle)]</nobr> ';
-   echo '<nobr>(<input type="checkbox" name="harvest_building_lcottage" value="1" '.($px_Setopts['e_h_building_lcottage']?'checked':'').' title="if the checkbox is selected, the bot will get items from the Leprechaun Cottage" /> Leprechaun Cottage)]</nobr> ';
+   echo '<nobr>(<input type="checkbox" name="harvest_building_ccastle" value="1" '.($px_Setopts['e_h_building_ccastle']?'checked':'').' title="if the checkbox is selected, the bot will get items from the Cupids Castle" /> Cupids Castle)</nobr> ';
+   echo '<nobr>(<input type="checkbox" name="harvest_building_lcottage" value="1" '.($px_Setopts['e_h_building_lcottage']?'checked':'').' title="if the checkbox is selected, the bot will get items from the Leprechaun Cottage" /> Leprechaun Cottage)</nobr> ';
+   echo '<nobr>(<input type="checkbox" name="harvest_building_sgarden" value="1" '.($px_Setopts['e_h_building_sgarden']?'checked':'').' title="if the checkbox is selected, the bot will get items from the Spring Garden" /> Spring Garden)]</nobr> ';
    echo '<br/><br/>';
    echo '<nobr>[(<input type="checkbox" name="lonlyanimals" value="1" '.($px_Setopts['lonlyanimals']?'checked':'').' title="if the checkbox is selected, the bot will check for lonlyanimals. Use MyRewards to get them." /> Check for LonlyAnimals)</nobr> ';
-   echo '<nobr>(<input type="checkbox" name="wanderinganimals" value="1" '.($px_Setopts['wanderinganimals']?'checked':'').' title="if the checkbox is selected, the bot will check for wanderinganimals. Use MyRewards to get them." /> Check for WanderingAnimals)]</nobr>';
+   echo '<nobr>[(<input type="checkbox" name="wanderinganimals" value="1" '.($px_Setopts['wanderinganimals']?'checked':'').' title="if the checkbox is selected, the bot will check for wanderinganimals. Use MyRewards to get them." /> Check for WanderingAnimals)]</nobr>';
 
    echo '<br/><br/>';
    echo '<nobr>[<input type="checkbox" name="harvest_animals" value="1" '.($px_Setopts['e_h_animal']?'checked':'').' title="if the checkbox is selected, the bot will get products from livestock" /> Harvest Animals</nobr><br/>';
    echo '<nobr>(<input type="checkbox" name="harvest_farmhands" value="1" '.($px_Setopts['e_h_farmhands']?'checked':'').' title="if the checkbox is selected, the bot will harvest from animals with farmhands" /> with Farmhands, ';
-   echo 'if more then <select name="harvest_farmhands_at"><option value="'.$px_Setopts['e_h_farmhands_at'].'" selected="selected">'.$px_Setopts['e_h_farmhands_at'].'%</option><option value="1">1%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="95%">95%</option><option value="100%">100%</option></select> ready)</nobr>&nbsp; ';
+   echo 'if more then <select name="harvest_farmhands_at"><option value="'.$px_Setopts['e_h_farmhands_at'].'" selected="selected">'.$px_Setopts['e_h_farmhands_at'].'%</option><option value="1">1%</option><option value="25">25%</option><option value="50">50%</option><option value="75">75%</option><option value="95">95%</option><option value="100%">100%</option></select> ready)</nobr>&nbsp; ';
    echo '<nobr>(but leave <input type="text" name="harvest_farmhands_min" size="3" value="'.$px_Setopts['e_h_farmhands_min'].'"> farmhands in giftbox)]</nobr><br/>';
    echo '<br/>';
 
