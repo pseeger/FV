@@ -679,7 +679,7 @@ function Arbeit() {
 			$one_seed_array = @explode(':', $one_seed_string);
 			if ($one_seed_array[1] == 'Default') $seed_default = $one_seed_array[0];
 			else {
-				if ($last_seed == $one_seed_array[0]) {
+				if(!empty($seed_list_new)) if ($last_seed == $one_seed_array[0]) {
 					$last_seed_string = array_pop($seed_list_new);
 					$last_seed_array = @explode(':', $last_seed_string);
 					$seed_list_new[] = $one_seed_array[0] . ':' . ($one_seed_array[1] + $last_seed_array[1]);
