@@ -568,7 +568,7 @@ text-decoration: none
 <table border="0" width="100%" cellspacing="0" cellpadding="2">
         <tr>
                 <td align="center" height="24" width="70" bgcolor="#0A246A">
-                <img border="0" src="<?php echo Seeder_imgPath.'world_'.$worldtype.'.png' ?>" width="58" height="24" alt="<?php echo $worldname ?> Settings">
+                <img border="0" src="<?php echo Seeder_imgURL.'world_'.$worldtype.'.png' ?>" width="58" height="24" alt="<?php echo $worldname ?> Settings">
                 </td>
                 <td align="center" height="24" width="100%" bgcolor="#0A246A">
                 <font size="2" face="Tahoma" color="#FFFFFF"><b>
@@ -619,7 +619,7 @@ unset($pendingRewards);unset($crafting);
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_coins_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['gold'];?></b></font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/consumables/consume_cash_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['cash'];?></b></font></td>
 <td align='left'><img border="0" width='18' src="<?php echo Seeder_ShowImage('/assets/equipment/equip_gas_can_icon.png');?>"></td><td align='left'><font size='1' face='Tahoma'><b><?php echo $Seeder_info['energy'];?></b></font></td>
-<td align='left' width='18'><input type="image" src="<?php echo Seeder_imgPath.'arrow.png';?>" border="0" name="show_stats" value="+" onclick="ShowStats();return false;" title="Show Player Stats"></font></td>
+<td align='left' width='18'><input type="image" src="<?php echo Seeder_imgURL.'arrow.png';?>" border="0" name="show_stats" value="+" onclick="ShowStats();return false;" title="Show Player Stats"></font></td>
 </tr>
 </table>
 <!--------------------------------------------------------------------------------------------------------------------------------------------------------->
@@ -825,7 +825,7 @@ if ($Seeder_info['plots'] > 0 )
 # fix 1.1.9 thanks to AJMSmith
 #  $plantTime = $plot['plantTime'];
   $plantTime = ($plot['plantTime'] - $Seeder_info['worldTimeOffset']);
-  $booster = "<img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'>";
+  $booster = "<img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'>";
   $spercent = "";
   $state = "";
 
@@ -876,7 +876,7 @@ if ($Seeder_info['plots'] > 0 )
   if ($bushel_name != "NULL")
   {
    if ($Btime_diff > 0 ) {
-   $booster = "<img border='0' title='Bushel Boosted!' src='".Seeder_imgPath."bushelbooster.png' width='16' height='16'>";
+   $booster = "<img border='0' title='Bushel Boosted!' src='".Seeder_imgURL."bushelbooster.png' width='16' height='16'>";
    }
    else
    {
@@ -916,9 +916,9 @@ if (sizeof($plots) > 0 )
  {
  echo "<tr>"."\n";
  echo "<td align='right' width='25'><font size='1' face='Tahoma'>".$plot['count']."</font></td>"."\n";
- echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'></td>"."\n";
+ echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'></td>"."\n";
  echo "<td align='left'><font size='1' face='Tahoma'>".$plot['state']."</font></td>"."\n";
- echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgPath."space.png' width='16' height='16'></td>"."\n";
+ echo "<td align='center' valign='center' width='16'><img border='0' src='".Seeder_imgURL."space.png' width='16' height='16'></td>"."\n";
  echo "<td align='center' width='40'><font size='1' face='Tahoma'>&nbsp;</font></td>"."\n";
  echo "<td align='left'><font size='1' face='Tahoma'>&nbsp;</font></td>"."\n";
  echo "</tr>";
@@ -1710,7 +1710,7 @@ function Seeder_box($title, $msg, $icon)
                 <td align="center">
                 <table border="0" width="100%" cellspacing="0" cellpadding="2">
                         <tr>
-                                <td align="left" width="32" valign="top"><img border="0" src="<?php echo Seeder_imgPath.'msgbox_'.$icon.'.png';?>" width="32" height="32"></td>
+                                <td align="left" width="32" valign="top"><img border="0" src="<?php echo Seeder_imgURL.'msgbox_'.$icon.'.png';?>" width="32" height="32"></td>
                                 <td align="left" valign="top"><font face="Tahoma" size="2"><?php echo $msg;?></font></td>
                         </tr>
                 </table>

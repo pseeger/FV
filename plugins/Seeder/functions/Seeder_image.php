@@ -7,6 +7,7 @@
 //========================================================================================================================
 function Seeder_ShowImage($iconurl)//revised v1.1.2
 {
+$iconurl = str_replace("//","/","/".$iconurl);
 return $iconurl;
 
 }
@@ -17,7 +18,7 @@ function Seeder_BushelImage($bushel)//added v1.1.2
 {
 
 	return $bushel;
-//$spacefile = Seeder_imgPath."space.png";
+//$spacefile = Seeder_imgURL."space.png";
 }
 
 //========================================================================================================================
@@ -29,7 +30,7 @@ return $quest;
 
 
 $iconurl = Bot_path.$iconurl;
-$spacefile = Seeder_imgPath."space.png";
+$spacefile = Seeder_imgURL."space.png";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -40,6 +41,7 @@ $image = 1;
 
   if ($image == 1)
   {
+  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
@@ -55,6 +57,7 @@ function Seeder_ShowImagebyName($name)//added v1.1.4
 {
 $unit = Units_GetUnitByName($name);
 $iconurl = $unit['iconurl'];
+$iconurl = str_replace("//","/","/".$iconurl);
 return $iconurl;
 }
 //========================================================================================================================
@@ -67,7 +70,7 @@ $unit = Units_GetUnitByName(Units_GetNameByCode($code));
 $iconurl = $unit['iconurl'];
 return $iconurl;
 $iconfile = Bot_path.$iconurl;
-$loaderfile = Seeder_imgPath."loader.gif";
+$loaderfile = Seeder_imgURL."loader.gif";
 $dir = Bot_path.dirname($iconurl);
 $image = 1;
 
@@ -78,6 +81,7 @@ $image = 1;
 
   if ($image == 1)
   {
+  $iconfile = str_replace("//","/","/".$iconurl);
   return $iconfile;
   }
   else
