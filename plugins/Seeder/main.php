@@ -11,14 +11,14 @@ include 'functions/Seeder_image.php';
 include 'functions/Seeder_quest.php';
 include 'functions/Seeder_trees.php';//added 1.1.6
 include 'functions/Seeder_tabs.php';
-define('Seeder_version','1.1.8');//revised v1.1.8
+define('Seeder_version','1.1.9');//revised v1.1.9
 define('Seeder_parser','22120');
 define('Bot_path',str_replace("\\", "/", getcwd()).'/');
 define('Seeder_Path',Bot_path.'plugins/Seeder/');
 define('Section_Path',Bot_path.'plugins/Sections/');//added v1.1.6
 define('GiftBox_Path',Bot_path.'plugins/GiftBox/');//added v1.1.6
 define('Seeder_dbPath',Seeder_Path.'database/');
-define('Seeder_imgPath',Seeder_Path.'images/');
+define('Seeder_imgPath','/plugins/Seeder/images/');
 define('Seeder_URL','/plugins/Seeder/main.php');
 define('Seeder_imgURL','/plugins/Seeder/images/');
 define('Seeder_date',date("Ymd"));
@@ -40,6 +40,7 @@ global $this_plugin;
  $hooks['after_load_settings'] = 'Seeder_after_load_settings';
  $hooks['before_harvest'] = 'Seeder_before_harvest';
  $hooks['before_planting'] = 'Seeder_before_planting';
+ $hooks['after_planting'] = 'Seeder_after_planting';
  $hooks['after_missions'] = 'Seeder_after_missions';
  }
 
@@ -67,6 +68,8 @@ function Seeder_after_load_settings()//revised v1.1.4
  }
 
 list($userId, $flashRevision, $token, $sequence, $flashSessionKey, $xp, $energy) = explode(';', file_get_contents(F('params.txt')));
+AddLog2("Seeder_load_settings> Seeder v".Seeder_version." flashRevision v".$flashRevision);
+
 if ($Seeder_default['flashRevision'] <> $flashRevision)
 {
  AddLog2("Seeder_load_settings> New game released!");
@@ -204,6 +207,22 @@ function Seeder_before_planting()//revised v1.1.5
  }
 
  AddLog2("Seeder_before_planting> end");
+}
+
+//========================================================================================================================
+//Seeder_after_planting
+//========================================================================================================================
+function Seeder_after_planting()//revised v1.1.9
+{
+
+ global $Seeder_settings;
+
+ if ($Seeder_settings['consume_instagrow'] == 1)
+ {
+ AddLog2("Seeder_after_planting> consume instagrow enabled");
+ Seeder_consume_instagrow();
+ }
+
 }
 
 //========================================================================================================================

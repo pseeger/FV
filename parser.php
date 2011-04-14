@@ -1,6 +1,6 @@
 <?php
-define('PX_VER_PARSER', 22130);
-define('PX_DATE_PARSER', '2011-04-03');
+define('PX_VER_PARSER', '22131');
+define('PX_DATE_PARSER', '2011-04-11');
 define('PARSER_MAX_SPEED', 8);
 define('PARSER_SQLITE', 'data.sqlite');
 define('SCK_WRITE_PACKET_SIZE', 8192);
@@ -139,7 +139,7 @@ function RestartBot() {
 function GetAMFHeaders() {
 	global $userId, $flashRevision, $token;
 	LoadAuthParams();
-	return array('sigTime' => time() . '.0000', 'token' => $token, 'flashRevision' => $flashRevision, 'masterId' => $userId, 'wid' => 0, 'snId' => 1);
+	return array('sigTime' => time() . '.0000', 'token' => $token, 'flashRevision' => $flashRevision, 'masterId' => $userId, 'wid' => 0, 'snId' => 1, 'uid'=>$userId);
 }
 
 function LoadAuthParams() {
@@ -539,15 +539,17 @@ function Arbeit() {
 	if (@$px_Setopts['e_h_building'] == 1) {
 		AddLog2("harvest buildings");
 		$building_list = array();
-		$buildingassoc = array('dairy' => 'DairyFarmBuilding', 'coop' => 'ChickenCoopBuilding', 'horse' => 'HorseStableBuilding', 'nursery' => 'NurseryBuilding', 'bees' => 'BeehiveBuilding', 'pigs' => 'PigpenBuilding', 'hauntedhouse' => 'HalloweenHauntedHouseBuilding', 'trough' => 'FeedTroughBuilding', 'orchard' => 'OrchardBuilding', 'turkeyroost' => 'TurkeyRoostBuilding', 'duckpond' => 'DuckpondBuilding');
+		$buildingassoc = array('dairy' => 'DairyFarmBuilding', 'coop' => 'ChickenCoopBuilding', 'horse' => 'HorseStableBuilding', 'nursery' => 'NurseryBuilding', 'bees' => 'BeehiveBuilding', 'pigs' => 'PigpenBuilding', 'hauntedhouse' => 'HalloweenHauntedHouseBuilding', 'trough' => 'FeedTroughBuilding', 'orchard' => 'OrchardBuilding', 'turkeyroost' => 'TurkeyRoostBuilding');
+		$featureBuildings = array('wworkshop','snowman', 'duckpond', 'ccastle', 'ccottage', 'sgarden');
 		foreach ($buildingassoc as $setting => $objectname) if (@$px_Setopts['e_h_' . $setting] == 1) {
 			$x = GetObjects($objectname);
 			//Check whether $building_list+=$x would work
 			if (is_array($x)) $building_list = array_merge($building_list, $x);
 		}
-		if (@$px_Setopts['e_h_building_wworkshop'] == 1 || @$px_Setopts['e_h_building_snowman'] == 1 || @$px_Setopts['e_h_building_duckpond'] == 1 || @$px_Setopts['e_h_building_ccastle'] == 1 || @$px_Setopts['e_h_building_lcottage'] == 1) {
+		foreach($featureBuildings as $fBuilding) if(@$px_Setopts['e_h_building'.$fBuilding]) {
 			$x = GetObjects("FeatureBuilding");
 			if (is_array($x)) $building_list = array_merge($building_list, $x);
+			break;
 		}
 		if (count($building_list) > 0) {
 			$buildings = array();
@@ -558,21 +560,19 @@ function Arbeit() {
 				if ($plot['className'] == 'HalloweenHauntedHouseBuilding') {
 					list($vUSec, $vSec) = explode(" ", microtime());
 					$vPlantTime = (string)$vSec . substr((string)$vUSec, 2, 3);
-					if ($plot['plantTime'] < ($vPlantTime - 86400000)) $buildings[] = $plot;
+					if ($plot['plantTime'] < ($vPlantTime - 82800000)) $buildings[] = $plot;
 				}
 			}
-			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
-			$buildings = array();
 			foreach ($building_list as $plot) {
 				if ($plot['className'] == 'FeatureBuilding') {
-					if ((@$px_Setopts['e_h_building_wworkshop'] == 1 && $plot['itemName'] == 'winterworkshop_finished') || (@$px_Setopts['e_h_building_snowman'] == 1 && $plot['itemName'] == 'snowman2010_finished') || (@$px_Setopts['e_h_building_duckpond'] == 1 && $plot['itemName'] == 'duckpond_finished') || (@$px_Setopts['e_h_building_ccastle'] == 1 && $plot['itemName'] == 'valentines2011_finished') || (@$px_Setopts['e_h_building_lcottage'] == 1 && $plot['itemName'] == 'stpatty2011_finished')) {
+					if ((@$px_Setopts['e_h_building_wworkshop'] == 1 && $plot['itemName'] == 'winterworkshop_finished') || (@$px_Setopts['e_h_building_snowman'] == 1 && $plot['itemName'] == 'snowman2010_finished') || (@$px_Setopts['e_h_building_duckpond'] == 1 && $plot['itemName'] == 'duckpond_finished') || (@$px_Setopts['e_h_building_ccastle'] == 1 && $plot['itemName'] == 'valentines2011_finished') || (@$px_Setopts['e_h_building_lcottage'] == 1 && $plot['itemName'] == 'stpatty2011_finished' || ($enable_harvest_building_sgarden == 1 && $plot['itemName']=='springgardenbuildable2011_finished'))) {
 						list($vUSec, $vSec) = explode(" ", microtime());
 						$vPlantTime = (string)$vSec . substr((string)$vUSec, 2, 3);
-						if ($plot['plantTime'] < ($vPlantTime - 86400000)) $buildings[] = $plot;
+						if ($plot['plantTime'] < ($vPlantTime - 82800000)) $buildings[] = $plot;
 					}
 				}
 			}
-			if (count($buildings) > 0) Do_Farm_Work($buildings); //harvest buildings
+			foreach($buildings as $b) Do_Farm_Work(array($b)); //harvest buildings one by one
 			unset($building_list);
 		}
 	}
@@ -679,7 +679,7 @@ function Arbeit() {
 			$one_seed_array = @explode(':', $one_seed_string);
 			if ($one_seed_array[1] == 'Default') $seed_default = $one_seed_array[0];
 			else {
-				if ($last_seed == $one_seed_array[0]) {
+				if(!empty($seed_list_new)) if ($last_seed == $one_seed_array[0]) {
 					$last_seed_string = array_pop($seed_list_new);
 					$last_seed_array = @explode(':', $last_seed_string);
 					$seed_list_new[] = $one_seed_array[0] . ':' . ($one_seed_array[1] + $last_seed_array[1]);

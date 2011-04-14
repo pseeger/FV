@@ -27,8 +27,8 @@ $amf->_bodys[0]->_value[2] = 0;
 $amf->_bodys[0]->_value[1][0]['sequence'] = GetSequense();
 $amf->_bodys[0]->_value[1][0]['params'] = Array();
 $amf->_bodys[0]->_value[1][0]['params'][0] = '-1';
-$amf->_bodys[0]->_value[1][0]['functionName'] = "SocialMissionService.onGetActiveMission";
 #$amf->_bodys[0]->_value[1][0]['functionName'] = "SocialMissionService.onGetAllMissionData";
+$amf->_bodys[0]->_value[1][0]['functionName'] = "SocialMissionService.onGetActiveMission";
 
 $amf->_bodys[0]->_value[1][1]['sequence'] = GetSequense();
 $amf->_bodys[0]->_value[1][1]['params'] = Array();
@@ -39,7 +39,9 @@ SaveAuthParams();
 
 $serializer = new AMFSerializer();
 $result = $serializer->serialize($amf);
-$answer = Request('', $result);
+$s = Connect();
+$answer = Request($s, $result);
+@fclose($s);
 
 $amf2 = new AMFObject($answer);
 $deserializer2 = new AMFDeserializer($amf2->rawData);
@@ -68,8 +70,12 @@ $amf_error = "UserService.postInit"."\n".$amf2->_bodys[0]->_value['data'][1]['am
 if ($amf_error == 0)
 {
 
+#Seeder_Write(@$amf2->_bodys[0]->_value['data'][0]['data']['activeMission'],"activeMission");
 Seeder_Write(@$amf2->_bodys[0]->_value['data'][0]['data'],"activeMission");
 AddLog2("Seeder_loadWorld> Active Co-Op Job updated");
+#Seeder_Write(@$amf2->_bodys[0]->_value['data'][0]['data']['availableMissions'],"availableMissions");
+#AddLog2("Seeder_loadWorld> Available Missions Job updated");
+
 Seeder_Write(@$amf2->_bodys[0]->_value['data'][1]['data']['stats'],"stats");
 AddLog2("Seeder_loadWorld> Stats updated");
 Seeder_Write(@$amf2->_bodys[0]->_value['data'][1]['data']['marketView'],"market");
@@ -83,10 +89,6 @@ Seeder_Write($greenhouse,"greenhouse");//added 1.1.6
 AddLog2("Seeder_loadWorld> Greenhouse updated");
 #Seeder_Write(@$amf2->_bodys[0]->_value['data'][1]['data'],"postInit");
 }
-#$MarketStallCount = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['currentMarketStallCount'];
-#$crafting_items = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['craftingItems'];
-#$maxbushels = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['maxCapacity'];
-#$pendingRewards = @$amf2->_bodys[0]->_value['data'][1]['data']['craftingState']['pendingRewards'];
 
 //tks FarmerBob00
 $world = unserialize(file_get_contents(F('world.txt')));
@@ -175,9 +177,6 @@ $mastery_counters = @$world['data'][0]['data']['userInfo']['player']['masteryCou
 $mastery_levels = @$world['data'][0]['data']['userInfo']['player']['mastery'];
 
 
-//[seenFlags][greenhousebuildable_finished_t] => 1
-//[expansionLevel] => 2
-//[state] => built
 //======================================
 //licenses
 //======================================
@@ -260,9 +259,10 @@ $seeds_array = array();
 //Timezone added 1.2.3
 global $Seeder_settings;
 $Seeder_settings = Seeder_Read("settings");
-$localOffset = date('Z');// fixed 1.1.3b
-//$serverOffset = -(Units_GetFarming('globalServerUTCOffsetHours') * 60 * 60);//(GMT -5:00) EST - Eastern Standard Time (U.S. & Canada)
-$serverOffset = (-5 * 60 * 60);//(GMT -5:00) EST - Eastern Standard Time (U.S. & Canada)
+
+#$localOffset = date('Z');// fixed 1.1.3b
+#$serverOffset = -(Units_GetFarming('globalServerUTCOffsetHours') * 60 * 60);//(GMT -5:00) EST - Eastern Standard Time (U.S. & Canada)
+#$serverOffset = (-5 * 60 * 60);//(GMT -5:00) EST - Eastern Standard Time (U.S. & Canada)
 
 //booster fixed 1.1.4
 $booster_crop = @$world['data'][0]['data']['userInfo']['player']['buffs']['BBushel']['crop'];
@@ -387,7 +387,7 @@ foreach($units_seeds as $seed)
 
  if ($mastery_level == 3)
  {
- $seeds_array[$name]['seedpackage_count'] = 99999;
+ $seeds_array[$name]['seedpackage_count'] = 9999;
  }
 
  } else {
@@ -457,7 +457,7 @@ foreach($units_seeds as $seed)
  }
 
  //World
- $seed_world = @$world_array[$name]; if (!$seed_world) {$seed_world = "farm";}
+ $seed_world = @$world_array[$name]; if (!$seed_world) {$seed_world = $worldtype;}//fix 1.1.9
  $seeds_array[$name]['world'] = $seed_world;
  
 }//foreach($units_seeds as $seed)
@@ -557,6 +557,9 @@ $Seeder_info['booster_time'] = $booster_time;
 $instagrow_count = @$inconbox['A4']; if (!$instagrow_count) {$instagrow_count = 0;}
 $Seeder_info['instagrow_count'] = $instagrow_count;
 
+// fix 1.1.9 thanks to AJMSmith
+$Seeder_info['worldTimeOffset'] = (@$world['data'][0]['worldTime'] - time());
+
 unset($inconbox);unset($booster_crop);unset($booster_time);
 unset($objects);unset($world);
 Seeder_Write($Seeder_info,"info");
@@ -570,6 +573,13 @@ Seeder_Write($Seeder_info,"info");
  unset($quests);
  }
 //======================================
+
+
+#$f = fopen(Seeder_dbPath.PluginF('loadWorld.txt'), "w+");
+#fwrite($f, print_r($amf2,true));
+#fclose($f);
+
+
 } //if ($errData == 0)
 else
 {

@@ -1,10 +1,12 @@
 Settings
-22130
+22131
 MrN updated by px, ralphm2004, strmckr
 http://farmvillebot.net/forum/viewtopic.php?t=7884
 The second bot settings. Use this to tell the bot what to do.
 
-22130 pause/freeze unused farm
+22131 springgarden
+22131 amfheader (Brianwuz)
+22130 continue/freeze unused farm
 22130 fixed thankyougift-message (FarmerBob00)
 22129 more england-releated fixes
 22129 update seedlist for england and seedpackages

@@ -65,7 +65,7 @@ $seeds_available = array();
 
     //all filters ok
 //force_planting
-   if ($Seeder_settings['force_planting'] == 1) {$seed_filter = 0;}
+   #if ($Seeder_settings['force_planting'] == 1) {$seed_filter = 0;}
 
    if ($seed_filter == 0) {$seeds_available[$name] = $seed;}
 
@@ -137,7 +137,7 @@ if (count($seed) > 0 )
 } else {$SeedFilter = 1;}// 1st Seeder_ArrayFilter
 
 //force_planting
-   if ($Seeder_settings['force_planting'] == 1) {$SeedFilter = 0;}
+   #if ($Seeder_settings['force_planting'] == 1) {$SeedFilter = 0;}
 
 
 unset($mastery_counters);unset($seeds);
@@ -160,6 +160,8 @@ $seeds_tomastery = Seeder_available();//added 1.1.2
 $seeds_tomastery = Seeder_ArrayFilter($seeds_tomastery, 'masterymax', '>', '0');
 $seeds_tomastery = Seeder_ArrayFilter($seeds_tomastery, 'to_mastery', '>', '0');
 if ($Seeder_settings['mastery_adjustment'] == 0) {$seeds_tomastery = Seeder_ArrayFilter($seeds_tomastery, 'mastery_level', '<', '3');}
+
+$seeds_tomastery = Seeder_ArrayOrder($seeds_tomastery, $Seeder_settings['seeds_order'], $Seeder_settings['seeds_sort']);
 
  if (sizeof($seeds_tomastery) > 0 )
  {
@@ -415,7 +417,7 @@ function Seeder_Booster()//revised v1.1.4
        if ($res == 'OK')
        {
        AddLog2("Seeder_Booster> Restarting farm to Rapid Harvest");
-       DoInit('');
+       DoInit();
        Seeder_Booster();
        break;//foreach ($plot_count as $plot)
        }
@@ -513,7 +515,7 @@ $action = "harvest";
 //======================================
     $serializer = new AMFSerializer();
     $result = $serializer->serialize($amf); // serialize the data
-    $answer = Request('', $result);
+    $answer = Request($s, $result);
     $amf2 = new AMFObject($answer);
     $deserializer2 = new AMFDeserializer($amf2->rawData); // deserialize the data
     $deserializer2->deserialize($amf2); // run the deserializer
@@ -952,7 +954,7 @@ $amf->_bodys[0]->_value[1][0]['sequence'] = GetSequense();
 $amf->_bodys[0]->_value[1][0]['functionName'] = "BreedingService.beginNewBreedingProject";
 
 $res = RequestAMF($amf);
-AddLog2("Seeder_start_greenhouse> Tray #".$tray." Start: ".$seeds_array['seedpackages_to_mastery']." ".$seeds_array['seedpackage_realname']." result: ".$res);
+AddLog2("Seeder_start_greenhouse> Tray #".($tray + 1)." Start: ".$seeds_array['seedpackages_to_mastery']." ".$seeds_array['seedpackage_realname']." result: ".$res);
 
 #DoInit();
 #Seeder_loadWorld();
@@ -980,10 +982,10 @@ for ($i = 0; $i < $Seeder_info['greenhouse_trays']; $i++)
   
   if ($TimeLeft == 0)
   {
-  AddLog2("Seeder_harvest_greenhouse> tray #".$i.": ".Units_GetRealnameByCode($seedpackage)." - Ready!");
+  AddLog2("Seeder_harvest_greenhouse> tray #".($i + 1).": ".Units_GetRealnameByCode($seedpackage)." - Ready!");
   Seeder_harvest_tray($i);
   $reload = 1;
-  } else {  AddLog2("Seeder_harvest_greenhouse> tray #".$i.": ".Units_GetRealnameByCode($seedpackage)." - Harvest in ".$TimeLeft);}
+  } else {  AddLog2("Seeder_harvest_greenhouse> tray #".($i + 1).": ".Units_GetRealnameByCode($seedpackage)." - Harvest in ".$TimeLeft);}
   
  }
 }
@@ -1015,10 +1017,61 @@ $amf->_bodys[0]->_value[1][0]['sequence'] = GetSequense();
 $amf->_bodys[0]->_value[1][0]['functionName'] = "BreedingService.finishBreedingProject";
 
 $res = RequestAMF($amf);
-AddLog2("Seeder_harvest_tray> Harvested tray #".$tray.": ".Units_GetRealnameByCode($greenhouse['trays'][$tray]['trayResult'])." result: ".$res);
+AddLog2("Seeder_harvest_tray> Harvested tray #".($tray + 1).": ".Units_GetRealnameByCode($greenhouse['trays'][$tray]['trayResult'])." result: ".$res);
 
 #DoInit();
 #Seeder_loadWorld();
+
+}
+//========================================================================================================================
+//Seeder_consume_instagrow
+//========================================================================================================================
+function Seeder_consume_instagrow()//added v1.1.9
+{
+
+global $userId, $vCnt63000, $Seeder_info;
+
+if ($Seeder_info['instagrow_count'] > 0)
+{
+$res = 0;
+$px_time = time();
+$amf = new AMFObject("");
+$amf->_bodys[0] = new MessageBody();
+$amf->_bodys[0]->targetURI = 'FlashService.dispatchBatch';
+$amf->_bodys[0]->responseURI = '/1/onStatus';
+$amf->_bodys[0]->responseIndex = '/1';
+$amf->_bodys[0]->_value[0] = GetAMFHeaders();
+$amf->_bodys[0]->_value[2] = 0;
+
+ $amf->_bodys[0]->_value[1][0]['params'][0] = 'use';
+ $amf->_bodys[0]->_value[1][0]['params'][1]['deleted'] = false;
+ $amf->_bodys[0]->_value[1][0]['params'][1]['direction'] = 0;
+ $amf->_bodys[0]->_value[1][0]['params'][1]['tempId'] = -1;
+ $amf->_bodys[0]->_value[1][0]['params'][1]['itemName'] = 'consume_instagrow';
+ $amf->_bodys[0]->_value[1][0]['params'][1]['id'] = $vCnt63000 ++;
+ $amf->_bodys[0]->_value[1][0]['params'][1]['position'] = array('x'=>0, 'y'=>0, 'z'=>0);
+ $amf->_bodys[0]->_value[1][0]['params'][1]['className'] = 'Consumable';
+
+ $amf->_bodys[0]->_value[1][0]['params'][2]['storageId'] = -1;
+ $amf->_bodys[0]->_value[1][0]['params'][2]['isFree'] = false;
+ $amf->_bodys[0]->_value[1][0]['params'][2]['targetUser'] = $userId;
+ $amf->_bodys[0]->_value[1][0]['params'][2]['isGift'] = true;
+ 
+ $amf->_bodys[0]->_value[1][0]['sequence'] = GetSequense();
+ $amf->_bodys[0]->_value[1][0]['functionName'] = "WorldService.performAction";
+
+ $res = RequestAMF($amf);
+ if($res=='OK')
+ {
+   AddLog2("Seeder_consume_instagrow> grow all plots");
+ }
+ else
+ {
+   AddLog2("Seeder_consume_instagrow> Error: ".$res." no plot to grow?");
+   DoInit();
+ }
+
+} else {AddLog2("Seeder_consume_instagrow> Error: No instagrow in Giftbox");}
 
 }
 //========================================================================================================================
@@ -1277,18 +1330,14 @@ function Seeder_GetPlotsTime()//revised v1.1.2
  $plots = Seeder_ArrayFilter($plots, 'state', '!=', 'plowed');
  $plots = Seeder_ArrayFilter($plots, 'state', '!=', 'fallow');
 
- $world = unserialize(file_get_contents(F('world.txt')));
- $worldTimeOffset = @$world['data'][0]['worldTime'] - time(); 
-
  $array = array();
  foreach ($plots as $plot)
   {
-   $plantTimeMod = ($plot['plantTime']/1000) - $worldTimeOffset;
-   $plantTimeID = $plot['itemName']."-".$plantTimeMod;
+   $plantTimeID = $plot['itemName']."-".($plot['plantTime']/1000);
    if (!isset($array[$plantTimeID]['plantTimeID']))
    {
    $array[$plantTimeID]['plantTimeID'] = $plantTimeID;
-   $array[$plantTimeID]['plantTime'] = $plantTimeMod;
+   $array[$plantTimeID]['plantTime'] = ($plot['plantTime']/1000);
    $array[$plantTimeID]['itemName'] = $plot['itemName'];
    $array[$plantTimeID]['realname'] = Units_GetRealnameByName($plot['itemName']);
    $array[$plantTimeID]['state'] = $plot['state'];
@@ -1369,7 +1418,7 @@ function Seeder_seed_genealogy($itemCode)//added v1.1.6
 //======================================
 function Seeder_userProfile()//added v1.1.6
 {
-$flashVars = file_get_contents(F('flashVars.txt'));
+$flashVars = @file_get_contents(F('flashVars.txt'));
 preg_match('/var g_userInfo = \{([^}]*)\}/sim', $flashVars, $flash);
 preg_match_all('/"([^"]*)":"([^"]*)"/im', $flash[1], $fr);
 $newarray = array_combine($fr[1], $fr[2]);
@@ -1409,7 +1458,7 @@ return $worldtype;
 function Seeder_worldname()//added v1.1.8
 {
 $worldtype = Seeder_worldtype();
-if($worldtype == 'england') {$worldname = 'English Countryside';} else {$worldname = 'Farmville';}
+if($worldtype == 'england') {$worldname = 'English Countryside';} else {$worldname = 'Farmville Home';}
 return $worldname;
 
 }
